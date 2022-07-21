@@ -153,7 +153,7 @@ class FeatureExtractor:
 
     def report_interval_data(self):
 
-        if len(ipca.intervals) == 0:
+        if len(self.ipca_intervals) == 0:
             print('iPCA has not yet been performed.')
             return
 
