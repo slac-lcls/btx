@@ -73,7 +73,7 @@ class FeatureExtractor:
         self.ipca_intervals['update_basis'] = []
 
         start_idx = self.psi.counter
-        end_idx = min(psi.max_events, num_images)
+        end_idx = min(self.psi.max_events, num_images)
         
         imgs = np.array([[]])
         new_obs = np.array([[]])
