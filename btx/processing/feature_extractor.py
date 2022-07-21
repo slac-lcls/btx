@@ -36,13 +36,13 @@ class TimeTask:
         self.start_time = 0.
         self.intervals = intervals
     
-    __enter__(self):
+    def __enter__(self):
         """
         Set reference start time.
         """
         self.start_time = perf_counter()
     
-    __exit__(self, *args, **kwargs):
+    def __exit__(self, *args, **kwargs):
         """
         Mutate interval list with interval duration of current task.
         """
