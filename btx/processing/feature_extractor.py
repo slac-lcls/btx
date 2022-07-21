@@ -12,16 +12,40 @@ from time import perf_counter
 from scipy.linalg import svd
 from scipy.linalg import qr
 
-class TimePerformance:
+class TimeTask:
+    """
+    A context manager to record the duration of wrapped task.
+
+    Attributes
+    ----------
+    start_time : float
+        reference time for start time of task
+    intervals : list
+        list containing time interval data
+    """
     
     def __init__(self, intervals):
+        """
+        Construct all necessary attributes for the TimeTask context manager.
+
+        Parameters
+        ----------
+        intervals : list of float
+            List containing interval data
+        """
         self.start_time = 0.
         self.intervals = intervals
     
     __enter__(self):
+        """
+        Set reference start time.
+        """
         self.start_time = perf_counter()
     
     __exit__(self, *args, **kwargs):
+        """
+        Mutate interval list with interval duration of current task.
+        """
         self.intervals.append(perf_counter() - self.start_time)
 
 class FeatureExtractor:
@@ -90,28 +114,28 @@ class FeatureExtractor:
                 
                 if n % block_size == 0 or idx == end_idx :
                     
-                    with TimePerformance(self.ipca_intervals['update_mean']):
+                    with TimeTask(self.ipca_intervals['update_mean']):
                         m = n % block_size if idx == end_idx else block_size
                         mu_m = np.mean(new_obs, axis=1)
                         mu_m = np.reshape(mu_m, (x*y, 1))
                         mu_nm = (1 / (n + m)) * (n * mu + m * mu_m)
                     
-                    with TimePerformance(self.ipca_intervals['concat']):
+                    with TimeTask(self.ipca_intervals['concat']):
                         X_centered = new_obs - np.tile(mu_m, (1, m))
                         X_m = np.hstack((X_centered, np.sqrt(n * m / (n + m)) * mu_m - mu))
                     
-                    with TimePerformance(self.ipca_intervals['ortho']):
+                    with TimeTask(self.ipca_intervals['ortho']):
                         UX_m = U.T @ X_m
                         dX_m = X_m - U @ UX_m
                         X_pm, _ = qr(dX_m, mode='economic')
                     
-                    with TimePerformance(self.ipca_intervals['build_r']):
+                    with TimeTask(self.ipca_intervals['build_r']):
                         R = np.block([[S, UX_m], [np.zeros((m + 1,q)), X_pm.T @ dX_m]])
                     
-                    with TimePerformance(self.ipca_intervals['svd']):
+                    with TimeTask(self.ipca_intervals['svd']):
                         U_tilde, S_tilde, _ = svd(R)
                     
-                    with TimePerformance(self.ipca_intervals['update_basis']):
+                    with TimeTask(self.ipca_intervals['update_basis']):
                         U_prime = np.concatenate((U, X_pm), axis=1) @ U_tilde
                         U = U_prime[:, :q]
                         S = np.diag(S_tilde[:q])
