@@ -9,8 +9,6 @@ from psalgos.pypsalgos import PyAlgos
 
 from matplotlib import pyplot as plt
 from time import perf_counter
-from scipy.linalg import svd
-from scipy.linalg import qr
 
 class TimeTask:
     """
@@ -96,7 +94,7 @@ class FeatureExtractor:
                 imgs = np.hstack((imgs, img)) if imgs.size else img
                 
                 if n == q:
-                    U, s, _ = svd(imgs, full_matrices=False)
+                    U, s, _ = np.linalg.svd(imgs, full_matrices=False)
                     S = np.diag(s)
                     
                     mu = np.mean(imgs, axis=1)
@@ -128,13 +126,13 @@ class FeatureExtractor:
                     with TimeTask(self.ipca_intervals['ortho']):
                         UX_m = U.T @ X_m
                         dX_m = X_m - U @ UX_m
-                        X_pm, _ = qr(dX_m, mode='economic')
+                        X_pm, _ = np.linalg.qr(dX_m, mode='economic')
                     
                     with TimeTask(self.ipca_intervals['build_r']):
                         R = np.block([[S, UX_m], [np.zeros((m + 1,q)), X_pm.T @ dX_m]])
                     
                     with TimeTask(self.ipca_intervals['svd']):
-                        U_tilde, S_tilde, _ = svd(R)
+                        U_tilde, S_tilde, _ = np.linalg.svd(R)
                     
                     with TimeTask(self.ipca_intervals['update_basis']):
                         U_prime = np.concatenate((U, X_pm), axis=1) @ U_tilde
