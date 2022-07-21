@@ -161,3 +161,28 @@ class FeatureExtractor:
         for key in list(self.ipca_intervals.keys()):
             interval_mean = np.mean(self.ipca_intervals[key])
             print(f'Mean compute time of step \'{key}\': {interval_mean:.4g}s')
+
+
+def compression_loss(X, U):
+    """
+    Calculate the compression loss between centered observation matrix X and its rank-q reconstruction.
+
+    Parameters
+    ----------
+    X : ndarray, shape (d x n)
+        flattened, centered image data from n run events
+    U : ndarray, shape (d x q)
+        first q singular vectors of X, forming orthonormal basis of q-dimensional subspace of R^d
+    
+    Returns
+    -------
+    Ln : float
+        compression loss of X
+    """
+    d, n = X.shape
+
+    UX = U.T @ X
+    UUX = U @ UX
+
+    Ln = ((np.linalg.norm(X - UXX, 'fro')) ** 2) / n
+    return Ln 
