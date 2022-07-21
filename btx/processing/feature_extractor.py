@@ -54,7 +54,7 @@ class FeatureExtractor:
     Extract features from a psana run using dimensionality reduction.
     """
     
-    def __init__(self, exp, run):
+    def __init__(self, exp, run, det_type):
         self.psi = PsanaInterface(exp=exp, run=run, det_type=det_type)
 
         self.ipca_intervals = dict({})
