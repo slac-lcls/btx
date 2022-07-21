@@ -160,4 +160,4 @@ class FeatureExtractor:
 
         for key in list(self.ipca_intervals.keys()):
             interval_mean = np.mean(self.ipca_intervals[key])
-            print(f'Mean compute time of step {key}: {interval_mean:.4g}s')
+            print(f'Mean compute time of step \'{key}\': {interval_mean:.4g}s')
