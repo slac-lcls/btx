@@ -126,7 +126,7 @@ class FeatureExtractor:
                     with TimeTask(self.ipca_intervals['ortho']):
                         UX_m = U.T @ X_m
                         dX_m = X_m - U @ UX_m
-                        X_pm, _ = np.linalg.qr(dX_m, mode='economic')
+                        X_pm, _ = np.linalg.qr(dX_m, mode='reduced')
                     
                     with TimeTask(self.ipca_intervals['build_r']):
                         R = np.block([[S, UX_m], [np.zeros((m + 1,q)), X_pm.T @ dX_m]])
