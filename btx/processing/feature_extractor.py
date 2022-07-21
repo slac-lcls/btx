@@ -63,7 +63,7 @@ class FeatureExtractor:
         self.rank = self.comm.Get_rank()
         self.size = self.comm.Get_size()
     
-    def ipca(q, block_size, num_images, init_with_pca=True):
+    def ipca(self, q, block_size, num_images, init_with_pca=True):
 
         self.ipca_intervals['update_mean'] = []
         self.ipca_intervals['concat'] = []
