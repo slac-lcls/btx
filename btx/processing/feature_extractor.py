@@ -72,15 +72,15 @@ class FeatureExtractor:
         self.ipca_intervals['svd'] = []
         self.ipca_intervals['update_basis'] = []
 
-        start_idx = psi.counter
+        start_idx = self.psi.counter
         end_idx = min(psi.max_events, num_images)
         
         imgs = np.array([[]])
         new_obs = np.array([[]])
         
-        runner = psi.runner
-        times = psi.times
-        det = psi.det
+        runner = self.psi.runner
+        times = self.psi.times
+        det = self.psi.det
         
         for idx in np.arange(start_idx, end_idx):
             n = idx + 1
@@ -143,9 +143,9 @@ class FeatureExtractor:
                         
                     new_obs = np.array([])
                     
-            psi.counter += 1
+            self.psi.counter += 1
             
-            if psi.counter == psi.max_events:
+            if self.psi.counter == self.psi.max_events:
                 break
         
         self.U, self.S, self.mu = U, S, mu
