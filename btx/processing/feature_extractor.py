@@ -184,5 +184,5 @@ def compression_loss(X, U):
     UX = U.T @ X
     UUX = U @ UX
 
-    Ln = ((np.linalg.norm(X - UXX, 'fro')) ** 2) / n
+    Ln = ((np.linalg.norm(X - UUX, 'fro')) ** 2) / n
     return Ln 
