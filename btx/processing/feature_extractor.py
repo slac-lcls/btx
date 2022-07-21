@@ -81,6 +81,9 @@ class FeatureExtractor:
         runner = self.psi.runner
         times = self.psi.times
         det = self.psi.det
+
+        print(start_idx)
+        print(end_idx)
         
         for idx in np.arange(start_idx, end_idx):
             n = idx + 1
@@ -105,17 +108,21 @@ class FeatureExtractor:
                     print('initialized')
 
             else:
+                print('fee')
                 if idx == 0:
                     S = np.diag(np.ones(q))
                     mu = np.zeros((x*y, 1))
                     U = np.zeros((x*y, q))
                     np.fill_diagonal(U, 1)
-                    
+                
+                print('fi')
                 new_obs = np.hstack((new_obs, img)) if new_obs.size else img
                     
                 # update model with block every m samples, or img limit
                 
                 if n % block_size == 0 or idx == end_idx :
+
+                    print('fo')
                     
                     with TimeTask(self.ipca_intervals['update_mean']):
                         m = n % block_size if idx == end_idx else block_size
