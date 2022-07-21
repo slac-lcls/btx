@@ -102,7 +102,7 @@ class FeatureExtractor:
                     mu = np.mean(imgs, axis=1)
                     mu = np.reshape(mu, (x*y, 1))
 
-                    print(initialized)
+                    print('initialized')
 
             else:
                 if idx == 0:
