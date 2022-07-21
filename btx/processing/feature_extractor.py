@@ -84,6 +84,7 @@ class FeatureExtractor:
         
         for idx in np.arange(start_idx, end_idx):
             n = idx + 1
+            print(n)
             
             evt = runner.event(times[idx])
             img_yx = det.image(evt=evt)
@@ -100,6 +101,8 @@ class FeatureExtractor:
                     
                     mu = np.mean(imgs, axis=1)
                     mu = np.reshape(mu, (x*y, 1))
+
+                    print(initialized)
 
             else:
                 if idx == 0:
