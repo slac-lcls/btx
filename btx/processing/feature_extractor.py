@@ -61,7 +61,7 @@ class FeatureExtractor:
         self.rank = self.comm.Get_rank()
         self.size = self.comm.Get_size()
 
-    def reduce_dataset_dimensionality(self, new_dim):
+    def reduce_dataset_dim(self, new_dim):
         det_x_dim = self.psi.det.image_xaxis(self.psi.run).shape[0]
         det_y_dim = self.psi.det.image_yaxis(self.psi.run).shape[0]
 
@@ -71,11 +71,12 @@ class FeatureExtractor:
             print('Reduced dimension must be <= detector dimension.')
             return
 
-        reduced_dimension = new_dim if new_dim > 1 else new_dim * det_pixels
+        reduced_dimension = new_dim if new_dim > 1 else np.floor(new_dim * det_pixels)
+        reduced_dimension = int(reduced_dimension)
 
         self.reduced_indices = np.random.choice(det_pixels, reduced_dimension)
 
-    def restore_dataset_dimensionality(self):
+    def restore_dataset_dim(self):
         self.reduced_indices = np.array([])
 
     def ipca(self, q, block_size, num_images, init_with_pca=True):
