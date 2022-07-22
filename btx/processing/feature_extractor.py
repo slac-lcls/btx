@@ -105,12 +105,15 @@ class FeatureExtractor:
             evt = runner.event(times[idx])
             img_yx = det.image(evt=evt)
 
-            if self.reduced_indices.size:
-                img_yx = img_yx[self.reduced_indices]
-            
             y, x = img_yx.shape
-            img = np.reshape(img_yx, (x*y, 1))
+            d = y * x
 
+            img = np.reshape(img_yx, (d, 1))
+
+            if self.reduced_indices.size:
+                img = img[self.reduced_indices]
+                d, _ = img.shape
+            
             if init_with_pca and n <= q:
                 imgs = np.hstack((imgs, img)) if imgs.size else img
                 
@@ -119,13 +122,13 @@ class FeatureExtractor:
                     S = np.diag(s)
                     
                     mu = np.mean(imgs, axis=1)
-                    mu = np.reshape(mu, (x*y, 1))
+                    mu = np.reshape(mu, (d, 1))
 
             else:
                 if idx == 0:
                     S = np.diag(np.ones(q))
-                    mu = np.zeros((x*y, 1))
-                    U = np.zeros((x*y, q))
+                    mu = np.zeros((d, 1))
+                    U = np.zeros((d, q))
                     np.fill_diagonal(U, 1)
                 
                 new_obs = np.hstack((new_obs, img)) if new_obs.size else img
@@ -137,7 +140,7 @@ class FeatureExtractor:
                     with TimeTask(self.ipca_intervals['update_mean']):
                         m = n % block_size if idx == end_idx else block_size
                         mu_m = np.mean(new_obs, axis=1)
-                        mu_m = np.reshape(mu_m, (x*y, 1))
+                        mu_m = np.reshape(mu_m, (d, 1))
                         mu_nm = (1 / (n + m)) * (n * mu + m * mu_m)
                     
                     with TimeTask(self.ipca_intervals['concat']):
