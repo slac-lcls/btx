@@ -10,9 +10,9 @@ from psalgos.pypsalgos import PyAlgos
 from matplotlib import pyplot as plt
 from time import perf_counter
 
-class TimeTask:
+class TaskTimer:
     """
-    A context manager to record the duration of wrapped task.
+    A context manager to record the duration of managed task.
 
     Attributes
     ----------
@@ -24,7 +24,7 @@ class TimeTask:
     
     def __init__(self, intervals):
         """
-        Construct all necessary attributes for the TimeTask context manager.
+        Construct all necessary attributes for the TaskTimer context manager.
 
         Parameters
         ----------
@@ -79,6 +79,15 @@ class FeatureExtractor:
         self.reduced_indices = np.array([])
 
     def ipca(self, q, block_size, num_images, init_with_pca=True):
+        """
+        Run iPCA with run subset subject to initialization parameters.
+
+        Parameters
+        ----------
+
+        num_images : int
+            number of events consider, psi.max_events if -1
+        """
 
         self.ipca_intervals['update_mean'] = []
         self.ipca_intervals['concat'] = []
@@ -89,7 +98,10 @@ class FeatureExtractor:
 
         start_idx = self.psi.counter
         end_idx = min(self.psi.max_events, num_images)
-        
+
+        if num_images == -1:
+            end_idx = self.psi.max_events
+
         imgs = np.array([[]])
         new_obs = np.array([[]])
         
@@ -136,28 +148,28 @@ class FeatureExtractor:
                 
                 if n % block_size == 0 or idx == end_idx :
 
-                    with TimeTask(self.ipca_intervals['update_mean']):
+                    with TaskTimer(self.ipca_intervals['update_mean']):
                         m = n % block_size if idx == end_idx else block_size
                         mu_m = np.mean(new_obs, axis=1)
                         mu_m = np.reshape(mu_m, (d, 1))
                         mu_nm = (1 / (n + m)) * (n * mu + m * mu_m)
                     
-                    with TimeTask(self.ipca_intervals['concat']):
+                    with TaskTimer(self.ipca_intervals['concat']):
                         X_centered = new_obs - np.tile(mu_m, (1, m))
                         X_m = np.hstack((X_centered, np.sqrt(n * m / (n + m)) * mu_m - mu))
                     
-                    with TimeTask(self.ipca_intervals['ortho']):
+                    with TaskTimer(self.ipca_intervals['ortho']):
                         UX_m = U.T @ X_m
                         dX_m = X_m - U @ UX_m
                         X_pm, _ = np.linalg.qr(dX_m, mode='reduced')
                     
-                    with TimeTask(self.ipca_intervals['build_r']):
+                    with TaskTimer(self.ipca_intervals['build_r']):
                         R = np.block([[S, UX_m], [np.zeros((m + 1,q)), X_pm.T @ dX_m]])
                     
-                    with TimeTask(self.ipca_intervals['svd']):
+                    with TaskTimer(self.ipca_intervals['svd']):
                         U_tilde, S_tilde, _ = np.linalg.svd(R)
                     
-                    with TimeTask(self.ipca_intervals['update_basis']):
+                    with TaskTimer(self.ipca_intervals['update_basis']):
                         U_prime = np.concatenate((U, X_pm), axis=1) @ U_tilde
                         U = U_prime[:, :q]
                         S = np.diag(S_tilde[:q])
