@@ -56,6 +56,7 @@ class FeatureExtractor:
         self.psi = PsanaInterface(exp=exp, run=run, det_type=det_type)
 
         self.ipca_intervals = dict({})
+        self.reduced_indices = np.array([])
         
         self.comm = MPI.COMM_WORLD
         self.rank = self.comm.Get_rank()
@@ -195,6 +196,9 @@ class FeatureExtractor:
         for key in list(self.ipca_intervals.keys()):
             interval_mean = np.mean(self.ipca_intervals[key])
             print(f'Mean compute time of step \'{key}\': {interval_mean:.4g}s')
+    
+    def pca(self):
+
 
 
 def compression_loss(X, U):
@@ -220,3 +224,7 @@ def compression_loss(X, U):
 
     Ln = ((np.linalg.norm(X - UUX, 'fro')) ** 2) / n
     return Ln 
+
+def statistical_accuracy(U, U_hat):
+
+
