@@ -89,6 +89,7 @@ class FeatureExtractor:
             number of events consider, psi.max_events if -1
         """
 
+        self.ipca_intervals['load_event'] = []
         self.ipca_intervals['update_mean'] = []
         self.ipca_intervals['concat'] = []
         self.ipca_intervals['ortho'] = []
@@ -111,10 +112,10 @@ class FeatureExtractor:
         
         for idx in np.arange(start_idx, end_idx):
             n = idx + 1
-            print(f'Observation: {n}')
-            
-            evt = runner.event(times[idx])
-            img_yx = det.image(evt=evt)
+
+            with TaskTimer(self.ipca_intervals['load_event']): 
+                evt = runner.event(times[idx])
+                img_yx = det.image(evt=evt)
 
             y, x = img_yx.shape
             d = y * x
