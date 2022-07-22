@@ -129,18 +129,13 @@ class FeatureExtractor:
             
             if init_with_pca and n <= q:
                 imgs = np.hstack((imgs, img)) if imgs.size else img
-
-                print('here')
                 
                 if n == q:
-                    print('here')
                     U, s, _ = np.linalg.svd(imgs, full_matrices=False)
                     S = np.diag(s)
                     
                     mu = np.mean(imgs, axis=1)
                     mu = np.reshape(mu, (d, 1))
-
-                    print(np.diag(S))
 
             else:
                 if idx == 0:
