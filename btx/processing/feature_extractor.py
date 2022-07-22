@@ -60,7 +60,24 @@ class FeatureExtractor:
         self.comm = MPI.COMM_WORLD
         self.rank = self.comm.Get_rank()
         self.size = self.comm.Get_size()
-    
+
+    def reduce_dataset_dimensionality(self, new_dim):
+        det_x_dim = self.psi.det.image_xaxis(self.psi.run).shape[0]
+        det_y_dim = self.psi.det.image_yaxis(self.psi.run).shape[0]
+
+        det_pixels = det_y_dim * det_x_dim
+
+        if det_pixels < new_dim:
+            print('Reduced dimension must be <= detector dimension.')
+            return
+
+        reduced_dimension = new_dim if new_dim > 1 else new_dim * det_pixels
+
+        self.reduced_indices = np.random.choice(det_pixels, reduced_dimension)
+
+    def restore_dataset_dimensionality(self):
+        self.reduced_indices = np.array([])
+
     def ipca(self, q, block_size, num_images, init_with_pca=True):
 
         self.ipca_intervals['update_mean'] = []
@@ -86,10 +103,13 @@ class FeatureExtractor:
             
             evt = runner.event(times[idx])
             img_yx = det.image(evt=evt)
+
+            if self.reduced_indices.size:
+                img_yx = img_yx[self.reduced_indices]
             
             y, x = img_yx.shape
             img = np.reshape(img_yx, (x*y, 1))
-            
+
             if init_with_pca and n <= q:
                 imgs = np.hstack((imgs, img)) if imgs.size else img
                 
