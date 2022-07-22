@@ -62,7 +62,7 @@ class FeatureExtractor:
         self.rank = self.comm.Get_rank()
         self.size = self.comm.Get_size()
 
-    def reduce_dataset_dim(self, new_dim):
+    def generate_reduced_indices(self, new_dim):
         det_x_dim = self.psi.det.image_xaxis(self.psi.run).shape[0]
         det_y_dim = self.psi.det.image_yaxis(self.psi.run).shape[0]
 
@@ -76,7 +76,7 @@ class FeatureExtractor:
 
         self.reduced_indices = np.random.choice(det_pixels, reduced_dimension, replace=False)
 
-    def restore_dataset_dim(self):
+    def remove_reduced_indices(self):
         self.reduced_indices = np.array([])
 
     def ipca(self, q, block_size, num_images, init_with_pca=True):
