@@ -137,6 +137,8 @@ class FeatureExtractor:
                     mu = np.mean(imgs, axis=1)
                     mu = np.reshape(mu, (d, 1))
 
+                    print(np.diag(S))
+
             else:
                 if idx == 0:
                     S = np.diag(np.ones(q))
