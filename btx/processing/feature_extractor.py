@@ -196,9 +196,6 @@ class FeatureExtractor:
         for key in list(self.ipca_intervals.keys()):
             interval_mean = np.mean(self.ipca_intervals[key])
             print(f'Mean compute time of step \'{key}\': {interval_mean:.4g}s')
-    
-    def pca(self):
-
 
 
 def compression_loss(X, U):
@@ -226,5 +223,5 @@ def compression_loss(X, U):
     return Ln 
 
 def statistical_accuracy(U, U_hat):
-
+    return
 
