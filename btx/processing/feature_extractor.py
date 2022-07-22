@@ -68,13 +68,12 @@ class FeatureExtractor:
         det_pixels = det_y_dim * det_x_dim
 
         if det_pixels < new_dim:
-            print('Reduced dimension must be <= detector dimension.')
+            print('Detector dimension must be less than reduced dimension.')
             return
 
-        reduced_dimension = new_dim if new_dim > 1 else np.floor(new_dim * det_pixels)
-        reduced_dimension = int(reduced_dimension)
+        reduced_dimension = new_dim if new_dim > 1 else int(np.floor(new_dim * det_pixels))
 
-        self.reduced_indices = np.random.choice(det_pixels, reduced_dimension)
+        self.reduced_indices = np.random.choice(det_pixels, reduced_dimension, replace=False)
 
     def restore_dataset_dim(self):
         self.reduced_indices = np.array([])
