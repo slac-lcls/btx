@@ -192,8 +192,8 @@ class FeatureExtractor:
                     new_obs = np.array([])
 
                     print(np.sum(np.diag(S)))
-                    print(np.sum(s_n))
-                    print(np.sum(np.diag(S)) / np.sum(s_n))
+                    print(np.sum(total_variance))
+                    print(np.sum(np.diag(S)) / np.sum(total_variance))
                     
             self.psi.counter += 1
             
