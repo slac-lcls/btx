@@ -158,7 +158,7 @@ class FeatureExtractor:
                     mu_nm = (1 / (n + m)) * (n * mu + m * mu_m)
                 
                 s_m = np.reshape(np.var(new_obs, ddof=1, axis=1), (d, 1))
-                total_variance = ((n - 1)*total_variance + (m - 1)*s_m ) / (n + m - 1) + (n*m*(mu - mu_m)**2) / ((n+m)*(n+m-1))
+                self.total_variance = ((n - 1)*total_variance + (m - 1)*s_m ) / (n + m - 1) + (n*m*(mu - mu_m)**2) / ((n+m)*(n+m-1))
                 
                 with TaskTimer(self.ipca_intervals['concat']):
                     X_centered = new_obs - np.tile(mu_m, (1, m))
@@ -177,17 +177,15 @@ class FeatureExtractor:
                 
                 with TaskTimer(self.ipca_intervals['update_basis']):
                     U_prime = np.concatenate((U, X_pm), axis=1) @ U_tilde
-                    U = U_prime[:, :q]
-                    S = np.diag(S_tilde[:q])
-                    mu = mu_nm
+                    self.U = U_prime[:, :q]
+                    self.S = np.diag(S_tilde[:q])
+                    self.mu = mu_nm
                     
                 new_obs = np.array([])
 
                 print(np.sum(np.diag(S**2) / (n + m -1)))
                 print(np.sum(total_variance))
                 print(np.sum(np.diag(S**2) / (n + m - 1)) / np.sum(total_variance))
-        
-        self.U, self.S, self.mu = U, S, mu
 
     def report_interval_data(self):
 
