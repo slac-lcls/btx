@@ -137,9 +137,11 @@ class FeatureExtractor:
             # initialize model on first q observations, if init_with_pca is true
             if init_with_pca and (idx + 1) <= q:
                 if (idx + 1) == q:
-                    self.U, s, _ = np.linalg.svd(new_obs, full_matrices=False)
-                    self.S = np.diag(s)
                     self.mu = np.reshape(np.mean(new_obs, axis=1), (d, 1))
+                    centered_obs = new_obs - np.tile(self.mu, q)
+                    
+                    self.U, s, _ = np.linalg.svd(centered_obs, full_matrices=False)
+                    self.S = np.diag(s)
                     self.total_variance = np.reshape(np.var(new_obs, ddof=1, axis=1), (d, 1))
                     
                     new_obs = np.array([[]])
