@@ -128,6 +128,9 @@ class FeatureExtractor:
                 evt = runner.event(times[idx])
                 img_yx = det.image(evt=evt)
 
+            if self.reduced_indices.size:
+                img_yx = img_yx[self.reduced_indices]
+            
             img = np.reshape(img_yx, (d, 1))
             new_obs = np.hstack((new_obs, img)) if new_obs.size else img
 
