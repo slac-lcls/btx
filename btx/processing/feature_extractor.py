@@ -71,7 +71,7 @@ class FeatureExtractor:
         det_pixels = det_y_dim * det_x_dim
 
         if det_pixels < new_dim:
-            print('Reduced dimension must be less than detector dimension.')
+            print('Detector dimension must be greater than or equal to reduced dimension.')
             return
 
         reduced_dimension = new_dim if new_dim > 1 else int(np.floor(new_dim * det_pixels))
@@ -114,7 +114,6 @@ class FeatureExtractor:
         det = self.psi.det
         
         for idx in np.arange(start_idx, end_idx):
-            n = idx + 1
 
             with TaskTimer(self.ipca_intervals['load_event']): 
                 evt = runner.event(times[idx])
@@ -132,7 +131,7 @@ class FeatureExtractor:
             if init_with_pca and n <= q:
                 imgs = np.hstack((imgs, img)) if imgs.size else img
                 
-                if n == q:
+                if idx + 1 == q:
                     U, s, _ = np.linalg.svd(imgs, full_matrices=False)
                     S = np.diag(s)
                     
@@ -145,18 +144,29 @@ class FeatureExtractor:
                     mu = np.zeros((d, 1))
                     U = np.zeros((d, q))
                     np.fill_diagonal(U, 1)
-                
+
+                    s_n = np.zeros((d, 1))
+
                 new_obs = np.hstack((new_obs, img)) if new_obs.size else img
                     
                 # update model with block every m samples, or img limit
                 
-                if n % block_size == 0 or idx == end_idx :
+                if (idx + 1) % block_size == 0 or idx == end_idx :
 
                     with TaskTimer(self.ipca_intervals['update_mean']):
-                        m = n % block_size if idx == end_idx else block_size
+
+                        # size of current block
+                        m = (idx + 1) % block_size if idx == end_idx else block_size
+
+                        # number of samples factored into model thus far
+                        n = (idx + 1) - m
+                        
                         mu_m = np.mean(new_obs, axis=1)
                         mu_m = np.reshape(mu_m, (d, 1))
                         mu_nm = (1 / (n + m)) * (n * mu + m * mu_m)
+                    
+                    s_m = np.reshape(np.var(imgs, ddof=1, axis=1), (d, 1))
+                    s_n = ((n - 1)*s_n + (m - 1)*s_m ) / (n + m - 1) + (n*m*(mu_n - mu_m)**2) / ((n+m)*(n+m-1))
                     
                     with TaskTimer(self.ipca_intervals['concat']):
                         X_centered = new_obs - np.tile(mu_m, (1, m))
@@ -180,6 +190,10 @@ class FeatureExtractor:
                         mu = mu_nm
                         
                     new_obs = np.array([])
+
+                    print(np.sum(np.diag(S)))
+                    print(np.sum(s_n))
+                    print(np.sum(np.diag(S)) / np.sum(s_n))
                     
             self.psi.counter += 1
             
@@ -187,7 +201,6 @@ class FeatureExtractor:
                 break
         
         self.U, self.S, self.mu = U, S, mu
-
 
     def report_interval_data(self):
 
@@ -198,7 +211,6 @@ class FeatureExtractor:
         for key in list(self.ipca_intervals.keys()):
             interval_mean = np.mean(self.ipca_intervals[key])
             print(f'Mean compute time of step \'{key}\': {interval_mean:.4g}s')
-
 
 def compression_loss(X, U):
     """
