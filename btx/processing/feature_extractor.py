@@ -105,22 +105,28 @@ class FeatureExtractor:
 
         if num_images == -1:
             end_idx = self.psi.max_events
-
+        
         imgs = np.array([[]])
         new_obs = np.array([[]])
+
+        det_x_dim = fe.psi.det.image_xaxis(fe.psi.run).shape[0]
+        det_y_dim = fe.psi.det.image_yaxis(fe.psi.run).shape[0]
+        d = det_x_dim * det_y_dim
+
+        self.S = np.eye(q)
+        self.U = np.zeros((d, q))
+        self.mu = img
+        self.total_variance = np.zeros((d, 1))
         
         runner = self.psi.runner
         times = self.psi.times
         det = self.psi.det
-        
+
         for idx in np.arange(start_idx, end_idx):
 
             with TaskTimer(self.ipca_intervals['load_event']): 
                 evt = runner.event(times[idx])
                 img_yx = det.image(evt=evt)
-
-            y, x = img_yx.shape
-            d = y * x
 
             img = np.reshape(img_yx, (d, 1))
 
@@ -128,77 +134,58 @@ class FeatureExtractor:
                 img = img[self.reduced_indices]
                 d, _ = img.shape
             
+            new_obs = np.hstack((new_obs, img)) if new_obs.size else img
+
             if init_with_pca and (idx + 1) <= q:
-                imgs = np.hstack((imgs, img)) if imgs.size else img
+                if (idx + 1) == q:
+                    self.U, s, _ = np.linalg.svd(new_obs, full_matrices=False)
+                    self.S = np.diag(s)
+                    self.mu = np.reshape(np.mean(new_obs, axis=1), (d, 1))
+                continue
                 
-                if idx + 1 == q:
-                    U, s, _ = np.linalg.svd(imgs, full_matrices=False)
-                    S = np.diag(s)
-                    
-                    mu = np.mean(imgs, axis=1)
-                    mu = np.reshape(mu, (d, 1))
+            # update model with block every m samples, or img limit
+            if (idx + 1) % block_size == 0 or idx == end_idx :
 
-            else:
-                if idx == 0:
-                    S = np.diag(np.ones(q))
-                    mu = np.zeros((d, 1))
-                    U = np.zeros((d, q))
-                    np.fill_diagonal(U, 1)
+                with TaskTimer(self.ipca_intervals['update_mean']):
+                    # size of current block
+                    m = (idx + 1) % block_size if idx == end_idx else block_size
 
-                    total_variance = np.zeros((d, 1))
+                    # number of samples factored into model thus far
+                    n = (idx + 1) - m
 
-                new_obs = np.hstack((new_obs, img)) if new_obs.size else img
-                    
-                # update model with block every m samples, or img limit
+                    mu_m = np.mean(new_obs, axis=1)
+                    mu_m = np.reshape(mu_m, (d, 1))
+                    mu_nm = (1 / (n + m)) * (n * mu + m * mu_m)
                 
-                if (idx + 1) % block_size == 0 or idx == end_idx :
+                s_m = np.reshape(np.var(new_obs, ddof=1, axis=1), (d, 1))
+                total_variance = ((n - 1)*total_variance + (m - 1)*s_m ) / (n + m - 1) + (n*m*(mu - mu_m)**2) / ((n+m)*(n+m-1))
+                
+                with TaskTimer(self.ipca_intervals['concat']):
+                    X_centered = new_obs - np.tile(mu_m, (1, m))
+                    X_m = np.hstack((X_centered, np.sqrt(n * m / (n + m)) * mu_m - mu))
+                
+                with TaskTimer(self.ipca_intervals['ortho']):
+                    UX_m = U.T @ X_m
+                    dX_m = X_m - U @ UX_m
+                    X_pm, _ = np.linalg.qr(dX_m, mode='reduced')
+                
+                with TaskTimer(self.ipca_intervals['build_r']):
+                    R = np.block([[S, UX_m], [np.zeros((m + 1,q)), X_pm.T @ dX_m]])
+                
+                with TaskTimer(self.ipca_intervals['svd']):
+                    U_tilde, S_tilde, _ = np.linalg.svd(R)
+                
+                with TaskTimer(self.ipca_intervals['update_basis']):
+                    U_prime = np.concatenate((U, X_pm), axis=1) @ U_tilde
+                    U = U_prime[:, :q]
+                    S = np.diag(S_tilde[:q])
+                    mu = mu_nm
+                    
+                new_obs = np.array([])
 
-                    with TaskTimer(self.ipca_intervals['update_mean']):
-
-                        # size of current block
-                        m = (idx + 1) % block_size if idx == end_idx else block_size
-
-                        # number of samples factored into model thus far
-                        n = (idx + 1) - m
-
-                        mu_m = np.mean(new_obs, axis=1)
-                        mu_m = np.reshape(mu_m, (d, 1))
-                        mu_nm = (1 / (n + m)) * (n * mu + m * mu_m)
-                    
-                    s_m = np.reshape(np.var(new_obs, ddof=1, axis=1), (d, 1))
-                    total_variance = ((n - 1)*total_variance + (m - 1)*s_m ) / (n + m - 1) + (n*m*(mu - mu_m)**2) / ((n+m)*(n+m-1))
-                    
-                    with TaskTimer(self.ipca_intervals['concat']):
-                        X_centered = new_obs - np.tile(mu_m, (1, m))
-                        X_m = np.hstack((X_centered, np.sqrt(n * m / (n + m)) * mu_m - mu))
-                    
-                    with TaskTimer(self.ipca_intervals['ortho']):
-                        UX_m = U.T @ X_m
-                        dX_m = X_m - U @ UX_m
-                        X_pm, _ = np.linalg.qr(dX_m, mode='reduced')
-                    
-                    with TaskTimer(self.ipca_intervals['build_r']):
-                        R = np.block([[S, UX_m], [np.zeros((m + 1,q)), X_pm.T @ dX_m]])
-                    
-                    with TaskTimer(self.ipca_intervals['svd']):
-                        U_tilde, S_tilde, _ = np.linalg.svd(R)
-                    
-                    with TaskTimer(self.ipca_intervals['update_basis']):
-                        U_prime = np.concatenate((U, X_pm), axis=1) @ U_tilde
-                        U = U_prime[:, :q]
-                        S = np.diag(S_tilde[:q])
-                        mu = mu_nm
-                        
-                    new_obs = np.array([])
-
-                    print(np.sum(np.diag(S**2) / (n + m -1)))
-                    print(np.sum(total_variance))
-                    print(np.sum(np.diag(S**2) / (n + m - 1)) / np.sum(total_variance))
-                    
-            self.psi.counter += 1
-            
-            if self.psi.counter == self.psi.max_events:
-                break
+                print(np.sum(np.diag(S**2) / (n + m -1)))
+                print(np.sum(total_variance))
+                print(np.sum(np.diag(S**2) / (n + m - 1)) / np.sum(total_variance))
         
         self.U, self.S, self.mu = U, S, mu
 
