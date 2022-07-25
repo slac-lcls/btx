@@ -168,7 +168,7 @@ class FeatureExtractor:
                     X_pm, _ = np.linalg.qr(dX_m, mode='reduced')
                 
                 with TaskTimer(self.ipca_intervals['build_r']):
-                    R = np.block([[S, UX_m], [np.zeros((m + 1, q)), X_pm.T @ dX_m]])
+                    R = np.block([[self.S, UX_m], [np.zeros((m + 1, q)), X_pm.T @ dX_m]])
                 
                 with TaskTimer(self.ipca_intervals['svd']):
                     U_tilde, S_tilde, _ = np.linalg.svd(R)
