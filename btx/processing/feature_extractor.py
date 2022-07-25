@@ -174,16 +174,16 @@ class FeatureExtractor:
                     U_tilde, S_tilde, _ = np.linalg.svd(R)
                 
                 with TaskTimer(self.ipca_intervals['update_basis']):
-                    U_prime = np.concatenate((U, X_pm), axis=1) @ U_tilde
+                    U_prime = np.concatenate((self.U, X_pm), axis=1) @ U_tilde
                     self.U = U_prime[:, :q]
                     self.S = np.diag(S_tilde[:q])
                     self.mu = mu_nm
                     
                 new_obs = np.array([[]])
 
-                print(np.sum(np.diag(S**2) / (n + m - 1)))
+                print(np.sum(np.diag(self.S**2) / (n + m - 1)))
                 print(np.sum(total_variance))
-                print(np.sum(np.diag(S**2) / (n + m - 1)) / np.sum(total_variance))
+                print(np.sum(np.diag(self.S**2) / (n + m - 1)) / np.sum(total_variance))
 
     def report_interval_data(self):
 
