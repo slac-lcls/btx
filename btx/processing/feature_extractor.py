@@ -92,6 +92,10 @@ class FeatureExtractor:
             number of events consider, psi.max_events if -1
         """
 
+        runner = self.psi.runner
+        times = self.psi.times
+        det = self.psi.det
+
         self.ipca_intervals['load_event'] = []
         self.ipca_intervals['update_mean'] = []
         self.ipca_intervals['concat'] = []
@@ -109,18 +113,14 @@ class FeatureExtractor:
         imgs = np.array([[]])
         new_obs = np.array([[]])
 
-        det_x_dim = fe.psi.det.image_xaxis(fe.psi.run).shape[0]
-        det_y_dim = fe.psi.det.image_yaxis(fe.psi.run).shape[0]
-        d = det_x_dim * det_y_dim
+        det_x_dim = det.image_xaxis(self.psi.run).shape[0]
+        det_y_dim = det.image_yaxis(self.psi.run).shape[0]
+        d = det_x_dim * det_y_dim if not self.reduced_indices.size else self.reduced_indices.size
 
         self.S = np.eye(q)
         self.U = np.zeros((d, q))
         self.mu = img
         self.total_variance = np.zeros((d, 1))
-        
-        runner = self.psi.runner
-        times = self.psi.times
-        det = self.psi.det
 
         for idx in np.arange(start_idx, end_idx):
 
@@ -129,13 +129,9 @@ class FeatureExtractor:
                 img_yx = det.image(evt=evt)
 
             img = np.reshape(img_yx, (d, 1))
-
-            if self.reduced_indices.size:
-                img = img[self.reduced_indices]
-                d, _ = img.shape
-            
             new_obs = np.hstack((new_obs, img)) if new_obs.size else img
 
+            # initialize model on first q observations, if init_with_pca is true
             if init_with_pca and (idx + 1) <= q:
                 if (idx + 1) == q:
                     self.U, s, _ = np.linalg.svd(new_obs, full_matrices=False)
