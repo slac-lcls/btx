@@ -63,13 +63,15 @@ class FeatureExtractor:
         self.size = self.comm.Get_size()
 
     def generate_reduced_indices(self, new_dim):
+        """
+        """
         det_x_dim = self.psi.det.image_xaxis(self.psi.run).shape[0]
         det_y_dim = self.psi.det.image_yaxis(self.psi.run).shape[0]
 
         det_pixels = det_y_dim * det_x_dim
 
         if det_pixels < new_dim:
-            print('Detector dimension must be less than reduced dimension.')
+            print('Reduced dimension must be less than detector dimension.')
             return
 
         reduced_dimension = new_dim if new_dim > 1 else int(np.floor(new_dim * det_pixels))
