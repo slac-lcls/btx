@@ -160,12 +160,12 @@ class FeatureExtractor:
 
                         # number of samples factored into model thus far
                         n = (idx + 1) - m
-                        
+
                         mu_m = np.mean(new_obs, axis=1)
                         mu_m = np.reshape(mu_m, (d, 1))
                         mu_nm = (1 / (n + m)) * (n * mu + m * mu_m)
                     
-                    s_m = np.reshape(np.var(imgs, ddof=1, axis=1), (d, 1))
+                    s_m = np.reshape(np.var(new_obs, ddof=1, axis=1), (d, 1))
                     s_n = ((n - 1)*s_n + (m - 1)*s_m ) / (n + m - 1) + (n*m*(mu_n - mu_m)**2) / ((n+m)*(n+m-1))
                     
                     with TaskTimer(self.ipca_intervals['concat']):
