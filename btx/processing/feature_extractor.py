@@ -119,7 +119,7 @@ class FeatureExtractor:
 
         self.S = np.eye(q)
         self.U = np.zeros((d, q))
-        self.mu = img
+        self.mu = np.zeros((d, 1))
         self.total_variance = np.zeros((d, 1))
 
         for idx in np.arange(start_idx, end_idx):
