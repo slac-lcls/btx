@@ -139,7 +139,7 @@ class FeatureExtractor:
                     self.mu = np.reshape(np.mean(new_obs, axis=1), (d, 1))
                     self.total_variance = np.reshape(np.var(new_obs, ddof=1, axis=1), (d, 1))
                     
-                    new_obs = np.array([[]])
+                    new_obs = np.array([])
                 continue
                 
             # update model with block every m samples, or img limit
@@ -152,8 +152,7 @@ class FeatureExtractor:
                     # number of samples factored into model thus far
                     n = (idx + 1) - m
 
-                    mu_m = np.mean(new_obs, axis=1)
-                    mu_m = np.reshape(mu_m, (d, 1))
+                    mu_m = np.reshape(np.mean(new_obs, axis=1), (d, 1))
                     mu_nm = (1 / (n + m)) * (n * self.mu + m * mu_m)
                 
                 s_m = np.reshape(np.var(new_obs, ddof=1, axis=1), (d, 1))
