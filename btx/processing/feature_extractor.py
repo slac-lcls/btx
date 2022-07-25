@@ -145,7 +145,7 @@ class FeatureExtractor:
                     U = np.zeros((d, q))
                     np.fill_diagonal(U, 1)
 
-                    s_n = np.zeros((d, 1))
+                    total_variance = np.zeros((d, 1))
 
                 new_obs = np.hstack((new_obs, img)) if new_obs.size else img
                     
@@ -166,7 +166,7 @@ class FeatureExtractor:
                         mu_nm = (1 / (n + m)) * (n * mu + m * mu_m)
                     
                     s_m = np.reshape(np.var(new_obs, ddof=1, axis=1), (d, 1))
-                    s_n = ((n - 1)*s_n + (m - 1)*s_m ) / (n + m - 1) + (n*m*(mu_n - mu_m)**2) / ((n+m)*(n+m-1))
+                    total_variance = ((n - 1)*total_variance + (m - 1)*s_m ) / (n + m - 1) + (n*m*(mu - mu_m)**2) / ((n+m)*(n+m-1))
                     
                     with TaskTimer(self.ipca_intervals['concat']):
                         X_centered = new_obs - np.tile(mu_m, (1, m))
