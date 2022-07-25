@@ -137,6 +137,8 @@ class FeatureExtractor:
                     self.U, s, _ = np.linalg.svd(new_obs, full_matrices=False)
                     self.S = np.diag(s)
                     self.mu = np.reshape(np.mean(new_obs, axis=1), (d, 1))
+                    
+                    new_obs = np.array([[]])
                 continue
                 
             # update model with block every m samples, or img limit
@@ -154,7 +156,7 @@ class FeatureExtractor:
                     mu_nm = (1 / (n + m)) * (n * self.mu + m * mu_m)
                 
                 s_m = np.reshape(np.var(new_obs, ddof=1, axis=1), (d, 1))
-                self.total_variance = ((n - 1) * self.total_variance + (m - 1)*s_m ) / (n + m - 1) + (n*m*(self.mu - mu_m)**2) / ((n+m)*(n+m-1))
+                self.total_variance = ((n - 1) * self.total_variance + (m - 1) * s_m ) / (n + m - 1) + (n*m*(self.mu - mu_m)**2) / ((n + m) * (n + m - 1))
                 
                 with TaskTimer(self.ipca_intervals['concat']):
                     X_centered = new_obs - np.tile(mu_m, (1, m))
@@ -177,7 +179,7 @@ class FeatureExtractor:
                     self.S = np.diag(S_tilde[:q])
                     self.mu = mu_nm
                     
-                new_obs = np.array([])
+                new_obs = np.array([[]])
 
                 print(np.sum(np.diag(S**2) / (n + m - 1)))
                 print(np.sum(total_variance))
