@@ -137,6 +137,7 @@ class FeatureExtractor:
                     self.U, s, _ = np.linalg.svd(new_obs, full_matrices=False)
                     self.S = np.diag(s)
                     self.mu = np.reshape(np.mean(new_obs, axis=1), (d, 1))
+                    self.total_variance = np.reshape(np.var(new_obs, ddof=1, axis=1), (d, 1))
                     
                     new_obs = np.array([[]])
                 continue
