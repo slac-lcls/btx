@@ -128,7 +128,7 @@ class FeatureExtractor:
                 img = img[self.reduced_indices]
                 d, _ = img.shape
             
-            if init_with_pca and n <= q:
+            if init_with_pca and (idx + 1) <= q:
                 imgs = np.hstack((imgs, img)) if imgs.size else img
                 
                 if idx + 1 == q:
