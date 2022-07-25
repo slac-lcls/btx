@@ -139,7 +139,7 @@ class FeatureExtractor:
                     self.mu = np.reshape(np.mean(new_obs, axis=1), (d, 1))
                     self.total_variance = np.reshape(np.var(new_obs, ddof=1, axis=1), (d, 1))
                     
-                    new_obs = np.array([])
+                    new_obs = np.array([[]])
                 continue
                 
             # update model with block every m samples, or img limit
@@ -175,8 +175,8 @@ class FeatureExtractor:
                 
                 with TaskTimer(self.ipca_intervals['update_basis']):
                     U_prime = np.concatenate((self.U, X_pm), axis=1) @ U_tilde
-                    self.U = U_prime[:, :q]
-                    self.S = np.diag(S_tilde[:q])
+                    self.U = U_prime[:, 1:q+1]
+                    self.S = np.diag(S_tilde[1:q+1])
                     self.mu = mu_nm
                     
                 new_obs = np.array([[]])
