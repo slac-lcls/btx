@@ -165,7 +165,7 @@ class FeatureExtractor:
                 with TaskTimer(self.ipca_intervals['concat']):
                     X_centered = new_obs - np.tile(mu_m, m)
                     print(X_centered.shape)
-                    print(np.mean(X_centered, axis=1).shape)
+                    print(np.mean(np.mean(X_centered, axis=1)))
                     print(np.mean(X_centered, axis=1) - np.reshape(mu_m, (1,d)))
                     X_m = np.hstack((X_centered, np.sqrt(n * m / (n + m)) * mu_m - self.mu))
                 
@@ -175,7 +175,7 @@ class FeatureExtractor:
                     X_pm, _ = np.linalg.qr(dX_m, mode='reduced')
                 
                 with TaskTimer(self.ipca_intervals['build_r']):
-                    R = np.block([[self.S, UX_m], [np.zeros((m + 1, q)), X_pm.T @ dX_m]])
+                    R = np.block([[self.S, UX_m], [np.zeros((m + 1, q)), X_pm.T @ X_m]])
                 
                 with TaskTimer(self.ipca_intervals['svd']):
                     U_tilde, S_tilde, _ = np.linalg.svd(R)
