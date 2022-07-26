@@ -158,13 +158,15 @@ class FeatureExtractor:
                     n = (idx + 1) - m
 
                     mu_m = np.reshape(np.mean(new_obs, axis=1), (d, 1))
+
+                s_m = np.reshape(np.var(new_obs, ddof=1, axis=1), (d, 1))
+                self.total_variance = update_sample_variance(self.total_variance, s_m, self.mu, mu_m, n, m)
                 
                 with TaskTimer(self.ipca_intervals['concat']):
                     X_centered = new_obs - np.tile(mu_m, m)
+                    print(np.mean(X_centered, axis=1))
+                    print(np.mean(X_centered, axis=1) - mu_m)
                     X_m = np.hstack((X_centered, np.sqrt(n * m / (n + m)) * mu_m - self.mu))
-                
-                s_m = np.reshape(np.var(X_centered, ddof=1, axis=1), (d, 1))
-                self.total_variance = update_sample_variance(self.total_variance, s_m, self.mu, mu_m, n, m)
                 
                 with TaskTimer(self.ipca_intervals['ortho']):
                     UX_m = self.U.T @ X_m
