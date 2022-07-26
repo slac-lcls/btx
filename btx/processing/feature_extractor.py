@@ -183,8 +183,8 @@ class FeatureExtractor:
                 
                 with TaskTimer(self.ipca_intervals['update_basis']):
                     U_prime = np.hstack((self.U, X_pm)) @ U_tilde
-                    self.U = U_prime[:, :q]
-                    self.S = np.diag(S_tilde[:q])
+                    self.U = U_prime[:, 1:q+1]
+                    self.S = np.diag(S_tilde[1:q+1])
                     self.mu = mu_nm
                     
                 new_obs = np.array([[]])
