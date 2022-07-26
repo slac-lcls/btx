@@ -82,7 +82,7 @@ class FeatureExtractor:
     def remove_reduced_indices(self):
         self.reduced_indices = np.array([])
 
-    def ipca(self, q, block_size, num_images, init_with_pca=True):
+    def ipca(self, q, block_size, num_images, f=1, init_with_pca=True):
         """
         Run iPCA with run subset subject to initialization parameters.
 
@@ -167,7 +167,7 @@ class FeatureExtractor:
                     mu_m = np.reshape(np.mean(new_obs, axis=1), (d, 1))
 
                 s_m = np.reshape(np.var(new_obs, ddof=1, axis=1), (d, 1))
-                self.total_variance = update_sample_variance(self.total_variance, s_m, self.mu, mu_m, n, m)
+                self.total_variance = update_sample_variance(self.total_variance, s_m, self.mu, mu_m, f*n, m)
                 
                 with TaskTimer(self.ipca_intervals['concat']):
                     X_centered = new_obs - np.tile(mu_m, m)
@@ -179,7 +179,7 @@ class FeatureExtractor:
                     X_pm, _ = np.linalg.qr(dX_m, mode='reduced')
                 
                 with TaskTimer(self.ipca_intervals['build_r']):
-                    R = np.block([[self.S, UX_m], [np.zeros((m + 1, q)), X_pm.T @ dX_m]])
+                    R = np.block([[f * self.S, UX_m], [np.zeros((m + 1, q)), X_pm.T @ dX_m]])
                 
                 with TaskTimer(self.ipca_intervals['svd']):
                     U_tilde, S_tilde, _ = np.linalg.svd(R)
@@ -188,7 +188,7 @@ class FeatureExtractor:
                     U_prime = np.hstack((self.U, X_pm)) @ U_tilde
                     self.U = U_prime[:, :q]
                     self.S = np.diag(S_tilde[:q])
-                    self.mu = update_sample_mean(self.mu, mu_m, n, m)
+                    self.mu = update_sample_mean(self.mu, mu_m, f*n, m)
                     
                 new_obs = np.array([[]])
 
