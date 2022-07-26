@@ -157,6 +157,9 @@ class FeatureExtractor:
                     # number of samples factored into model thus far
                     n = (idx + 1) - m
 
+                    print(m)
+                    print(n)
+
                     mu_m = np.reshape(np.mean(new_obs, axis=1), (d, 1))
                     mu_nm = (1 / (n + m)) * (n * self.mu + m * mu_m)
                 
@@ -164,7 +167,7 @@ class FeatureExtractor:
                 self.total_variance = ((n - 1) * self.total_variance + (m - 1) * s_m ) / (n + m - 1) + (n*m*(self.mu - mu_m)**2) / ((n + m) * (n + m - 1))
                 
                 with TaskTimer(self.ipca_intervals['concat']):
-                    X_centered = new_obs - np.tile(mu_m, (1, m))
+                    X_centered = new_obs - np.tile(mu_m, m)
                     X_m = np.hstack((X_centered, np.sqrt(n * m / (n + m)) * mu_m - self.mu))
                 
                 with TaskTimer(self.ipca_intervals['ortho']):
@@ -179,7 +182,7 @@ class FeatureExtractor:
                     U_tilde, S_tilde, _ = np.linalg.svd(R)
                 
                 with TaskTimer(self.ipca_intervals['update_basis']):
-                    U_prime = np.concatenate((self.U, X_pm), axis=1) @ U_tilde
+                    U_prime = np.hstack((self.U, X_pm)) @ U_tilde
                     self.U = U_prime[:, :q]
                     self.S = np.diag(S_tilde[:q])
                     self.mu = mu_nm
