@@ -158,14 +158,13 @@ class FeatureExtractor:
                     n = (idx + 1) - m
 
                     mu_m = np.reshape(np.mean(new_obs, axis=1), (d, 1))
-                    mu_nm = (1 / (n + m)) * (n * self.mu + m * mu_m)
-                
-                s_m = np.reshape(np.var(new_obs, ddof=1, axis=1), (d, 1))
-                self.total_variance = ((n - 1) * self.total_variance + (m - 1) * s_m ) / (n + m - 1) + (n*m*(self.mu - mu_m)**2) / ((n + m) * (n + m - 1))
                 
                 with TaskTimer(self.ipca_intervals['concat']):
                     X_centered = new_obs - np.tile(mu_m, m)
                     X_m = np.hstack((X_centered, np.sqrt(n * m / (n + m)) * mu_m - self.mu))
+                
+                s_m = np.reshape(np.var(X_centered, ddof=1, axis=1), (d, 1))
+                self.total_variance = update_sample_variance(self.total_variance, s_m, self.mu, mu_m, n, m)
                 
                 with TaskTimer(self.ipca_intervals['ortho']):
                     UX_m = self.U.T @ X_m
@@ -182,7 +181,7 @@ class FeatureExtractor:
                     U_prime = np.hstack((self.U, X_pm)) @ U_tilde
                     self.U = U_prime[:, :q]
                     self.S = np.diag(S_tilde[:q])
-                    self.mu = mu_nm
+                    self.mu = update_sample_mean(self.mu, mu_m, n, m)
                     
                 new_obs = np.array([[]])
 
@@ -199,6 +198,18 @@ class FeatureExtractor:
         for key in list(self.ipca_intervals.keys()):
             interval_mean = np.mean(self.ipca_intervals[key])
             print(f'Mean compute time of step \'{key}\': {interval_mean:.4g}s')
+
+def update_sample_mean(mu_n, mu_m, n, m):
+    if n == 0:
+        return mu_m
+
+    return (1 / (n + m)) * (n * mu_n + m * mu_m)
+
+def update_sample_variance(s_n, s_m, mu_n, mu_n, n, m):
+    if n == 0:
+        return s_m
+    
+    return ((n - 1) * s_n + (m - 1) * s_m ) / (n + m - 1) + (n*m*(mu_n - mu_m)**2) / ((n + m) * (n + m - 1))
 
 def compression_loss(X, U):
     """
