@@ -65,18 +65,19 @@ class FeatureExtractor:
     def generate_reduced_indices(self, new_dim):
         """
         """
-        det_x_dim = self.psi.det.image_xaxis(self.psi.run).shape[0]
-        det_y_dim = self.psi.det.image_yaxis(self.psi.run).shape[0]
 
-        det_pixels = det_y_dim * det_x_dim
+        z, x, y = self.psi.det.shape()
+        det_pixels = z * x * y
+        # det_x_dim = self.psi.det.image_xaxis(self.psi.run).shape[0]
+        # det_y_dim = self.psi.det.image_yaxis(self.psi.run).shape[0]
+
+        # det_pixels = det_y_dim * det_x_dim
 
         if det_pixels < new_dim:
             print('Detector dimension must be greater than or equal to reduced dimension.')
             return
 
-        reduced_dimension = new_dim if new_dim > 1 else int(np.floor(new_dim * det_pixels))
-
-        self.reduced_indices = np.random.choice(det_pixels, reduced_dimension, replace=False)
+        self.reduced_indices = np.random.choice(det_pixels, new_dim, replace=False)
 
     def remove_reduced_indices(self):
         self.reduced_indices = np.array([])
@@ -113,9 +114,13 @@ class FeatureExtractor:
         imgs = np.array([[]])
         new_obs = np.array([[]])
 
-        det_x_dim = det.image_xaxis(self.psi.run).shape[0]
-        det_y_dim = det.image_yaxis(self.psi.run).shape[0]
-        d = det_x_dim * det_y_dim if not self.reduced_indices.size else self.reduced_indices.size
+        z, x, y = det.shape()
+
+        # det_x_dim = det.image_xaxis(self.psi.run).shape[0]
+        # det_y_dim = det.image_yaxis(self.psi.run).shape[0]
+        # d = det_x_dim * det_y_dim if not self.reduced_indices.size else self.reduced_indices.size
+
+        d = z * x * y if not self.reduced_indices.size else self.reduced_indices.size
 
         self.S = np.eye(q)
         self.U = np.zeros((d, q))
@@ -126,9 +131,11 @@ class FeatureExtractor:
 
             with TaskTimer(self.ipca_intervals['load_event']): 
                 evt = runner.event(times[idx])
-                img_yx = det.image(evt=evt)
+                img_panels = det.calib(evt=evt)
 
-            img = np.reshape(img_yx, (det_x_dim * det_y_dim, 1))
+            img_panels = np.hstack(img_panels)
+            img = np.reshape(img_yx, (z*x*y, 1))
+
             if self.reduced_indices.size:
                 img = img[self.reduced_indices]
             
