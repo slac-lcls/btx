@@ -205,7 +205,7 @@ def update_sample_mean(mu_n, mu_m, n, m):
 
     return (1 / (n + m)) * (n * mu_n + m * mu_m)
 
-def update_sample_variance(s_n, s_m, mu_n, mu_n, n, m):
+def update_sample_variance(s_n, s_m, mu_n, mu_m, n, m):
     if n == 0:
         return s_m
     
