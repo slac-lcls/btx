@@ -166,7 +166,7 @@ class FeatureExtractor:
                     X_centered = new_obs - np.tile(mu_m, m)
                     print(X_centered.shape)
                     print(np.mean(X_centered, axis=1).shape)
-                    print(np.mean(X_centered, axis=1) - np.reshape(mu_m, (d,1)))
+                    print(np.mean(X_centered, axis=1) - np.reshape(mu_m, (1,d)))
                     X_m = np.hstack((X_centered, np.sqrt(n * m / (n + m)) * mu_m - self.mu))
                 
                 with TaskTimer(self.ipca_intervals['ortho']):
