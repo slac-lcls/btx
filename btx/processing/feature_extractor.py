@@ -157,9 +157,6 @@ class FeatureExtractor:
                     # number of samples factored into model thus far
                     n = (idx + 1) - m
 
-                    print(m)
-                    print(n)
-
                     mu_m = np.reshape(np.mean(new_obs, axis=1), (d, 1))
                     mu_nm = (1 / (n + m)) * (n * self.mu + m * mu_m)
                 
@@ -183,8 +180,8 @@ class FeatureExtractor:
                 
                 with TaskTimer(self.ipca_intervals['update_basis']):
                     U_prime = np.hstack((self.U, X_pm)) @ U_tilde
-                    self.U = U_prime[:, 1:q+1]
-                    self.S = np.diag(S_tilde[1:q+1])
+                    self.U = U_prime[:, :q]
+                    self.S = np.diag(S_tilde[:q])
                     self.mu = mu_nm
                     
                 new_obs = np.array([[]])
