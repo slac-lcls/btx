@@ -134,7 +134,7 @@ class FeatureExtractor:
                 img_panels = det.calib(evt=evt)
 
             img_panels = np.hstack(img_panels)
-            img = np.reshape(img_yx, (z*x*y, 1))
+            img = np.reshape(img_panels, (z*x*y, 1))
 
             if self.reduced_indices.size:
                 img = img[self.reduced_indices]
