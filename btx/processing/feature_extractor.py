@@ -88,8 +88,8 @@ class FeatureExtractor:
         
         split_indices = np.zeros(self.size)
         for r in range(self.size):
-            num_per_rank = d // total_ranks
-            if r < (d % total_ranks):
+            num_per_rank = d // self.size
+            if r < (d % self.size):
                 num_per_rank += 1
             split_indices[r] = num_per_rank
         split_indices = np.append(np.array([0]), np.cumsum(split_indices)).astype(int)
