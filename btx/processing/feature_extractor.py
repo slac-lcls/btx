@@ -82,7 +82,7 @@ class FeatureExtractor:
     def remove_reduced_indices(self):
         self.reduced_indices = np.array([])
 
-    def ipca(self, q, block_size, num_images, ff=1, init_with_pca=True):
+    def ipca(self, q, block_size, num_images, init_with_pca=True):
         """
         Run iPCA with run subset subject to initialization parameters.
 
@@ -98,7 +98,6 @@ class FeatureExtractor:
         det = self.psi.det
 
         self.ipca_intervals['load_event'] = []
-        self.ipca_intervals['update_mean'] = []
         self.ipca_intervals['concat'] = []
         self.ipca_intervals['ortho'] = []
         self.ipca_intervals['build_r'] = []
@@ -138,12 +137,11 @@ class FeatureExtractor:
             # initialize model on first q observations, if init_with_pca is true
             if init_with_pca and (idx + 1) <= q:
                 if (idx + 1) == q:
-                    self.mu = np.reshape(np.mean(new_obs, axis=1), (d, 1))
-                    centered_obs = new_obs - np.tile(self.mu, q)
+                    self.mu, self.total_variance = calculate_sample_mean_and_variance(new_obs)
                     
+                    centered_obs = new_obs - np.tile(self.mu, q)
                     self.U, s, _ = np.linalg.svd(centered_obs, full_matrices=False)
                     self.S = np.diag(s)
-                    self.total_variance = np.reshape(np.var(new_obs, ddof=1, axis=1), (d, 1))
                     
                     new_obs = np.array([[]])
                 continue
@@ -151,17 +149,13 @@ class FeatureExtractor:
             # update model with block every m samples, or img limit
             if (idx + 1) % block_size == 0 or idx == end_idx :
 
-                with TaskTimer(self.ipca_intervals['update_mean']):
-                    # size of current block
-                    m = (idx + 1) % block_size if idx == end_idx else block_size
+                # size of current block
+                m = (idx + 1) % block_size if idx == end_idx else block_size
 
-                    # number of samples factored into model thus far
-                    n = (idx + 1) - m
+                # number of samples factored into model thus far
+                n = (idx + 1) - m
 
-                    mu_m = np.reshape(np.mean(new_obs, axis=1), (d, 1))
-
-                s_m = np.reshape(np.var(new_obs, ddof=1, axis=1), (d, 1))
-                self.total_variance = update_sample_variance(self.total_variance, s_m, self.mu, mu_m, n, m)
+                mu_m, s_m = calculate_sample_mean_and_variance(new_obs)
                 
                 with TaskTimer(self.ipca_intervals['concat']):
                     X_centered = new_obs - np.tile(mu_m, m)
@@ -173,7 +167,7 @@ class FeatureExtractor:
                     X_pm, _ = np.linalg.qr(dX_m, mode='reduced')
                 
                 with TaskTimer(self.ipca_intervals['build_r']):
-                    R = np.block([[ff * self.S, UX_m], [np.zeros((m + 1, q)), X_pm.T @ dX_m]])
+                    R = np.block([[self.S, UX_m], [np.zeros((m + 1, q)), X_pm.T @ dX_m]])
                 
                 with TaskTimer(self.ipca_intervals['svd']):
                     U_tilde, S_tilde, _ = np.linalg.svd(R)
@@ -182,13 +176,11 @@ class FeatureExtractor:
                     U_prime = np.hstack((self.U, X_pm)) @ U_tilde
                     self.U = U_prime[:, :q]
                     self.S = np.diag(S_tilde[:q])
-                    self.mu = update_sample_mean(self.mu, mu_m, ff*n, m)
+
+                    self.total_variance = update_sample_variance(self.total_variance, s_m, self.mu, mu_m, n, m)
+                    self.mu = update_sample_mean(self.mu, mu_m, n, m)
                     
                 new_obs = np.array([[]])
-
-                print(np.sum(np.diag(self.S**2) / (n + m - 1)))
-                print(np.sum(self.total_variance))
-                print(np.sum(np.diag(self.S**2) / (n + m - 1)) / np.sum(self.total_variance))
 
     def report_interval_data(self):
 
@@ -207,6 +199,17 @@ class FeatureExtractor:
     def unflatten_image(self, img):
         z, x, y = self.psi.det.shape()
         return np.reshape(img, (z, x, y))
+
+def calculate_sample_mean_and_variance(imgs):
+    d, m = imgs.shape
+
+    mu_m = np.reshape(np.mean(imgs, axis=1), (d, 1))
+    s_m  = np.zeros((d, 1))
+
+    if m > 1:
+        s_m = np.reshape(np.var(imgs, axis=1, ddof=1), (d, 1))
+    
+    return mu_m, s_m
 
 def update_sample_mean(mu_n, mu_m, n, m):
     if n == 0:
