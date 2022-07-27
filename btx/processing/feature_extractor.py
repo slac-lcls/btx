@@ -200,7 +200,7 @@ class FeatureExtractor:
                     U_prime_partial = np.hstack((U_split, X_pm_split)) @ U_tilde
                     U_prime = np.empty((d, q+m+1))
 
-                    self.comm.allgather(U_prime_partial, U_prime)
+                    self.comm.Allgather(U_prime_partial, U_prime)
 
                     # U_prime = np.hstack((self.U, X_pm)) @ U_tilde
                     self.U = U_prime[:, :q]
