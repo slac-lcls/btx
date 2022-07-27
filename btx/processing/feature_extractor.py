@@ -115,11 +115,6 @@ class FeatureExtractor:
         new_obs = np.array([[]])
 
         z, x, y = det.shape()
-
-        # det_x_dim = det.image_xaxis(self.psi.run).shape[0]
-        # det_y_dim = det.image_yaxis(self.psi.run).shape[0]
-        # d = det_x_dim * det_y_dim if not self.reduced_indices.size else self.reduced_indices.size
-
         d = z * x * y if not self.reduced_indices.size else self.reduced_indices.size
 
         self.S = np.eye(q)
@@ -132,9 +127,8 @@ class FeatureExtractor:
             with TaskTimer(self.ipca_intervals['load_event']): 
                 evt = runner.event(times[idx])
                 img_panels = det.calib(evt=evt)
-
-            img_panels = np.hstack(img_panels)
-            img = np.reshape(img_panels, (z*x*y, 1))
+            
+            img = self.flatten_img(img_panels)
 
             if self.reduced_indices.size:
                 img = img[self.reduced_indices]
@@ -171,7 +165,7 @@ class FeatureExtractor:
                 
                 with TaskTimer(self.ipca_intervals['concat']):
                     X_centered = new_obs - np.tile(mu_m, m)
-                    X_m = np.hstack((X_centered, np.sqrt(n * m / (n + m)) * mu_m - self.mu))
+                    X_m = np.hstack((X_centered, np.sqrt(n * m / (n + m)) * (mu_m - self.mu)))
                 
                 with TaskTimer(self.ipca_intervals['ortho']):
                     UX_m = self.U.T @ X_m
@@ -205,6 +199,14 @@ class FeatureExtractor:
         for key in list(self.ipca_intervals.keys()):
             interval_mean = np.mean(self.ipca_intervals[key])
             print(f'Mean compute time of step \'{key}\': {interval_mean:.4g}s')
+
+    def flatten_img(self, img):
+        z, x, y = self.psi.det.shape()
+        return np.reshape(img, (x*y*z, 1))
+    
+    def unflatten_image(self, img):
+        z, x, y = self.psi.det.shape()
+        return np.reshape(img, (z, x, y))
 
 def update_sample_mean(mu_n, mu_m, n, m):
     if n == 0:
