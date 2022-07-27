@@ -70,7 +70,8 @@ class FeatureExtractor:
         
     def set_ipca_parameters(self, **kwargs):
         for key, value in kwargs.items():
-            self.key = value if self.key
+            if self.key:
+                self.key = value
         
 
     def generate_reduced_indices(self, new_dim):
