@@ -53,14 +53,16 @@ class FeatureExtractor:
     """
     
     def __init__(self, exp, run, det_type):
+
+        self.comm = MPI.COMM_WORLD
+        self.rank = self.comm.Get_rank()
+        self.size = self.comm.Get_size()
+
         self.psi = PsanaInterface(exp=exp, run=run, det_type=det_type)
 
         self.ipca_intervals = dict({})
         self.reduced_indices = np.array([])
         
-        self.comm = MPI.COMM_WORLD
-        self.rank = self.comm.Get_rank()
-        self.size = self.comm.Get_size()
 
     def generate_reduced_indices(self, new_dim):
         """
@@ -81,6 +83,19 @@ class FeatureExtractor:
 
     def remove_reduced_indices(self):
         self.reduced_indices = np.array([])
+
+    def get_distributed_indices(self, d):
+        
+        split_indices = np.zeros(self.size)
+        for r in range(self.size):
+            num_per_rank = d // total_ranks
+            if r < (d % total_ranks):
+                num_per_rank += 1
+            split_indices[r] = num_per_rank
+        split_indices = np.append(np.array([0]), np.cumsum(split_indices)).astype(int)
+
+        self.start_index = split_indices[self.rank]
+        self.end_index = split_indices[self.rank + 1]
 
     def ipca(self, q, block_size, num_images, init_with_pca=True):
         """
@@ -104,7 +119,7 @@ class FeatureExtractor:
         self.ipca_intervals['svd'] = []
         self.ipca_intervals['update_basis'] = []
 
-        start_idx = self.psi.counter
+        start_idx = 0
         end_idx = min(self.psi.max_events, num_images)
 
         if num_images == -1:
@@ -115,6 +130,9 @@ class FeatureExtractor:
 
         z, x, y = det.shape()
         d = z * x * y if not self.reduced_indices.size else self.reduced_indices.size
+    
+        self.get_distributed_indices(d)
+
 
         self.S = np.eye(q)
         self.U = np.zeros((d, q))
@@ -175,7 +193,16 @@ class FeatureExtractor:
                     U_tilde, S_tilde, _ = np.linalg.svd(R)
                 
                 with TaskTimer(self.ipca_intervals['update_basis']):
-                    U_prime = np.hstack((self.U, X_pm)) @ U_tilde
+
+                    U_split = self.U[split_indices[self.rank]:split_indices[self.rank+1], :]
+                    X_pm_split = X_pm[split_indices[self.rank]:split_indices[self.rank+1], :]
+
+                    U_prime_partial = np.hstack((U_split, X_pm_split)) @ U_tilde
+                    U_prime = np.empty((d, q+m+1))
+
+                    self.comm.allgather(U_prime_partial, U_prime)
+
+                    # U_prime = np.hstack((self.U, X_pm)) @ U_tilde
                     self.U = U_prime[:, :q]
                     self.S = np.diag(S_tilde[:q])
 
