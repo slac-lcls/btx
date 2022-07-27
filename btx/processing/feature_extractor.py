@@ -123,6 +123,8 @@ class FeatureExtractor:
 
         for idx in np.arange(start_idx, end_idx):
 
+            print(f'Processing observation: {idx + 1}')
+
             with TaskTimer(self.ipca_intervals['load_event']): 
                 evt = runner.event(times[idx])
                 img_panels = det.calib(evt=evt)
@@ -145,7 +147,7 @@ class FeatureExtractor:
                     
                     new_obs = np.array([[]])
                 continue
-                
+            
             # update model with block every m samples, or img limit
             if (idx + 1) % block_size == 0 or idx == end_idx :
 
