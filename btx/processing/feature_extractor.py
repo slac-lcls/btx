@@ -194,8 +194,8 @@ class FeatureExtractor:
                 
                 with TaskTimer(self.ipca_intervals['update_basis']):
 
-                    U_split = self.U[split_indices[self.rank]:split_indices[self.rank+1], :]
-                    X_pm_split = X_pm[split_indices[self.rank]:split_indices[self.rank+1], :]
+                    U_split = self.U[self.start_index:self.end_index, :]
+                    X_pm_split = X_pm[self.start_index:self.end_index, :]
 
                     U_prime_partial = np.hstack((U_split, X_pm_split)) @ U_tilde
                     U_prime = np.empty((d, q+m+1))
