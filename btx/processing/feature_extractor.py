@@ -47,12 +47,11 @@ class TaskTimer:
         self.intervals.append(perf_counter() - self.start_time)
 
 class FeatureExtractor:
-    
     """
     Extract features from a psana run using dimensionality reduction.
     """
     
-    def __init__(self, exp, run, det_type):
+    def __init__(self, exp, run, det_type, q=50, block_size=10, num_images=100, init_with_pca=False):
 
         self.comm = MPI.COMM_WORLD
         self.rank = self.comm.Get_rank()
@@ -62,6 +61,18 @@ class FeatureExtractor:
 
         self.ipca_intervals = dict({})
         self.reduced_indices = np.array([])
+
+        self.q = q
+        self.block_size = block_size
+        self.num_images = num_images
+        self.init_with_pca = init_with_pca
+ 
+        
+    def set_ipca_parameters(self, q, block_size, num_images, init_with_pca):
+        self.q = q
+        self.block_size = block_size
+        self.num_images = num_images
+        self.init_with_pca = init_with_pca
         
 
     def generate_reduced_indices(self, new_dim):
@@ -70,10 +81,6 @@ class FeatureExtractor:
 
         z, x, y = self.psi.det.shape()
         det_pixels = z * x * y
-        # det_x_dim = self.psi.det.image_xaxis(self.psi.run).shape[0]
-        # det_y_dim = self.psi.det.image_yaxis(self.psi.run).shape[0]
-
-        # det_pixels = det_y_dim * det_x_dim
 
         if det_pixels < new_dim:
             print('Detector dimension must be greater than or equal to reduced dimension.')
@@ -85,7 +92,6 @@ class FeatureExtractor:
         self.reduced_indices = np.array([])
 
     def get_distributed_indices(self, d):
-        
         split_indices = np.zeros(self.size)
         for r in range(self.size):
             num_per_rank = d // self.size
@@ -97,16 +103,15 @@ class FeatureExtractor:
         self.start_index = split_indices[self.rank]
         self.end_index = split_indices[self.rank + 1]
 
-    def ipca(self, q, block_size, num_images, init_with_pca=True):
+    def ipca(self):
         """
         Run iPCA with run subset subject to initialization parameters.
-
-        Parameters
-        ----------
-
-        num_images : int
-            number of events consider, psi.max_events if -1
         """
+
+        q = self.q
+        block_size = self.block_size
+        num_images = self.num_images
+        init_with_pca = self.init_with_pca
 
         runner = self.psi.runner
         times = self.psi.times
@@ -120,7 +125,7 @@ class FeatureExtractor:
         self.ipca_intervals['update_basis'] = []
 
         start_idx = 0
-        end_idx = min(self.psi.max_events, num_images)
+        end_idx = min(self.psi.max_events, self.num_images)
 
         if num_images == -1:
             end_idx = self.psi.max_events
@@ -132,7 +137,6 @@ class FeatureExtractor:
         d = z * x * y if not self.reduced_indices.size else self.reduced_indices.size
     
         self.get_distributed_indices(d)
-
 
         self.S = np.eye(q)
         self.U = np.zeros((d, q))
@@ -155,7 +159,7 @@ class FeatureExtractor:
             new_obs = np.hstack((new_obs, img)) if new_obs.size else img
 
             # initialize model on first q observations, if init_with_pca is true
-            if init_with_pca and (idx + 1) <= q:
+            if init_with_pca and (idx + 1) <= self.q:
                 if (idx + 1) == q:
                     self.mu, self.total_variance = calculate_sample_mean_and_variance(new_obs)
                     
@@ -167,7 +171,7 @@ class FeatureExtractor:
                 continue
             
             # update model with block every m samples, or img limit
-            if (idx + 1) % block_size == 0 or idx == end_idx :
+            if (idx + 1) % self.block_size == 0 or idx == end_idx :
 
                 # size of current block
                 m = (idx + 1) % block_size if idx == end_idx else block_size
@@ -187,7 +191,7 @@ class FeatureExtractor:
                     X_pm, _ = np.linalg.qr(dX_m, mode='reduced')
                 
                 with TaskTimer(self.ipca_intervals['build_r']):
-                    R = np.block([[self.S, UX_m], [np.zeros((m + 1, q)), X_pm.T @ dX_m]])
+                    R = np.block([[self.S, UX_m], [np.zeros((m + 1, self.q)), X_pm.T @ dX_m]])
                 
                 with TaskTimer(self.ipca_intervals['svd']):
                     U_tilde, S_tilde, _ = np.linalg.svd(R)
@@ -198,7 +202,7 @@ class FeatureExtractor:
                     X_pm_split = X_pm[self.start_index:self.end_index, :]
 
                     U_prime_partial = np.hstack((U_split, X_pm_split)) @ U_tilde
-                    U_prime = np.empty((d, q+m+1))
+                    U_prime = np.empty((d, self.q+m+1))
 
                     self.comm.Allgather(U_prime_partial, U_prime)
 
@@ -275,3 +279,26 @@ def compression_loss(X, U):
 
     Ln = ((np.linalg.norm(X - UUX, 'fro')) ** 2) / n
     return Ln 
+
+
+#### For command line use ####
+            
+def parse_input():
+    """
+    Parse command line input.
+    """
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-e', '--exp', help='Experiment name', required=True, type=str)
+    parser.add_argument('-r', '--run', help='Run number', required=True, type=int)
+    parser.add_argument('-d', '--det_type', help='Detector name, e.g epix10k2M or jungfrau4M',  required=True, type=str)
+    parser.add_argument('-q', '--components', help='Number of principal components to be extracted', required=False, type=int)
+    parser.add_argument('-m', '--block_size', help='iPCA block size', required=False, type=int)
+    parser.add_argument('-n', '--num_events', help='Number of events to process',  required=False, type=int)
+    parser.add_argument('--pca_init', help='Initialize on q elements using batch PCA', required=False, action='store_true')
+
+if __name__ == '__main__':
+    params = parse_input()
+    fe = FeatureExtractor(exp=params.exp, run=params.run, det_type=params.det_type)
+    fe.set_ipca_parameters(q=params.components, block_size=params.block_size, num_images=params.num_events, pca_init=params.pca_init)
+    fe.ipca()
+    fe.report_interval_data()
