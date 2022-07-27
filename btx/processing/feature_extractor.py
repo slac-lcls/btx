@@ -68,11 +68,9 @@ class FeatureExtractor:
         self.init_with_pca = init_with_pca
  
         
-    def set_ipca_parameters(self, q, block_size, num_images, init_with_pca):
-        self.q = q
-        self.block_size = block_size
-        self.num_images = num_images
-        self.init_with_pca = init_with_pca
+    def set_ipca_parameters(self, **kwargs):
+        for key, value in kwargs.items():
+            self.key = value if self.key
         
 
     def generate_reduced_indices(self, new_dim):
