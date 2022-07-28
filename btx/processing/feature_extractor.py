@@ -69,6 +69,20 @@ class FeatureExtractor:
  
         
     def set_ipca_params(self, q=None, block_size=None, num_images=None, init_with_pca=None):
+        """
+        Update parameters to be used in iPCA algorithm.
+
+        Parameters
+        ----------
+        q : int 
+            number of principal axes to be computed
+        block_size : int
+            block size to be used in iPCA algorithm
+        num_images : int
+            number of images on which iPCA will be ran
+        init_with_pca : bool
+            whether to initialize iPCA algorithm with batch PCA on first q observations
+        """
         self.q = q if self.q else self.q
         self.block_size = block_size if self.block_size else self.block_size
         self.num_images = num_images if self.num_images else self.num_images
@@ -77,6 +91,12 @@ class FeatureExtractor:
 
     def generate_reduced_indices(self, new_dim):
         """
+        Sample, without replacement, and store new_dim indices from unassembed image dimension.
+
+        Parameters
+        ----------
+        new_dim : int
+            number of sampled indices to be drawn
         """
         z, x, y = self.psi.det.shape()
         det_pixels = z * x * y
@@ -88,9 +108,15 @@ class FeatureExtractor:
         self.reduced_indices = np.random.choice(det_pixels, new_dim, replace=False)
 
     def remove_reduced_indices(self):
+        """
+        Remove stored reduced indices.
+        """
         self.reduced_indices = np.array([])
 
     def get_distributed_indices(self, d):
+        """
+        Distribute d indices over ranks in MPI world.
+        """
         split_indices = np.zeros(self.size)
         for r in range(self.size):
             num_per_rank = d // self.size
@@ -226,9 +252,9 @@ class FeatureExtractor:
 
         for i in range(n):
             if self.reduced_indices.size:
-                formatted_images[:, i:i+1] = np.reshape(imgs[i], (z*x*y, 1))[self.reduced_indices]
+                formatted_images[:, i:i+1] = self.flatten_img(imgs[i])[self.reduced_indices]
             else:
-                formatted_images[:, i:i+1] = np.reshape(imgs[i], (z*x*y, 1))
+                formatted_images[:, i:i+1] = self.flatten_img(imgs[i])
             
         mu_n = np.reshape(np.mean(formatted_images, axis=1), (d, 1))
         mu_n_tiled = np.tile(mu_n, n)
@@ -236,10 +262,12 @@ class FeatureExtractor:
         imgs_centered = formatted_images - mu_n_tiled 
 
         self.mu_pca = mu_n
-        self.U_pca, self.S_pca, _ = np.linalg.svd(imgs_centered, full_matrices=false)
+        self.U_pca, self.S_pca, _ = np.linalg.svd(imgs_centered, full_matrices=False)
 
     def report_interval_data(self):
-
+        """
+        Report time interval data gathered during iPCA.
+        """
         if len(self.ipca_intervals) == 0:
             print('iPCA has not yet been performed.')
             return
@@ -249,14 +277,59 @@ class FeatureExtractor:
             print(f'Mean compute time of step \'{key}\': {interval_mean:.4g}s')
 
     def flatten_img(self, img):
-        z, x, y = self.psi.det.shape()
-        return np.reshape(img, (x*y*z, 1))
+        """
+        Flatten unflattened input image.
+
+        Parameters
+        ----------
+        img : ndarray, shape (z, y, x)
+            unflattened input image, comprised of z (y x x) panels
+
+        Returns
+        -------
+        img_flattened : ndarray, shape (z*y*x, 1)
+            input image, flattened
+        """
+        z, y, x = self.psi.det.shape()
+        img_flattened = np.reshape(img, (z*y*x, 1))
+
+        return img_flattened
     
     def unflatten_image(self, img):
-        z, x, y = self.psi.det.shape()
-        return np.reshape(img, (z, x, y))
+        """
+        Unflatten flattened input image.
+
+        Parameters
+        ----------
+        img : ndarray, shape (z*y*x, 1)
+            flattened input image
+        
+        Returns
+        -------
+        img_unflattened : ndarray, shape (z, y, x)
+            input image, unflattened
+        """
+        z, y, x = self.psi.det.shape()
+        img_unflattened = np.reshape(img, (z, y, x))
+
+        return img_unflattened
 
 def calculate_sample_mean_and_variance(imgs):
+    """
+    Compute the sample mean and variance of a flattened stack of n images.
+
+    Parameters
+    ----------
+    imgs : ndarray, shape (d x n)
+        horizonally stacked batch of flattened images 
+
+    Returns
+    -------
+    mu_m : ndarray, shape (d x 1)
+        mean of imgs
+    su_m : ndarray, shape (d x 1)
+        sample variance of imgs (1 dof)
+    """
     d, m = imgs.shape
 
     mu_m = np.reshape(np.mean(imgs, axis=1), (d, 1))
@@ -268,16 +341,62 @@ def calculate_sample_mean_and_variance(imgs):
     return mu_m, s_m
 
 def update_sample_mean(mu_n, mu_m, n, m):
-    if n == 0:
-        return mu_m
+    """
+    Combine combined mean of two blocks of data.
 
-    return (1 / (n + m)) * (n * mu_n + m * mu_m)
+    Parameters
+    ----------
+    mu_n : ndarray, shape (d x 1)
+        mean of first block of data
+    mu_m : ndarray, shape (d x 1)
+        mean of second block of data
+    n : int
+        number of observations in first block of data
+    m : int
+        number of observations in second block of data
+
+    Returns
+    -------
+    mu_nm : ndarray, shape (d x 1)
+        combined mean of both blocks of input data
+    """
+    mu_nm = mu_m
+
+    if n != 0:
+        mu_nm = (1 / (n + m)) * (n * mu_n + m * mu_m)
+
+    return mu_nm
 
 def update_sample_variance(s_n, s_m, mu_n, mu_m, n, m):
-    if n == 0:
-        return s_m
-    
-    return (((n - 1) * s_n + (m - 1) * s_m) + (n*m*(mu_n - mu_m)**2) / (n + m)) / (n + m - 1) 
+    """
+    Compute combined sample variance of two blocks of data described by input parameters.
+
+    Parameters
+    ----------
+    s_n : ndarray, shape (d x 1)
+        sample variance of first block of data
+    s_m : ndarray, shape (d x 1)
+        sample variance of second block of data
+    mu_n : ndarray, shape (d x 1)
+        mean of first block of data
+    mu_m : ndarray, shape (d x 1)
+        mean of second block of data
+    n : int
+        number of observations in first block of data
+    m : int
+        number of observations in second block of data
+
+    Returns
+    -------
+    s_nm : ndarray, shape (d x 1)
+        combined sample variance of both blocks of data described by input parameters
+    """
+    s_nm = s_m
+
+    if n != 0:
+        s_nm = (((n - 1) * s_n + (m - 1) * s_m) + (n*m*(mu_n - mu_m)**2) / (n + m)) / (n + m - 1) 
+
+    return s_nm
 
 def compression_loss(X, U):
     """
