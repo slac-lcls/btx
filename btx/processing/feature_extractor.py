@@ -242,7 +242,7 @@ class FeatureExtractor:
                 new_obs = np.array([[]])
     
     def retrieve_run_data(self):
-        num_imgs = min(self.num_imgs, self.psi.max_events)
+        num_imgs = min(self.num_images, self.psi.max_events)
         imgs = self.psi.get_images(num_imgs, assemble=False)
 
         n, z, y, x = imgs.shape
