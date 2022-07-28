@@ -180,7 +180,7 @@ class FeatureExtractor:
                 if self.reduced_indices.size:
                     img = img[self.reduced_indices]
             else:
-                img = img_data[idx]
+                img = img_data[:, idx:idx+1]
             
             new_obs = np.hstack((new_obs, img)) if new_obs.size else img
 
