@@ -127,7 +127,7 @@ class FeatureExtractor:
         self.start_index = split_indices[self.rank]
         self.end_index = split_indices[self.rank + 1]
 
-    def ipca(self):
+    def ipca(self, imgs=None):
         """
         Run iPCA with run subset subject to initialization parameters.
         """
@@ -170,14 +170,17 @@ class FeatureExtractor:
 
             print(f'Processing observation: {idx + 1}')
 
-            with TaskTimer(self.ipca_intervals['load_event']): 
-                evt = runner.event(times[idx])
-                img_panels = det.calib(evt=evt)
+            if imgs is None:
+                with TaskTimer(self.ipca_intervals['load_event']): 
+                    evt = runner.event(times[idx])
+                    img_panels = det.calib(evt=evt)
             
-            img = self.flatten_img(img_panels)
+                img = self.flatten_img(img_panels)
 
-            if self.reduced_indices.size:
-                img = img[self.reduced_indices]
+                if self.reduced_indices.size:
+                    img = img[self.reduced_indices]
+            else:
+                img = imgs[idx]
             
             new_obs = np.hstack((new_obs, img)) if new_obs.size else img
 
@@ -238,11 +241,9 @@ class FeatureExtractor:
                     
                 new_obs = np.array([[]])
     
-    def batch_pca(self):
-        """
-        Run batch PCA on first num_images in run.
-        """
-        imgs = self.psi.get_images(self.num_images, assemble=False)
+    def retrieve_run_data(self):
+        num_imgs = min(self.num_imgs, self.psi.max_events)
+        imgs = self.psi.get_images(num_imgs, assemble=False)
 
         n, z, y, x = imgs.shape
         d = self.reduced_indices.size if self.reduced_indices.size else x*y*z
@@ -254,6 +255,30 @@ class FeatureExtractor:
                 formatted_images[:, i:i+1] = self.flatten_img(imgs[i])[self.reduced_indices]
             else:
                 formatted_images[:, i:i+1] = self.flatten_img(imgs[i])
+        
+        return formatted_images
+
+    def batch_pca(self, imgs=None):
+        """
+        Run batch PCA on first num_images in run.
+        """
+        formatted_imgs = imgs
+
+        if formatted_imgs is None:
+            imgs = self.psi.get_images(self.num_images, assemble=False)
+
+            n, z, y, x = imgs.shape
+            d = self.reduced_indices.size if self.reduced_indices.size else x*y*z
+
+            formatted_images = np.empty((d, n))
+
+            for i in range(n):
+                if self.reduced_indices.size:
+                    formatted_images[:, i:i+1] = self.flatten_img(imgs[i])[self.reduced_indices]
+                else:
+                    formatted_images[:, i:i+1] = self.flatten_img(imgs[i])
+        
+        d, n = formatted_imgs.shape
             
         mu_n = np.reshape(np.mean(formatted_images, axis=1), (d, 1))
         mu_n_tiled = np.tile(mu_n, n)
@@ -413,7 +438,7 @@ def compare_basis_vectors(U_1, U_2, q):
     Returns
     -------
     acc : float, 0 <= acc <= 1
-        quantitative measure of accuracy between basis vectors
+        quantitative measure of distance between basis vectors
     """
     if q > min(U_1.shape[1], U_2.shape[1]):
         print('Desired number of vectors is greater than matrix dimension.')
