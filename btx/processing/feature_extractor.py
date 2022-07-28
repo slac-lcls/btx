@@ -280,10 +280,10 @@ class FeatureExtractor:
         
         d, n = formatted_imgs.shape
             
-        mu_n = np.reshape(np.mean(formatted_images, axis=1), (d, 1))
+        mu_n = np.reshape(np.mean(formatted_imgs, axis=1), (d, 1))
         mu_n_tiled = np.tile(mu_n, n)
 
-        imgs_centered = formatted_images - mu_n_tiled 
+        imgs_centered = formatted_imgs - mu_n_tiled 
 
         self.mu_pca = mu_n
         self.U_pca, self.S_pca, _ = np.linalg.svd(imgs_centered, full_matrices=False)
