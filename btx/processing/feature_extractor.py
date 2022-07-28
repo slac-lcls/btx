@@ -130,8 +130,12 @@ class FeatureExtractor:
     def ipca(self, img_data=None):
         """
         Run iPCA with run subset subject to initialization parameters.
-        """
 
+        Parameters
+        ----------
+        img_data : ndarray, (d x n) (optional)
+            optional run data fetched and formatted through retrieve_run_data
+        """
         q = self.q
         block_size = self.block_size
         num_images = self.num_images
@@ -242,6 +246,14 @@ class FeatureExtractor:
                 new_obs = np.array([[]])
     
     def retrieve_run_data(self):
+        """
+        Retrieve run data subject to intitialization parameters.
+
+        Returns
+        -------
+        formatted_images : ndarray, shape (d x n)
+            formatted image data from run
+        """
         num_imgs = min(self.num_images, self.psi.max_events)
         imgs = self.psi.get_images(num_imgs, assemble=False)
 
@@ -261,6 +273,11 @@ class FeatureExtractor:
     def batch_pca(self, img_data=None):
         """
         Run batch PCA on first num_images in run.
+
+        Parameters
+        ----------
+        img_data : ndarray, (d x n) (optional)
+            optional run data fetched and formatted through retrieve_run_data
         """
         formatted_imgs = img_data
 
