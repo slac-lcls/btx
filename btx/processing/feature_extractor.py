@@ -124,7 +124,7 @@ class FeatureExtractor:
         self.ipca_intervals['update_basis'] = []
 
         start_idx = 0
-        end_idx = min(self.psi.max_events, self.num_images)
+        end_idx = min(self.psi.max_events, num_images)
 
         if num_images == -1:
             end_idx = self.psi.max_events
@@ -158,7 +158,7 @@ class FeatureExtractor:
             new_obs = np.hstack((new_obs, img)) if new_obs.size else img
 
             # initialize model on first q observations, if init_with_pca is true
-            if init_with_pca and (idx + 1) <= self.q:
+            if init_with_pca and (idx + 1) <= q:
                 if (idx + 1) == q:
                     self.mu, self.total_variance = calculate_sample_mean_and_variance(new_obs)
                     
@@ -170,13 +170,16 @@ class FeatureExtractor:
                 continue
             
             # update model with block every m samples, or img limit
-            if (idx + 1) % self.block_size == 0 or idx == end_idx :
+            if (idx + 1) % block_size == 0 or idx == end_idx:
 
                 # size of current block
                 m = (idx + 1) % block_size if idx == end_idx else block_size
 
                 # number of samples factored into model thus far
                 n = (idx + 1) - m
+
+                print(m)
+                print(n)
 
                 mu_m, s_m = calculate_sample_mean_and_variance(new_obs)
                 
@@ -190,22 +193,22 @@ class FeatureExtractor:
                     X_pm, _ = np.linalg.qr(dX_m, mode='reduced')
                 
                 with TaskTimer(self.ipca_intervals['build_r']):
-                    R = np.block([[self.S, UX_m], [np.zeros((m + 1, self.q)), X_pm.T @ dX_m]])
+                    R = np.block([[self.S, UX_m], [np.zeros((m + 1, q)), X_pm.T @ dX_m]])
                 
                 with TaskTimer(self.ipca_intervals['svd']):
                     U_tilde, S_tilde, _ = np.linalg.svd(R)
                 
                 with TaskTimer(self.ipca_intervals['update_basis']):
 
-                    # U_split = self.U[self.start_index:self.end_index, :]
-                    # X_pm_split = X_pm[self.start_index:self.end_index, :]
+                    U_split = self.U[self.start_index:self.end_index, :]
+                    X_pm_split = X_pm[self.start_index:self.end_index, :]
 
-                    # U_prime_partial = np.hstack((U_split, X_pm_split)) @ U_tilde
-                    # U_prime = np.empty((d, self.q+m+1))
+                    U_prime_partial = np.hstack((U_split, X_pm_split)) @ U_tilde
+                    U_prime = np.empty((d, q+m+1))
 
-                    # self.comm.Allgather(U_prime_partial, U_prime)
+                    self.comm.Allgather(U_prime_partial, U_prime)
 
-                    U_prime = np.hstack((self.U, X_pm)) @ U_tilde
+                    # U_prime = np.hstack((self.U, X_pm)) @ U_tilde
                     self.U = U_prime[:, :q]
                     self.S = np.diag(S_tilde[:q])
 
