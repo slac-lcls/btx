@@ -172,70 +172,83 @@ class FeatureExtractor:
 
         for idx in range(end_idx):
 
-            print(f'Processing observation: {idx + 1}')
+            if self.rank == 0:
+                print(f'Processing observation: {idx + 1}')
 
-            if img_data is None:
-                with TaskTimer(self.ipca_intervals['load_event']): 
-                    evt = runner.event(times[idx])
-                    img_panels = det.calib(evt=evt)
-            
-                img = self.flatten_img(img_panels)
+                if img_data is None:
+                    with TaskTimer(self.ipca_intervals['load_event']): 
+                        evt = runner.event(times[idx])
+                        img_panels = det.calib(evt=evt)
+                
+                    img = self.flatten_img(img_panels)
 
-                if self.reduced_indices.size:
-                    img = img[self.reduced_indices]
-            else:
-                img = img_data[:, idx:idx+1]
-            
-            new_obs = np.hstack((new_obs, img)) if new_obs.size else img
+                    if self.reduced_indices.size:
+                        img = img[self.reduced_indices]
+                else:
+                    img = img_data[:, idx:idx+1]
+                
+                new_obs = np.hstack((new_obs, img)) if new_obs.size else img
 
-            # initialize model on first q observations, if init_with_pca is true
-            if init_with_pca and (idx + 1) <= q:
-                if (idx + 1) == q:
-                    self.mu, self.total_variance = calculate_sample_mean_and_variance(new_obs)
-                    
-                    centered_obs = new_obs - np.tile(self.mu, q)
-                    self.U, s, _ = np.linalg.svd(centered_obs, full_matrices=False)
-                    self.S = np.diag(s)
-                    
-                    new_obs = np.array([[]])
-                continue
+                # initialize model on first q observations, if init_with_pca is true
+                if init_with_pca and (idx + 1) <= q:
+                    if (idx + 1) == q:
+                        self.mu, self.total_variance = calculate_sample_mean_and_variance(new_obs)
+                        
+                        centered_obs = new_obs - np.tile(self.mu, q)
+                        self.U, s, _ = np.linalg.svd(centered_obs, full_matrices=False)
+                        self.S = np.diag(s)
+                        
+                        new_obs = np.array([[]])
+                    continue
             
             # update model with block every m samples, or img limit
             if (idx + 1) % block_size == 0 or (idx + 1) == end_idx:
-                
-                # size of current block
-                m = (idx+1) % block_size if (idx+1) % block_size else block_size
 
-                # number of samples factored into model thus far
-                n = (idx + 1) - m
+                X_pm_loc = None
 
-                mu_m, s_m = calculate_sample_mean_and_variance(new_obs)
-                
-                with TaskTimer(self.ipca_intervals['concat']):
-                    X_centered = new_obs - np.tile(mu_m, m)
-                    X_m = np.hstack((X_centered, np.sqrt(n * m / (n + m)) * (mu_m - self.mu)))
-                
-                with TaskTimer(self.ipca_intervals['ortho']):
-                    UX_m = self.U.T @ X_m
-                    dX_m = X_m - self.U @ UX_m
-                    X_pm, _ = np.linalg.qr(dX_m, mode='reduced')
-                
-                with TaskTimer(self.ipca_intervals['build_r']):
-                    R = np.block([[self.S, UX_m], [np.zeros((m + 1, q)), X_pm.T @ dX_m]])
-                
-                with TaskTimer(self.ipca_intervals['svd']):
-                    U_tilde, S_tilde, _ = np.linalg.svd(R)
-                
+                if self.rank == 0:
+                    # size of current block
+                    m = (idx+1) % block_size if (idx+1) % block_size else block_size
+
+                    # number of samples factored into model thus far
+                    n = (idx + 1) - m
+
+                    mu_m, s_m = calculate_sample_mean_and_variance(new_obs)
+                    
+                    with TaskTimer(self.ipca_intervals['concat']):
+                        X_centered = new_obs - np.tile(mu_m, m)
+                        X_m = np.hstack((X_centered, np.sqrt(n * m / (n + m)) * (mu_m - self.mu)))
+                    
+                    with TaskTimer(self.ipca_intervals['ortho']):
+                        UX_m = self.U.T @ X_m
+                        dX_m = X_m - self.U @ UX_m
+                        X_pm, _ = np.linalg.qr(dX_m, mode='reduced')
+                    
+                    with TaskTimer(self.ipca_intervals['build_r']):
+                        R = np.block([[self.S, UX_m], [np.zeros((m + 1, q)), X_pm.T @ dX_m]])
+                    
+                    with TaskTimer(self.ipca_intervals['svd']):
+                        U_tilde, S_tilde, _ = np.linalg.svd(R)
+                    
+                    self.comm.Bcast(self.U root=0)
+                    self.comm.Bcast(X_pm, root=0)
+
+                self.comm.Barrier()
+
                 with TaskTimer(self.ipca_intervals['update_basis']):
 
                     U_split = self.U[self.start_index:self.end_index, :]
                     X_pm_split = X_pm[self.start_index:self.end_index, :]
 
                     U_prime_partial = np.hstack((U_split, X_pm_split)) @ U_tilde
-                    U_prime = np.empty((d, q+m+1))
 
-                    self.comm.Allgather(U_prime_partial, U_prime)
+                    U_prime = None
+                    if self.rank == 0:
+                        U_prime = np.empty((d, q+m+1))
 
+                    self.comm.Gather(U_prime_partial, U_prime, root=0)
+
+                if self.rank == 0:
                     # U_prime = np.hstack((self.U, X_pm)) @ U_tilde
                     self.U = U_prime[:, :q]
                     self.S = np.diag(S_tilde[:q])
@@ -243,8 +256,8 @@ class FeatureExtractor:
                     self.total_variance = update_sample_variance(self.total_variance, s_m, self.mu, mu_m, n, m)
                     self.mu = update_sample_mean(self.mu, mu_m, n, m)
                     
-                new_obs = np.array([[]])
-    
+                    new_obs = np.array([[]])
+
     def retrieve_run_data(self):
         """
         Retrieve run data subject to intitialization parameters.
@@ -314,13 +327,14 @@ class FeatureExtractor:
         """
         Report time interval data gathered during iPCA.
         """
-        if len(self.ipca_intervals) == 0:
-            print('iPCA has not yet been performed.')
-            return
+        if self.rank == 0:
+            if len(self.ipca_intervals) == 0:
+                print('iPCA has not yet been performed.')
+                return
 
-        for key in list(self.ipca_intervals.keys()):
-            interval_mean = np.mean(self.ipca_intervals[key])
-            print(f'Mean compute time of step \'{key}\': {interval_mean:.4g}s')
+            for key in list(self.ipca_intervals.keys()):
+                interval_mean = np.mean(self.ipca_intervals[key])
+                print(f'Mean compute time of step \'{key}\': {interval_mean:.4g}s')
 
     def flatten_img(self, img):
         """
