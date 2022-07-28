@@ -226,9 +226,9 @@ class FeatureExtractor:
 
         for i in range(n):
             if self.reduced_indices.size:
-                formatted_images[:, i:i+1] = np.reshape(imgs[i], (z*x*y, 1))
-            else:
                 formatted_images[:, i:i+1] = np.reshape(imgs[i], (z*x*y, 1))[self.reduced_indices]
+            else:
+                formatted_images[:, i:i+1] = np.reshape(imgs[i], (z*x*y, 1))
             
         mu_n = np.reshape(np.mean(formatted_images, axis=1), (d, 1))
         mu_n_tiled = np.tile(mu_n, n)
