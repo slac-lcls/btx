@@ -515,6 +515,6 @@ def parse_input():
 if __name__ == '__main__':
     params = parse_input()
     fe = FeatureExtractor(exp=params.exp, run=params.run, det_type=params.det_type)
-    fe.set_ipca_params(q=params.components, block_size=params.block_size, num_images=params.num_events, pca_init=params.pca_init)
+    fe.set_ipca_params(q=params.components, block_size=params.block_size, num_images=params.num_events, init_with_pca=params.pca_init)
     fe.ipca()
     fe.report_interval_data()
