@@ -87,7 +87,6 @@ class FeatureExtractor:
         self.block_size = block_size if self.block_size else self.block_size
         self.num_images = num_images if self.num_images else self.num_images
         self.init_with_pca = init_with_pca if self.init_with_pca else self.init_with_pca
-        
 
     def generate_reduced_indices(self, new_dim):
         """
@@ -397,6 +396,32 @@ def update_sample_variance(s_n, s_m, mu_n, mu_m, n, m):
         s_nm = (((n - 1) * s_n + (m - 1) * s_m) + (n*m*(mu_n - mu_m)**2) / (n + m)) / (n + m - 1) 
 
     return s_nm
+
+def compare_basis_vectors(U_1, U_2, q):
+    """
+    Quantitatively compare the first q basis vectors of U and U_prime. 
+
+    Parameters
+    ----------
+    U_1 : ndarray, shape (d x a), a >= q
+        first matrix of orthonormal basis vectors
+    U_2 : ndarray, shape (d x b), b >= q
+        second matrix of orthonormal basis vectors
+    q : int
+        number of vectors to compare
+    
+    Returns
+    -------
+    acc : float, 0 <= acc <= 1
+        quantitative measure of accuracy between basis vectors
+    """
+    if q > min(U_1.shape[1], U_2.shape[1]):
+        print('Desired number of vectors is greater than matrix dimension.')
+        return 0.
+    
+    acc = np.trace(np.abs(U_1[:, :q].T @ U_2[:, :q])) / q
+    return acc
+    
 
 def compression_loss(X, U):
     """
