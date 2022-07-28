@@ -255,7 +255,12 @@ class FeatureExtractor:
             formatted image data from run
         """
         num_imgs = min(self.num_images, self.psi.max_events)
-        imgs = self.psi.get_images(num_imgs, assemble=False)
+
+        try:
+            imgs = self.psi.get_images(num_imgs, assemble=False)
+        except MemoryError:
+            print('Requested image set too large to fit in memory.')
+            return np.empty(0)
 
         n, z, y, x = imgs.shape
         d = self.reduced_indices.size if self.reduced_indices.size else x*y*z
