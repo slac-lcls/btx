@@ -178,9 +178,6 @@ class FeatureExtractor:
                 # number of samples factored into model thus far
                 n = (idx + 1) - m
 
-                print(m)
-                print(n)
-
                 mu_m, s_m = calculate_sample_mean_and_variance(new_obs)
                 
                 with TaskTimer(self.ipca_intervals['concat']):
