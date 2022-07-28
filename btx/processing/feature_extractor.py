@@ -171,9 +171,9 @@ class FeatureExtractor:
             
             # update model with block every m samples, or img limit
             if (idx + 1) % block_size == 0 or (idx + 1) == end_idx:
-
+                
                 # size of current block
-                m = (idx + 1) % block_size if (idx + 1) == end_idx else block_size
+                m = (idx+1) % block_size if (idx+1) % block_size else block_size
 
                 # number of samples factored into model thus far
                 n = (idx + 1) - m
@@ -256,7 +256,7 @@ def update_sample_variance(s_n, s_m, mu_n, mu_m, n, m):
     if n == 0:
         return s_m
     
-    return ((n - 1) * s_n + (m - 1) * s_m ) / (n + m - 1) + (n*m*(mu_n - mu_m)**2) / ((n + m) * (n + m - 1))
+    return (((n - 1) * s_n + (m - 1) * s_m) + (n*m*(mu_n - mu_m)**2) / (n + m)) / (n + m - 1) 
 
 def compression_loss(X, U):
     """
