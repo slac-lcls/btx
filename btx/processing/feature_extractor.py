@@ -510,6 +510,8 @@ def parse_input():
     parser.add_argument('-n', '--num_events', help='Number of events to process',  required=False, type=int)
     parser.add_argument('--pca_init', help='Initialize on q elements using batch PCA', required=False, action='store_true')
 
+    return parser.parse_args()
+    
 if __name__ == '__main__':
     params = parse_input()
     fe = FeatureExtractor(exp=params.exp, run=params.run, det_type=params.det_type)
