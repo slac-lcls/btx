@@ -127,7 +127,7 @@ class FeatureExtractor:
         self.start_index = split_indices[self.rank]
         self.end_index = split_indices[self.rank + 1]
 
-    def ipca(self, imgs=None):
+    def ipca(self, img_data=None):
         """
         Run iPCA with run subset subject to initialization parameters.
         """
@@ -170,7 +170,7 @@ class FeatureExtractor:
 
             print(f'Processing observation: {idx + 1}')
 
-            if imgs is None:
+            if img_data is None:
                 with TaskTimer(self.ipca_intervals['load_event']): 
                     evt = runner.event(times[idx])
                     img_panels = det.calib(evt=evt)
@@ -180,7 +180,7 @@ class FeatureExtractor:
                 if self.reduced_indices.size:
                     img = img[self.reduced_indices]
             else:
-                img = imgs[idx]
+                img = img_data[idx]
             
             new_obs = np.hstack((new_obs, img)) if new_obs.size else img
 
@@ -258,11 +258,11 @@ class FeatureExtractor:
         
         return formatted_images
 
-    def batch_pca(self, imgs=None):
+    def batch_pca(self, img_data=None):
         """
         Run batch PCA on first num_images in run.
         """
-        formatted_imgs = imgs
+        formatted_imgs = img_data
 
         if formatted_imgs is None:
             imgs = self.psi.get_images(self.num_images, assemble=False)
