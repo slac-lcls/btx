@@ -145,7 +145,7 @@ class FeatureExtractor:
         times = self.psi.times
         det = self.psi.det
 
-        self.ipca_intervals['load_event'] = []
+        
         self.ipca_intervals['concat'] = []
         self.ipca_intervals['ortho'] = []
         self.ipca_intervals['build_r'] = []
@@ -176,6 +176,10 @@ class FeatureExtractor:
                 print(f'Processing observation: {idx + 1}')
 
                 if img_data is None:
+                    
+                    if idx == 0:
+                        self.ipca_intervals['load_event'] = []
+
                     with TaskTimer(self.ipca_intervals['load_event']): 
                         evt = runner.event(times[idx])
                         img_panels = det.calib(evt=evt)
