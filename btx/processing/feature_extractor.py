@@ -123,9 +123,6 @@ class FeatureExtractor:
         self.ipca_intervals['svd'] = []
         self.ipca_intervals['update_basis'] = []
 
-        start_idx = 0
-        end_idx = min(self.psi.max_events, num_images)
-
         if num_images == -1:
             end_idx = self.psi.max_events
         
@@ -142,7 +139,9 @@ class FeatureExtractor:
         self.mu = np.zeros((d, 1))
         self.total_variance = np.zeros((d, 1))
 
-        for idx in np.arange(start_idx, end_idx):
+        end_idx = min(self.psi.max_events, num_images)
+
+        for idx in range(end_idx):
 
             print(f'Processing observation: {idx + 1}')
 
@@ -213,6 +212,30 @@ class FeatureExtractor:
                     self.mu = update_sample_mean(self.mu, mu_m, n, m)
                     
                 new_obs = np.array([[]])
+    
+    def batch_pca(self):
+        """
+        Run batch PCA on first num_images in run.
+        """
+        imgs = self.psi.get_images(self.num_images, assemble=False)
+
+        n, z, y, x = imgs.shape
+        d = self.reduced_indices.size if self.reduced_indices.size else x*y*z
+
+        formatted_images = np.empty((d, n))
+
+        for i in range(n):
+            if self.reduced_indices.size:
+                formatted_images[:, i:i+1] = np.reshape(imgs[i], (z*x*y, 1))
+            else:
+                formatted_images[:, i:i+1] = np.reshape(imgs[i], (z*x*y, 1))[self.reduced_indices]
+            
+        mu_n = np.reshape(np.mean(formatted_images, axis=1), (d, 1))
+        mu_n_tiled = np.tile(mu_n, n)
+
+        imgs_centered = formatted_images - mu_n_tiled 
+
+        self.U_pca, self.S_pca, _ = np.linalg.svd(imgs_centered, full_matrices=false)
 
     def report_interval_data(self):
 
