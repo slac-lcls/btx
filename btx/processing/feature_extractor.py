@@ -170,10 +170,10 @@ class FeatureExtractor:
                 continue
             
             # update model with block every m samples, or img limit
-            if (idx + 1) % block_size == 0 or idx == end_idx:
+            if (idx + 1) % block_size == 0 or (idx + 1) == end_idx:
 
                 # size of current block
-                m = (idx + 1) % block_size if idx == end_idx else block_size
+                m = (idx + 1) % block_size if (idx + 1) == end_idx else block_size
 
                 # number of samples factored into model thus far
                 n = (idx + 1) - m
