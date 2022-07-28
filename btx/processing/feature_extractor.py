@@ -235,6 +235,7 @@ class FeatureExtractor:
 
         imgs_centered = formatted_images - mu_n_tiled 
 
+        self.mu_pca = mu_n
         self.U_pca, self.S_pca, _ = np.linalg.svd(imgs_centered, full_matrices=false)
 
     def report_interval_data(self):
