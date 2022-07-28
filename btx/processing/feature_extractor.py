@@ -68,7 +68,7 @@ class FeatureExtractor:
         self.init_with_pca = init_with_pca
  
         
-    def set_ipca_parameters(self, q=None, block_size=None, num_images=None, init_with_pca=None):
+    def set_ipca_params(self, q=None, block_size=None, num_images=None, init_with_pca=None):
         self.q = q if self.q else self.q
         self.block_size = block_size if self.block_size else self.block_size
         self.num_images = num_images if self.num_images else self.num_images
@@ -78,7 +78,6 @@ class FeatureExtractor:
     def generate_reduced_indices(self, new_dim):
         """
         """
-
         z, x, y = self.psi.det.shape()
         det_pixels = z * x * y
 
