@@ -230,7 +230,7 @@ class FeatureExtractor:
                     with TaskTimer(self.ipca_intervals['svd']):
                         U_tilde, S_tilde, _ = np.linalg.svd(R)
                     
-                    self.comm.Bcast(self.U root=0)
+                    self.comm.Bcast(self.U, root=0)
                     self.comm.Bcast(X_pm, root=0)
 
                 self.comm.Barrier()
