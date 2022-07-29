@@ -117,9 +117,11 @@ class FeatureExtractor:
         self.total_variance = np.zeros((self.d, 1))
 
         # initialize ipca
-        init_block_size = min(self.q, self.num_images) if self.init_with_pca else 0
-        img_block = self.gather_img_block(init_block_size)
-        self.initialize(img_block)
+
+        if self.init_with_pca:
+            init_block_size = min(self.q, self.num_images)
+            img_block = self.gather_img_block(init_block_size)
+            self.initialize(img_block)
 
         # run pca on all windows
         while self.counter < self.num_images:
