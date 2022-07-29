@@ -327,18 +327,18 @@ class FeatureExtractor:
         """
         Report time interval data gathered during iPCA.
         """
-        if self.rank == 0:
-            if len(self.ipca_intervals) == 0:
-                print('iPCA has not yet been performed.')
-                return
-            
-            for key in list(self.ipca_intervals.keys()):
-                interval_mean = np.mean(self.ipca_intervals[key])
+        print(self.rank)
+        if len(self.ipca_intervals) == 0:
+            print('iPCA has not yet been performed.')
+            return
+        
+        for key in list(self.ipca_intervals.keys()):
+            interval_mean = np.mean(self.ipca_intervals[key])
 
-                if key is 'load_event':
-                    print(f'Mean time to load each observation: {interval_mean:.4g}s')
-                else:
-                    print(f'Mean per-iteration compute time of step \'{key}\': {interval_mean / self.block_size:.4g}s')
+            if key is 'load_event':
+                print(f'Mean time to load each observation: {interval_mean:.4g}s')
+            else:
+                print(f'Mean per-iteration compute time of step \'{key}\': {interval_mean / self.block_size:.4g}s')
 
 
     def flatten_img(self, img):
