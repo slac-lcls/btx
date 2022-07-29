@@ -90,7 +90,7 @@ class FeatureExtractor:
                 evt = self.psi.runner.event(self.psi.times[idx])
                 img_panels = self.psi.det.calib(evt=evt)
             
-            img = self.flatten_img(imgs_panels)
+            img = self.flatten_img(img_panels)
 
             if self.reduced_indices.size:
                 img = img[self.reduced_indices]
