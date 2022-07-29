@@ -230,6 +230,8 @@ class FeatureExtractor:
                 
                 with TaskTimer(self.ipca_intervals['svd']):
                     U_tilde, S_tilde, _ = np.linalg.svd(R)
+                
+                print(self.rank)
 
                 self.comm.Barrier()
 
@@ -243,7 +245,7 @@ class FeatureExtractor:
                     
                     U_prime = np.empty((d, q+m+1))
             
-                    self.comm.Allgather(U_prime_partial, U_prime, root=0)
+                    self.comm.Allgather(U_prime_partial, U_prime)
 
                     print(U_prime.shape)
 
