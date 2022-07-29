@@ -128,7 +128,7 @@ class FeatureExtractor:
 
             if (self.counter + 1) % self.block_size == 0 or (self.counter + 1) == self.num_images:
                 # size of current block
-                m = (idx+1) % self.block_size if (idx+1) % self.block_size else self.block_size
+                m = (self.counter+1) % self.block_size if (self.counter+1) % self.block_size else self.block_size
                 img_block = self.gather_img_block(m)
                 self.update_model(img_block)
 
