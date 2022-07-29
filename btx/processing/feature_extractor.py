@@ -12,7 +12,7 @@ from time import perf_counter
 
 class TaskTimer:
     """
-    A context manager to record the duration of managed task.
+    A context manager to record the duration of managed tasks.
 
     Attributes
     ----------
@@ -145,7 +145,6 @@ class FeatureExtractor:
         times = self.psi.times
         det = self.psi.det
 
-        
         self.ipca_intervals['concat'] = []
         self.ipca_intervals['ortho'] = []
         self.ipca_intervals['build_r'] = []
@@ -176,7 +175,7 @@ class FeatureExtractor:
                 print(f'Processing observation: {idx + 1}')
 
                 if img_data is None:
-                    
+
                     if idx == 0:
                         self.ipca_intervals['load_event'] = []
 
@@ -337,10 +336,15 @@ class FeatureExtractor:
             if len(self.ipca_intervals) == 0:
                 print('iPCA has not yet been performed.')
                 return
-
+            
             for key in list(self.ipca_intervals.keys()):
                 interval_mean = np.mean(self.ipca_intervals[key])
-                print(f'Mean compute time of step \'{key}\': {interval_mean:.4g}s')
+
+                if key is 'load_event':
+                    print(f'Mean time to load each observation: {interval_mean:.4g}s')
+                else:
+                    print(f'Mean compute time of step \'{key}\': {interval_mean:.4g}s')
+
 
     def flatten_img(self, img):
         """
