@@ -87,7 +87,7 @@ class FeatureExtractor:
         while self.counter < num_events:
 
             with TaskTimer(self.ipca_intervals['load_event']): 
-                evt = self.psi.runner.event(self.psi.times[idx])
+                evt = self.psi.runner.event(self.psi.times[self.counter])
                 img_panels = self.psi.det.calib(evt=evt)
             
             img = self.flatten_img(img_panels)
