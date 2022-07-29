@@ -64,7 +64,7 @@ class FeatureExtractor:
 
         self.q = q
         self.block_size = block_size
-        self.num_images = num_images
+        self.num_images = min(num_images, self.psi.max_images)
         self.init_with_pca = init_with_pca
 
 
@@ -77,12 +77,12 @@ class FeatureExtractor:
         self.d = np.prod(self.psi.det.shape())
         self.counter = 0
 
-    def gather_event_block(self, num_events):
+    def gather_img_block(self, num_events):
 
         if 'load_event' not in self.ipca_intervals:
             self.ipca_intervals['load_event'] = []
 
-        events = np.array([])
+        img_block = np.array([])
 
         while self.counter < num_events:
 
@@ -95,11 +95,11 @@ class FeatureExtractor:
             if self.reduced_indices.size:
                 img = img[self.reduced_indices]
             
-            events = np.hstack((events, img)) if events.size else img
+            img_block = np.hstack((events, img)) if img_block.size else img
 
             self.counter += 1
 
-        return events
+        return img_block
 
     def run_ipca(self):
 
@@ -118,18 +118,21 @@ class FeatureExtractor:
 
         # initialize ipca
         init_block_size = min(self.q, self.num_images) if self.init_with_pca else 0
-        init_events = self.gather_event_block(init_block_size)
-        self.initialize(init_events)
+
+        print(init_block_size)
+
+        img_block = self.gather_img_block(init_block_size)
+        self.initialize(img_block)
 
         # run pca on all windows
-        while self.counter < min(self.psi.max_events, num_images):
+        while self.counter < self.num_images:
 
             if (self.counter + 1) % block_size == 0 or (self.counter + 1) == end_idx:
                 
                 # size of current block
                 m = (idx+1) % block_size if (idx+1) % block_size else block_size
-                event_block = self.gather_event_block(m)
-                self.update_model(event_block)
+                img_block = self.gather_img_block(m)
+                self.update_model(img_block)
 
             self.counter += 1
 
