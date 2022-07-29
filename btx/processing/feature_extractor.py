@@ -126,7 +126,7 @@ class FeatureExtractor:
         # run pca on all windows
         while self.counter < self.num_images:
 
-            if (self.counter + 1) % self.block_size == 0 or (self.counter + 1) == end_idx:
+            if (self.counter + 1) % self.block_size == 0 or (self.counter + 1) == self.num_images:
                 # size of current block
                 m = (idx+1) % self.block_size if (idx+1) % self.block_size else self.block_size
                 img_block = self.gather_img_block(m)
