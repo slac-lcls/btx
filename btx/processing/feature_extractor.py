@@ -74,6 +74,7 @@ class FeatureExtractor:
         self.U = 0
         self.s = 0
 
+        self.d = np.prod(self.psi.det.shape())
         self.counter = 0
 
     def gather_event_block(self, num_events):
@@ -108,15 +109,12 @@ class FeatureExtractor:
         self.ipca_intervals['svd'] = []
         self.ipca_intervals['update_basis'] = []
 
-        z, x, y = self.psi.det.shape()
-        d = z * x * y if not self.reduced_indices.size else self.reduced_indices.size
+        self.get_distributed_indices(self.d)
 
-        self.get_distributed_indices(d)
-
-        self.S = np.eye(q)
-        self.U = np.zeros((d, q))
-        self.mu = np.zeros((d, 1))
-        self.total_variance = np.zeros((d, 1))
+        self.S = np.eye(self.q)
+        self.U = np.zeros((self.d, self.q))
+        self.mu = np.zeros((self.d, 1))
+        self.total_variance = np.zeros((self.d, 1))
 
         # initialize ipca
         init_block_size = min(self.q, self.num_images) if self.init_with_pca else 0
@@ -219,20 +217,23 @@ class FeatureExtractor:
         new_dim : int
             number of sampled indices to be drawn
         """
-        z, x, y = self.psi.det.shape()
-        det_pixels = z * x * y
+        det_pixels = np.prod(self.psi.det.shape())
 
         if det_pixels < new_dim:
             print('Detector dimension must be greater than or equal to reduced dimension.')
             return
 
         self.reduced_indices = np.random.choice(det_pixels, new_dim, replace=False)
+        self.d = new_dim
 
     def remove_reduced_indices(self):
         """
         Remove stored reduced indices.
         """
+        det_pixels = np.prod(self.psi.det.shape())
+
         self.reduced_indices = np.array([])
+        self.d = det_pixels
 
     def get_distributed_indices(self, d):
         """
