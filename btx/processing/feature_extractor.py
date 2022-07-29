@@ -108,7 +108,7 @@ class FeatureExtractor:
         self.ipca_intervals['svd'] = []
         self.ipca_intervals['update_basis'] = []
 
-        z, x, y = det.shape()
+        z, x, y = self.psi.det.shape()
         d = z * x * y if not self.reduced_indices.size else self.reduced_indices.size
 
         self.get_distributed_indices(d)
