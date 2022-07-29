@@ -209,6 +209,8 @@ class FeatureExtractor:
 
                 X_pm_loc = None
 
+                print('At 1')
+
                 if self.rank == 0:
                     # size of current block
                     m = (idx+1) % block_size if (idx+1) % block_size else block_size
@@ -217,41 +219,59 @@ class FeatureExtractor:
                     n = (idx + 1) - m
 
                     mu_m, s_m = calculate_sample_mean_and_variance(new_obs)
+
+                    print('At 2')
                     
                     with TaskTimer(self.ipca_intervals['concat']):
                         X_centered = new_obs - np.tile(mu_m, m)
                         X_m = np.hstack((X_centered, np.sqrt(n * m / (n + m)) * (mu_m - self.mu)))
                     
+                    print('At 3')
                     with TaskTimer(self.ipca_intervals['ortho']):
                         UX_m = self.U.T @ X_m
                         dX_m = X_m - self.U @ UX_m
                         X_pm, _ = np.linalg.qr(dX_m, mode='reduced')
+
+                    print('At 4')
                     
                     with TaskTimer(self.ipca_intervals['build_r']):
                         R = np.block([[self.S, UX_m], [np.zeros((m + 1, q)), X_pm.T @ dX_m]])
                     
+                    print('At 5')
+
                     with TaskTimer(self.ipca_intervals['svd']):
                         U_tilde, S_tilde, _ = np.linalg.svd(R)
-                    
+                    print('At 6')
                     self.U = np.ascontiguousarray(self.U)
+                    print('At 7')
 
                     self.comm.Bcast(self.U, root=0)
+                    print('At 8')
                     self.comm.Bcast(X_pm, root=0)
 
+                print('At 9')
                 self.comm.Barrier()
+                print('At 10')
 
                 with TaskTimer(self.ipca_intervals['update_basis']):
+
+                    print('At 11')
 
                     U_split = self.U[self.start_index:self.end_index, :]
                     X_pm_split = X_pm[self.start_index:self.end_index, :]
 
+                    print('At 12')
                     U_prime_partial = np.hstack((U_split, X_pm_split)) @ U_tilde
 
                     U_prime = None
                     if self.rank == 0:
                         U_prime = np.empty((d, q+m+1))
+                    
+                    print('At 13')
 
                     self.comm.Gather(U_prime_partial, U_prime, root=0)
+
+                    print(U_prime.shape)
 
                 if self.rank == 0:
                     # U_prime = np.hstack((self.U, X_pm)) @ U_tilde
