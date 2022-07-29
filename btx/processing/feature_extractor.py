@@ -217,15 +217,8 @@ class FeatureExtractor:
                 mu_m, s_m = calculate_sample_mean_and_variance(new_obs)
                 
                 with TaskTimer(self.ipca_intervals['concat']):
-                    X_centered_split = new_obs[:, self.start_index:self.end_index] - np.tile(mu_m, self.end_index - self.start_index)
-                    # X_centered = new_obs - np.tile(mu_m, m)
-
-                    if self.rank == self.size - 1:
-                        X_centered_split = np.hstack((X_cented_split, np.sqrt(n * m / (n + m)) * (mu_m - self.mu)))
-                    
-                    # X_m = np.hstack((X_centered, np.sqrt(n * m / (n + m)) * (mu_m - self.mu)))
-                    X_centered = np.empty((d, m + 1))
-                    self.comm.Allgather(X_centered_split, X_centered)
+                    X_centered = new_obs - np.tile(mu_m, m)
+                    X_m = np.hstack((X_centered, np.sqrt(n * m / (n + m)) * (mu_m - self.mu)))
 
                 with TaskTimer(self.ipca_intervals['ortho']):
                     UX_m = self.U.T @ X_m
