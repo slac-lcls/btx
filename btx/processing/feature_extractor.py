@@ -64,7 +64,7 @@ class FeatureExtractor:
 
         self.q = q
         self.block_size = block_size
-        self.num_images = min(num_images, self.psi.max_images)
+        self.num_images = min(num_images, self.psi.max_events)
         self.init_with_pca = init_with_pca
 
 
@@ -118,9 +118,6 @@ class FeatureExtractor:
 
         # initialize ipca
         init_block_size = min(self.q, self.num_images) if self.init_with_pca else 0
-
-        print(init_block_size)
-
         img_block = self.gather_img_block(init_block_size)
         self.initialize(img_block)
 
