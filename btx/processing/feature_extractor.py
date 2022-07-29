@@ -66,7 +66,129 @@ class FeatureExtractor:
         self.block_size = block_size
         self.num_images = num_images
         self.init_with_pca = init_with_pca
- 
+
+
+        # relevant parameters tracked over course of algorithm
+        self.mu = 0
+        self.total_variance = 0
+        self.U = 0
+        self.s = 0
+
+        self.counter = 0
+
+    def gather_event_block(self, num_events):
+
+        if 'load_event' not in self.ipca_intervals:
+            self.ipca_intervals['load_event'] = []
+
+        events = np.array([])
+
+        while self.counter < num_events:
+
+            with TaskTimer(self.ipca_intervals['load_event']): 
+                evt = self.psi.runner.event(self.psi.times[idx])
+                img_panels = self.psi.det.calib(evt=evt)
+            
+            img = self.flatten_img(imgs_panels)
+
+            if self.reduced_indices.size:
+                img = img[self.reduced_indices]
+            
+            events = np.hstack((events, img)) if events.size else img
+
+            self.counter += 1
+
+        return events
+
+    def run_ipca(self):
+
+        self.ipca_intervals['concat'] = []
+        self.ipca_intervals['ortho'] = []
+        self.ipca_intervals['build_r'] = []
+        self.ipca_intervals['svd'] = []
+        self.ipca_intervals['update_basis'] = []
+
+        z, x, y = det.shape()
+        d = z * x * y if not self.reduced_indices.size else self.reduced_indices.size
+
+        self.get_distributed_indices(d)
+
+        self.S = np.eye(q)
+        self.U = np.zeros((d, q))
+        self.mu = np.zeros((d, 1))
+        self.total_variance = np.zeros((d, 1))
+
+        # initialize ipca
+        init_block_size = min(self.q, self.num_images) if self.init_with_pca else 0
+        init_events = self.gather_event_block(init_block_size)
+        self.initialize(init_events)
+
+        # run pca on all windows
+        while self.counter < min(self.psi.max_events, num_images):
+
+            if (self.counter + 1) % block_size == 0 or (self.counter + 1) == end_idx:
+                
+                # size of current block
+                m = (idx+1) % block_size if (idx+1) % block_size else block_size
+                event_block = self.gather_event_block(m)
+                self.update_model(event_block)
+
+            self.counter += 1
+
+
+    def initialize(self, event_data):
+        self.mu, self.total_variance = calculate_sample_mean_and_variance(event_data)
+        
+        centered_data = event_data - np.tile(self.mu, q)
+        self.U, self.s, _ = np.linalg.svd(centered_data, full_matrices=False)
+
+    def update_model(self, event_data):
+        d, m = event_data.shape
+        n = self.counter + 1 - m
+
+        mu_m, s_m = calculate_sample_mean_and_variance(event_data)
+
+        X_pm_loc = None
+
+        with TaskTimer(self.ipca_intervals['concat']):
+            X_centered = event_data - np.tile(mu_m, m)
+            X_m = np.hstack((X_centered, np.sqrt(n * m / (n + m)) * (mu_m - self.mu)))
+
+        with TaskTimer(self.ipca_intervals['ortho']):
+            UX_m = self.U.T @ X_m
+            dX_m = X_m - self.U @ UX_m
+            X_pm, _ = np.linalg.qr(dX_m, mode='reduced')
+        
+        with TaskTimer(self.ipca_intervals['build_r']):
+            R = np.block([[self.S, UX_m], [np.zeros((m + 1, q)), X_pm.T @ dX_m]])
+        
+        with TaskTimer(self.ipca_intervals['svd']):
+            U_tilde, S_tilde, _ = np.linalg.svd(R)
+        
+        print(self.rank)
+
+        self.comm.Barrier()
+
+        with TaskTimer(self.ipca_intervals['update_basis']):
+
+            U_split = self.U[self.start_index:self.end_index, :]
+            X_pm_split = X_pm[self.start_index:self.end_index, :]
+
+            U_prime_partial = np.hstack((U_split, X_pm_split)) @ U_tilde
+            print(U_prime_partial.shape)
+            
+            U_prime = np.empty((d, q+m+1))
+    
+            self.comm.Allgather(U_prime_partial, U_prime)
+
+            print(U_prime.shape)
+
+        # U_prime = np.hstack((self.U, X_pm)) @ U_tilde
+        self.U = U_prime[:, :q]
+        self.S = np.diag(S_tilde[:q])
+
+        self.total_variance = update_sample_variance(self.total_variance, s_m, self.mu, mu_m, n, m)
+        self.mu = update_sample_mean(self.mu, mu_m, n, m)
         
     def set_ipca_params(self, q=None, block_size=None, num_images=None, init_with_pca=None):
         """
@@ -127,7 +249,7 @@ class FeatureExtractor:
         self.start_index = split_indices[self.rank]
         self.end_index = split_indices[self.rank + 1]
 
-    def ipca(self, img_data=None):
+    def ipca(self):
         """
         Run iPCA with run subset subject to initialization parameters.
 
@@ -173,21 +295,18 @@ class FeatureExtractor:
 
             print(f'Processing observation: {idx + 1}')
 
-            if img_data is None:
+            if idx == 0:
+                self.ipca_intervals['load_event'] = []
 
-                if idx == 0:
-                    self.ipca_intervals['load_event'] = []
+            with TaskTimer(self.ipca_intervals['load_event']): 
+                evt = runner.event(times[idx])
+                img_panels = det.calib(evt=evt)
+        
+            img = self.flatten_img(img_panels)
 
-                with TaskTimer(self.ipca_intervals['load_event']): 
-                    evt = runner.event(times[idx])
-                    img_panels = det.calib(evt=evt)
-            
-                img = self.flatten_img(img_panels)
+            if self.reduced_indices.size:
+                img = img[self.reduced_indices]
 
-                if self.reduced_indices.size:
-                    img = img[self.reduced_indices]
-            else:
-                img = img_data[:, idx:idx+1]
             
             new_obs = np.hstack((new_obs, img)) if new_obs.size else img
 
