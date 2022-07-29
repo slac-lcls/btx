@@ -171,38 +171,37 @@ class FeatureExtractor:
 
         for idx in range(end_idx):
 
-            if self.rank == 0:
-                print(f'Processing observation: {idx + 1}')
+            print(f'Processing observation: {idx + 1}')
 
-                if img_data is None:
+            if img_data is None:
 
-                    if idx == 0:
-                        self.ipca_intervals['load_event'] = []
+                if idx == 0:
+                    self.ipca_intervals['load_event'] = []
 
-                    with TaskTimer(self.ipca_intervals['load_event']): 
-                        evt = runner.event(times[idx])
-                        img_panels = det.calib(evt=evt)
-                
-                    img = self.flatten_img(img_panels)
+                with TaskTimer(self.ipca_intervals['load_event']): 
+                    evt = runner.event(times[idx])
+                    img_panels = det.calib(evt=evt)
+            
+                img = self.flatten_img(img_panels)
 
-                    if self.reduced_indices.size:
-                        img = img[self.reduced_indices]
-                else:
-                    img = img_data[:, idx:idx+1]
-                
-                new_obs = np.hstack((new_obs, img)) if new_obs.size else img
+                if self.reduced_indices.size:
+                    img = img[self.reduced_indices]
+            else:
+                img = img_data[:, idx:idx+1]
+            
+            new_obs = np.hstack((new_obs, img)) if new_obs.size else img
 
-                # initialize model on first q observations, if init_with_pca is true
-                if init_with_pca and (idx + 1) <= q:
-                    if (idx + 1) == q:
-                        self.mu, self.total_variance = calculate_sample_mean_and_variance(new_obs)
-                        
-                        centered_obs = new_obs - np.tile(self.mu, q)
-                        self.U, s, _ = np.linalg.svd(centered_obs, full_matrices=False)
-                        self.S = np.diag(s)
-                        
-                        new_obs = np.array([[]])
-                    continue
+            # initialize model on first q observations, if init_with_pca is true
+            if init_with_pca and (idx + 1) <= q:
+                if (idx + 1) == q:
+                    self.mu, self.total_variance = calculate_sample_mean_and_variance(new_obs)
+                    
+                    centered_obs = new_obs - np.tile(self.mu, q)
+                    self.U, s, _ = np.linalg.svd(centered_obs, full_matrices=False)
+                    self.S = np.diag(s)
+                    
+                    new_obs = np.array([[]])
+                continue
             
             # update model with block every m samples, or img limit
             if (idx + 1) % block_size == 0 or (idx + 1) == end_idx:
@@ -240,7 +239,7 @@ class FeatureExtractor:
                     X_pm_split = X_pm[self.start_index:self.end_index, :]
 
                     U_prime_partial = np.hstack((U_split, X_pm_split)) @ U_tilde
-
+                    print(U_prime_partial.shape)
                     
                     U_prime = np.empty((d, q+m+1))
             
