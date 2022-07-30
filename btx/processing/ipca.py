@@ -49,6 +49,7 @@ class IPCA:
 
         self.d = d
         self.q = q
+        self.n = 0
 
         self.S = np.eye(self.q)
         self.U = np.zeros((self.d, self.q))
@@ -112,12 +113,18 @@ class IPCA:
         self.total_variance = update_sample_variance(self.total_variance, s_m, self.mu, mu_m, n, m)
         self.mu = update_sample_mean(self.mu, mu_m, n, m)
 
-    def initialize_model(self, X):
-        self.mu, self.total_variance = calculate_sample_mean_and_variance(event_data)
+        self.n += m
 
-        centered_data = event_data - np.tile(self.mu, q)
+    def initialize_model(self, X):
+        q = self.q
+
+        self.mu, self.total_variance = calculate_sample_mean_and_variance(X)
+
+        centered_data = X - np.tile(self.mu, q)
         self.U, s, _ = np.linalg.svd(centered_data, full_matrices=False)
         self.S = np.diag(s)
+        
+        self.n += q
 
     def get_distributed_indices(self):
         """
