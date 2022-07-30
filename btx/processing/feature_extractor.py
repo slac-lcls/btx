@@ -390,7 +390,7 @@ class FeatureExtractor:
             n, z, y, x = imgs.shape
             d = self.reduced_indices.size if self.reduced_indices.size else x*y*z
 
-            formatted_images = np.empty((d, n))
+            formatted_imgs = np.empty((d, n))
 
             for i in range(n):
                 if self.reduced_indices.size:
