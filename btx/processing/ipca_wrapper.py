@@ -65,9 +65,11 @@ class IPCAWrapper:
         self.d = det_pixels
 
     def run_ipca(self):
-
+        d = self.d
         m = self.m
         q = self.q
+
+        self.ipca = IPCA(d, q)
 
         parsed_images = 0
 
