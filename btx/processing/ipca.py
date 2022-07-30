@@ -58,6 +58,7 @@ class IPCA:
         self.get_distributed_indices()
 
         # attributes for computing timings of iPCA steps
+        self.ipca_intervals = dict({})
         self.ipca_intervals['concat'] = []
         self.ipca_intervals['ortho'] = []
         self.ipca_intervals['build_r'] = []
