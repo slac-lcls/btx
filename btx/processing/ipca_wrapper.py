@@ -83,7 +83,7 @@ class IPCAWrapper:
 
         while parsed_images <= max_images:
 
-            if parsed_images == max_images or parsed_images % m == 0:
+            if parsed_images == max_images or (parsed_images % m == 0 and parsed_images != 0):
                 current_block_size = parsed_images % m if parsed_images % m else m
 
                 img_block = self.fetch_formatted_images(current_block_size)
