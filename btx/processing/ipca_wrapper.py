@@ -25,7 +25,7 @@ class IPCAWrapper:
     def fetch_formatted_images(self, n):
         d = self.d
 
-        imgs = self.psi.get_images(n)
+        imgs = self.psi.get_images(n, assemble=False)
 
         formatted_imgs = np.empty((d, n))
 
@@ -74,7 +74,7 @@ class IPCAWrapper:
         parsed_images = 0
 
         if self.init_with_pca:
-            img_block = self.fetch_formatted_images(q, assemble=False)
+            img_block = self.fetch_formatted_images(q)
             self.ipca.initialize_model(img_block)
 
             parsed_images = q
@@ -86,7 +86,7 @@ class IPCAWrapper:
             if parsed_images == max_images or parsed_images % m == 0:
                 current_block_size = parsed_images % m if parsed_images % m else m
 
-                img_block = self.fetch_formatted_images(current_block_size, assemble=False)
+                img_block = self.fetch_formatted_images(current_block_size)
                 self.ipca.update_model(img_block)
             
             parsed_images += 1
