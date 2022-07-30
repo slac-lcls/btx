@@ -67,6 +67,7 @@ class IPCA:
 
 
     def update_model(self, X):
+        print(X.shape)
         d, m = X.shape
         n = self.n
 
