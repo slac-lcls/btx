@@ -394,9 +394,9 @@ class FeatureExtractor:
 
             for i in range(n):
                 if self.reduced_indices.size:
-                    formatted_images[:, i:i+1] = self.flatten_img(imgs[i])[self.reduced_indices]
+                    formatted_imgs[:, i:i+1] = self.flatten_img(imgs[i])[self.reduced_indices]
                 else:
-                    formatted_images[:, i:i+1] = self.flatten_img(imgs[i])
+                    formatted_imgs[:, i:i+1] = self.flatten_img(imgs[i])
         
         d, n = formatted_imgs.shape
             
