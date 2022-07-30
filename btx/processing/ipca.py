@@ -68,8 +68,10 @@ class IPCA:
 
 
     def update_model(self, X):
-        d, m = X.shape
+        _, m = X.shape
         n = self.n
+        q = self.q
+        d = self.d
 
         mu_m, s_m = calculate_sample_mean_and_variance(X)
 
@@ -123,7 +125,7 @@ class IPCA:
         centered_data = X - np.tile(self.mu, q)
         self.U, s, _ = np.linalg.svd(centered_data, full_matrices=False)
         self.S = np.diag(s)
-        
+
         self.n += q
 
     def get_distributed_indices(self):
