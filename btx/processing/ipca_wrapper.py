@@ -31,9 +31,9 @@ class IPCAWrapper:
 
         for i in range(n):
             if self.reduced_indices.size:
-                formatted_imgs[:, i] = np.reshape(imgs[i], (d, 1))[self.reduced_indices]
+                formatted_imgs[:, i:i+1] = np.reshape(imgs[i], (d, 1))[self.reduced_indices]
             else:
-                formatted_imgs[:, i] = np.reshape(imgs[i], (d, 1))
+                formatted_imgs[:, i:i+1] = np.reshape(imgs[i], (d, 1))
 
         return formatted_imgs
 
