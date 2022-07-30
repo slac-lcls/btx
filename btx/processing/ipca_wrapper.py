@@ -1,6 +1,6 @@
 from btx.interfaces.psana_interface import *
 
-from ipca import *
+from btx.processing.ipca import *
 
 
 class IPCAWrapper:
@@ -65,6 +65,7 @@ class IPCAWrapper:
         self.d = det_pixels
 
     def run_ipca(self):
+
         m = self.m
         q = self.q
 
@@ -87,3 +88,5 @@ class IPCAWrapper:
                 self.ipca.update_model(img_block)
             
             parsed_images += 1
+
+        
