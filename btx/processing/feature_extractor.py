@@ -461,6 +461,89 @@ class FeatureExtractor:
             else:
                 print(f'Mean per-iteration compute time of step \'{key}\': {interval_mean / self.block_size:.4g}s')
 
+def calculate_sample_mean_and_variance(imgs):
+    """
+    Compute the sample mean and variance of a flattened stack of n images.
+
+    Parameters
+    ----------
+    imgs : ndarray, shape (d x n)
+        horizonally stacked batch of flattened images 
+
+    Returns
+    -------
+    mu_m : ndarray, shape (d x 1)
+        mean of imgs
+    su_m : ndarray, shape (d x 1)
+        sample variance of imgs (1 dof)
+    """
+    d, m = imgs.shape
+
+    mu_m = np.reshape(np.mean(imgs, axis=1), (d, 1))
+    s_m  = np.zeros((d, 1))
+
+    if m > 1:
+        s_m = np.reshape(np.var(imgs, axis=1, ddof=1), (d, 1))
+    
+    return mu_m, s_m
+
+def update_sample_mean(mu_n, mu_m, n, m):
+    """
+    Combine combined mean of two blocks of data.
+
+    Parameters
+    ----------
+    mu_n : ndarray, shape (d x 1)
+        mean of first block of data
+    mu_m : ndarray, shape (d x 1)
+        mean of second block of data
+    n : int
+        number of observations in first block of data
+    m : int
+        number of observations in second block of data
+
+    Returns
+    -------
+    mu_nm : ndarray, shape (d x 1)
+        combined mean of both blocks of input data
+    """
+    mu_nm = mu_m
+
+    if n != 0:
+        mu_nm = (1 / (n + m)) * (n * mu_n + m * mu_m)
+
+    return mu_nm
+
+def update_sample_variance(s_n, s_m, mu_n, mu_m, n, m):
+    """
+    Compute combined sample variance of two blocks of data described by input parameters.
+
+    Parameters
+    ----------
+    s_n : ndarray, shape (d x 1)
+        sample variance of first block of data
+    s_m : ndarray, shape (d x 1)
+        sample variance of second block of data
+    mu_n : ndarray, shape (d x 1)
+        mean of first block of data
+    mu_m : ndarray, shape (d x 1)
+        mean of second block of data
+    n : int
+        number of observations in first block of data
+    m : int
+        number of observations in second block of data
+
+    Returns
+    -------
+    s_nm : ndarray, shape (d x 1)
+        combined sample variance of both blocks of data described by input parameters
+    """
+    s_nm = s_m
+
+    if n != 0:
+        s_nm = (((n - 1) * s_n + (m - 1) * s_m) + (n*m*(mu_n - mu_m)**2) / (n + m)) / (n + m - 1) 
+
+    return s_nm
 
     def flatten_img(self, img):
         """
