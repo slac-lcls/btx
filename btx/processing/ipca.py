@@ -168,11 +168,7 @@ class IPCA:
         
         for key in list(self.task_durations.keys()):
             interval_mean = np.mean(self.task_durations[key])
-
-            if key is 'load_event':
-                print(f'Mean time to load each observation: {interval_mean:.4g}s')
-            else:
-                print(f'Mean per-iteration compute time of step \'{key}\': {interval_mean:.4g}s')
+            print(f'Mean per-block compute time of step \'{key}\': {interval_mean:.4g}s')
 
 
 def calculate_sample_mean_and_variance(imgs):
