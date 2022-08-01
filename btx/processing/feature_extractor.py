@@ -10,6 +10,42 @@ from psalgos.pypsalgos import PyAlgos
 from matplotlib import pyplot as plt
 from time import perf_counter
 
+class TaskTimer:
+    """
+    A context manager to record the duration of managed tasks.
+
+    Attributes
+    ----------
+    start_time : float
+        reference time for start time of task
+    intervals : list
+        list containing time interval data
+    """
+    
+    def __init__(self, intervals):
+        """
+        Construct all necessary attributes for the TaskTimer context manager.
+
+        Parameters
+        ----------
+        intervals : list of float
+            List containing interval data
+        """
+        self.start_time = 0.
+        self.intervals = intervals
+    
+    def __enter__(self):
+        """
+        Set reference start time.
+        """
+        self.start_time = perf_counter()
+    
+    def __exit__(self, *args, **kwargs):
+        """
+        Mutate interval list with interval duration of current task.
+        """
+        self.intervals.append(perf_counter() - self.start_time)
+
 class FeatureExtractor:
     """
     Extract features from a psana run using dimensionality reduction.
