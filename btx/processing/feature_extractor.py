@@ -90,7 +90,7 @@ class FeatureExtractor:
                 evt = self.psi.runner.event(self.psi.times[self.counter])
                 img_panels = self.psi.det.calib(evt=evt)
             
-            img = self.flatten_img(img_panels)
+            img = np.reshape(img_panels, (self.d, 1))
 
             if self.reduced_indices.size:
                 img = img[self.reduced_indices]
@@ -304,7 +304,7 @@ class FeatureExtractor:
                 evt = runner.event(times[idx])
                 img_panels = det.calib(evt=evt)
         
-            img = self.flatten_img(img_panels)
+            img = np.reshape(img_panels, (self.d, 1))
 
             if self.reduced_indices.size:
                 img = img[self.reduced_indices]
@@ -403,9 +403,9 @@ class FeatureExtractor:
 
         for i in range(n):
             if self.reduced_indices.size:
-                formatted_images[:, i:i+1] = self.flatten_img(imgs[i])[self.reduced_indices]
+                formatted_images[:, i:i+1] = np.reshape(imgs[i], (self.d, 1))[self.reduced_indices]
             else:
-                formatted_images[:, i:i+1] = self.flatten_img(imgs[i])
+                formatted_images[:, i:i+1] = np.reshape(imgs[i], (self.d, 1))
         
         return formatted_images
 
@@ -430,9 +430,9 @@ class FeatureExtractor:
 
             for i in range(n):
                 if self.reduced_indices.size:
-                    formatted_imgs[:, i:i+1] = self.flatten_img(imgs[i])[self.reduced_indices]
+                    formatted_imgs[:, i:i+1] = np.reshape(imgs[i], (self.d, 1))[self.reduced_indices]
                 else:
-                    formatted_imgs[:, i:i+1] = self.flatten_img(imgs[i])
+                    formatted_imgs[:, i:i+1] = np.reshape(imgs[i], (self.d, 1))
         
         d, n = formatted_imgs.shape
             
