@@ -59,15 +59,23 @@ class IPCA:
         self.get_distributed_indices()
 
         # attributes for computing timings of iPCA steps
-        self.ipca_intervals = dict({})
-        self.ipca_intervals['concat'] = []
-        self.ipca_intervals['ortho'] = []
-        self.ipca_intervals['build_r'] = []
-        self.ipca_intervals['svd'] = []
-        self.ipca_intervals['update_basis'] = []
+        self.task_durations = dict({})
+        self.task_durations['concat'] = []
+        self.task_durations['ortho'] = []
+        self.task_durations['build_r'] = []
+        self.task_durations['svd'] = []
+        self.task_durations['update_basis'] = []
 
 
     def update_model(self, X):
+        """
+        Update model with new block of observations using iPCA.
+
+        Parameters
+        ----------
+        X : ndarray, shape (d x m)
+            block of m (d x 1) observations 
+        """
         _, m = X.shape
         n = self.n
         q = self.q
@@ -77,26 +85,26 @@ class IPCA:
 
         X_pm_loc = None
 
-        with TaskTimer(self.ipca_intervals['concat']):
+        with TaskTimer(self.task_durations['concat']):
             X_centered = X - np.tile(mu_m, m)
             X_m = np.hstack((X_centered, np.sqrt(n * m / (n + m)) * (mu_m - self.mu)))
 
-        with TaskTimer(self.ipca_intervals['ortho']):
+        with TaskTimer(self.task_durations['ortho']):
             UX_m = self.U.T @ X_m
             dX_m = X_m - self.U @ UX_m
             X_pm, _ = np.linalg.qr(dX_m, mode='reduced')
         
-        with TaskTimer(self.ipca_intervals['build_r']):
+        with TaskTimer(self.task_durations['build_r']):
             R = np.block([[self.S, UX_m], [np.zeros((m + 1, q)), X_pm.T @ dX_m]])
         
-        with TaskTimer(self.ipca_intervals['svd']):
+        with TaskTimer(self.task_durations['svd']):
             U_tilde, S_tilde, _ = np.linalg.svd(R)
         
         print(self.rank)
 
         self.comm.Barrier()
 
-        with TaskTimer(self.ipca_intervals['update_basis']):
+        with TaskTimer(self.task_durations['update_basis']):
             U_split = self.U[self.start_index:self.end_index, :]
             X_pm_split = X_pm[self.start_index:self.end_index, :]
 
@@ -118,6 +126,14 @@ class IPCA:
         self.n += m
 
     def initialize_model(self, X):
+        """
+        Initialiize model on sample of data using batch PCA.
+
+        Parameters
+        ----------
+        X : ndarray, shape (d x m)
+            set of m (d x 1) observations
+        """
         q = self.q
 
         self.mu, self.total_variance = calculate_sample_mean_and_variance(X)
@@ -147,18 +163,17 @@ class IPCA:
         """
         Report time interval data gathered during iPCA.
         """
-        print(self.rank)
-        if len(self.ipca_intervals) == 0:
+        if len(self.task_durations) == 0:
             print('iPCA has not yet been performed.')
             return
         
-        for key in list(self.ipca_intervals.keys()):
-            interval_mean = np.mean(self.ipca_intervals[key])
+        for key in list(self.task_durations.keys()):
+            interval_mean = np.mean(self.task_durations[key])
 
             if key is 'load_event':
                 print(f'Mean time to load each observation: {interval_mean:.4g}s')
             else:
-                print(f'Mean per-iteration compute time of step \'{key}\': {interval_mean / self.block_size:.4g}s')
+                print(f'Mean per-iteration compute time of step \'{key}\': {interval_mean:.4g}s')
 
 
 def calculate_sample_mean_and_variance(imgs):

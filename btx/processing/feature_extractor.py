@@ -1,213 +1,70 @@
-import numpy as np
-import argparse
-import h5py
-import os
-import requests
-from mpi4py import MPI
 from btx.interfaces.psana_interface import *
-from psalgos.pypsalgos import PyAlgos
 
-from matplotlib import pyplot as plt
-from time import perf_counter
+from btx.processing.ipca import *
 
-class TaskTimer:
-    """
-    A context manager to record the duration of managed tasks.
-
-    Attributes
-    ----------
-    start_time : float
-        reference time for start time of task
-    intervals : list
-        list containing time interval data
-    """
-    
-    def __init__(self, intervals):
-        """
-        Construct all necessary attributes for the TaskTimer context manager.
-
-        Parameters
-        ----------
-        intervals : list of float
-            List containing interval data
-        """
-        self.start_time = 0.
-        self.intervals = intervals
-    
-    def __enter__(self):
-        """
-        Set reference start time.
-        """
-        self.start_time = perf_counter()
-    
-    def __exit__(self, *args, **kwargs):
-        """
-        Mutate interval list with interval duration of current task.
-        """
-        self.intervals.append(perf_counter() - self.start_time)
 
 class FeatureExtractor:
-    """
-    Extract features from a psana run using dimensionality reduction.
-    """
     
+    """
+    Class to manage performing of feature extraction on image data subject to initialization parameters.
+    """
+
     def __init__(self, exp, run, det_type, q=50, block_size=10, num_images=100, init_with_pca=False):
-
-        self.comm = MPI.COMM_WORLD
-        self.rank = self.comm.Get_rank()
-        self.size = self.comm.Get_size()
-
         self.psi = PsanaInterface(exp=exp, run=run, det_type=det_type)
 
-        self.ipca_intervals = dict({})
+        self.d = np.prod(self.psi.det.shape())
         self.reduced_indices = np.array([])
 
-        self.q = q
-        self.block_size = block_size
-        self.num_images = min(num_images, self.psi.max_events)
         self.init_with_pca = init_with_pca
 
+        # ensure that requested number of images is valid
+        self.num_images = num_images
+        if self.num_images > self.psi.max_events:
+            self.num_images = self.psi.max_events
+            print(f'Requested number of images too large, reduced to {self.num_images}')
 
-        # relevant parameters tracked over course of algorithm
-        self.mu = 0
-        self.total_variance = 0
-        self.U = 0
-        self.s = 0
+        # ensure that requested dimension is valid
+        self.q = q
+        if self.q > self.num_images:
+            self.q = self.num_images
+            print(f'Requested number of components too large, reduced to {self.q}')
 
-        self.d = np.prod(self.psi.det.shape())
-        self.counter = 0
+        self.m = block_size
+        if self.m > self.num_events:
+            self.m = self.num_images
+            print(f'Requested block size too large, reduced to {self.m}')
 
-    def gather_img_block(self, num_events):
+    def fetch_formatted_images(self, n):
+        """
+        Retrieve and format n images from run.
 
-        if 'load_event' not in self.ipca_intervals:
-            self.ipca_intervals['load_event'] = []
+        Paramters
+        ---------
+        n : int
+            number of images to retrieve and format
 
-        img_block = np.array([])
+        Return
+        ------
+        formatted_imgs: ndarray, shape (d x n)
+            n formatted (d x 1) images from run
+        
+        Notes
+        -----
+        PsanaInterface has internal counter that's updated on retrieval of images, ensuring
+        that images are retrieved sequentially using this method.
+        """
+        d = self.d
 
-        while self.counter < num_events:
+        imgs = self.psi.get_images(n, assemble=False)
+        formatted_imgs = np.empty((d, n))
 
-            with TaskTimer(self.ipca_intervals['load_event']): 
-                evt = self.psi.runner.event(self.psi.times[self.counter])
-                img_panels = self.psi.det.calib(evt=evt)
-            
-            img = np.reshape(img_panels, (self.d, 1))
-
+        for i in range(n):
             if self.reduced_indices.size:
-                img = img[self.reduced_indices]
-            
-            img_block = np.hstack((events, img)) if img_block.size else img
+                formatted_imgs[:, i:i+1] = np.reshape(imgs[i], (d, 1))[self.reduced_indices]
+            else:
+                formatted_imgs[:, i:i+1] = np.reshape(imgs[i], (d, 1))
 
-            self.counter += 1
-
-        return img_block
-
-    def run_ipca(self):
-
-        self.ipca_intervals['concat'] = []
-        self.ipca_intervals['ortho'] = []
-        self.ipca_intervals['build_r'] = []
-        self.ipca_intervals['svd'] = []
-        self.ipca_intervals['update_basis'] = []
-
-        self.get_distributed_indices(self.d)
-
-        self.S = np.eye(self.q)
-        self.U = np.zeros((self.d, self.q))
-        self.mu = np.zeros((self.d, 1))
-        self.total_variance = np.zeros((self.d, 1))
-
-        # initialize ipca
-
-        if self.init_with_pca:
-            init_block_size = min(self.q, self.num_images)
-            img_block = self.gather_img_block(init_block_size)
-            self.initialize(img_block)
-
-        # run pca on all windows
-        while self.counter < self.num_images:
-
-            if (self.counter + 1) % self.block_size == 0 or (self.counter + 1) == self.num_images:
-                # size of current block
-                m = (self.counter+1) % self.block_size if (self.counter+1) % self.block_size else self.block_size
-                img_block = self.gather_img_block(m)
-                self.update_model(img_block)
-
-            self.counter += 1
-
-
-    def initialize(self, event_data):
-        self.mu, self.total_variance = calculate_sample_mean_and_variance(event_data)
-        
-        centered_data = event_data - np.tile(self.mu, q)
-        self.U, self.s, _ = np.linalg.svd(centered_data, full_matrices=False)
-
-    def update_model(self, event_data):
-        d, m = event_data.shape
-        n = self.counter + 1 - m
-
-        mu_m, s_m = calculate_sample_mean_and_variance(event_data)
-
-        X_pm_loc = None
-
-        with TaskTimer(self.ipca_intervals['concat']):
-            X_centered = event_data - np.tile(mu_m, m)
-            X_m = np.hstack((X_centered, np.sqrt(n * m / (n + m)) * (mu_m - self.mu)))
-
-        with TaskTimer(self.ipca_intervals['ortho']):
-            UX_m = self.U.T @ X_m
-            dX_m = X_m - self.U @ UX_m
-            X_pm, _ = np.linalg.qr(dX_m, mode='reduced')
-        
-        with TaskTimer(self.ipca_intervals['build_r']):
-            R = np.block([[self.S, UX_m], [np.zeros((m + 1, q)), X_pm.T @ dX_m]])
-        
-        with TaskTimer(self.ipca_intervals['svd']):
-            U_tilde, S_tilde, _ = np.linalg.svd(R)
-        
-        print(self.rank)
-
-        self.comm.Barrier()
-
-        with TaskTimer(self.ipca_intervals['update_basis']):
-
-            U_split = self.U[self.start_index:self.end_index, :]
-            X_pm_split = X_pm[self.start_index:self.end_index, :]
-
-            U_prime_partial = np.hstack((U_split, X_pm_split)) @ U_tilde
-            print(U_prime_partial.shape)
-            
-            U_prime = np.empty((d, q+m+1))
-    
-            self.comm.Allgather(U_prime_partial, U_prime)
-
-            print(U_prime.shape)
-
-        # U_prime = np.hstack((self.U, X_pm)) @ U_tilde
-        self.U = U_prime[:, :q]
-        self.S = np.diag(S_tilde[:q])
-
-        self.total_variance = update_sample_variance(self.total_variance, s_m, self.mu, mu_m, n, m)
-        self.mu = update_sample_mean(self.mu, mu_m, n, m)
-        
-    def set_ipca_params(self, q=None, block_size=None, num_images=None, init_with_pca=None):
-        """
-        Update parameters to be used in iPCA algorithm.
-
-        Parameters
-        ----------
-        q : int 
-            number of principal axes to be computed
-        block_size : int
-            block size to be used in iPCA algorithm
-        num_images : int
-            number of images on which iPCA will be ran
-        init_with_pca : bool
-            whether to initialize iPCA algorithm with batch PCA on first q observations
-        """
-        self.q = q if self.q else self.q
-        self.block_size = block_size if self.block_size else self.block_size
-        self.num_images = num_images if self.num_images else self.num_images
-        self.init_with_pca = init_with_pca if self.init_with_pca else self.init_with_pca
+        return formatted_imgs
 
     def generate_reduced_indices(self, new_dim):
         """
@@ -236,374 +93,31 @@ class FeatureExtractor:
         self.reduced_indices = np.array([])
         self.d = det_pixels
 
-    def get_distributed_indices(self, d):
+    def run_ipca(self):
         """
-        Distribute d indices over ranks in MPI world.
+        Perform iPCA on run subject to initialization parameters.
         """
-        split_indices = np.zeros(self.size)
-        for r in range(self.size):
-            num_per_rank = d // self.size
-            if r < (d % self.size):
-                num_per_rank += 1
-            split_indices[r] = num_per_rank
-        split_indices = np.append(np.array([0]), np.cumsum(split_indices)).astype(int)
-
-        self.start_index = split_indices[self.rank]
-        self.end_index = split_indices[self.rank + 1]
-
-    def ipca(self):
-        """
-        Run iPCA with run subset subject to initialization parameters.
-
-        Parameters
-        ----------
-        img_data : ndarray, (d x n) (optional)
-            optional run data fetched and formatted through retrieve_run_data
-        """
+        d = self.d
+        m = self.m
         q = self.q
-        block_size = self.block_size
-        num_images = self.num_images
-        init_with_pca = self.init_with_pca
+        parsed_images = 0
 
-        runner = self.psi.runner
-        times = self.psi.times
-        det = self.psi.det
+        self.ipca = IPCA(d, q)
 
-        self.ipca_intervals['concat'] = []
-        self.ipca_intervals['ortho'] = []
-        self.ipca_intervals['build_r'] = []
-        self.ipca_intervals['svd'] = []
-        self.ipca_intervals['update_basis'] = []
+        if self.init_with_pca:
+            img_block = self.fetch_formatted_images(q)
+            self.ipca.initialize_model(img_block)
 
-        if num_images == -1:
-            end_idx = self.psi.max_events
-        
-        imgs = np.array([[]])
-        new_obs = np.array([[]])
+            parsed_images = q
 
-        z, x, y = det.shape()
-        d = z * x * y if not self.reduced_indices.size else self.reduced_indices.size
-    
-        self.get_distributed_indices(d)
+        while parsed_images <= self.num_images:
 
-        self.S = np.eye(q)
-        self.U = np.zeros((d, q))
-        self.mu = np.zeros((d, 1))
-        self.total_variance = np.zeros((d, 1))
+            if parsed_images == self.num_images or (parsed_images % m == 0 and parsed_images != 0):
+                current_block_size = parsed_images % m if parsed_images % m else m
 
-        end_idx = min(self.psi.max_events, num_images)
-
-        for idx in range(end_idx):
-
-            print(f'Processing observation: {idx + 1}')
-
-            if idx == 0:
-                self.ipca_intervals['load_event'] = []
-
-            with TaskTimer(self.ipca_intervals['load_event']): 
-                evt = runner.event(times[idx])
-                img_panels = det.calib(evt=evt)
-        
-            img = np.reshape(img_panels, (self.d, 1))
-
-            if self.reduced_indices.size:
-                img = img[self.reduced_indices]
-
+                img_block = self.fetch_formatted_images(current_block_size)
+                self.ipca.update_model(img_block)
             
-            new_obs = np.hstack((new_obs, img)) if new_obs.size else img
+            parsed_images += 1
 
-            # initialize model on first q observations, if init_with_pca is true
-            if init_with_pca and (idx + 1) <= q:
-                if (idx + 1) == q:
-                    self.mu, self.total_variance = calculate_sample_mean_and_variance(new_obs)
-                    
-                    centered_obs = new_obs - np.tile(self.mu, q)
-                    self.U, s, _ = np.linalg.svd(centered_obs, full_matrices=False)
-                    self.S = np.diag(s)
-                    
-                    new_obs = np.array([[]])
-                continue
-            
-            # update model with block every m samples, or img limit
-            if (idx + 1) % block_size == 0 or (idx + 1) == end_idx:
-
-                X_pm_loc = None
-
-                # size of current block
-                m = (idx+1) % block_size if (idx+1) % block_size else block_size
-
-                # number of samples factored into model thus far
-                n = (idx + 1) - m
-
-                mu_m, s_m = calculate_sample_mean_and_variance(new_obs)
-                
-                with TaskTimer(self.ipca_intervals['concat']):
-                    X_centered = new_obs - np.tile(mu_m, m)
-                    X_m = np.hstack((X_centered, np.sqrt(n * m / (n + m)) * (mu_m - self.mu)))
-
-                with TaskTimer(self.ipca_intervals['ortho']):
-                    UX_m = self.U.T @ X_m
-                    dX_m = X_m - self.U @ UX_m
-                    X_pm, _ = np.linalg.qr(dX_m, mode='reduced')
-                
-                with TaskTimer(self.ipca_intervals['build_r']):
-                    R = np.block([[self.S, UX_m], [np.zeros((m + 1, q)), X_pm.T @ dX_m]])
-                
-                with TaskTimer(self.ipca_intervals['svd']):
-                    U_tilde, S_tilde, _ = np.linalg.svd(R)
-                
-                print(self.rank)
-
-                self.comm.Barrier()
-
-                with TaskTimer(self.ipca_intervals['update_basis']):
-
-                    U_split = self.U[self.start_index:self.end_index, :]
-                    X_pm_split = X_pm[self.start_index:self.end_index, :]
-
-                    U_prime_partial = np.hstack((U_split, X_pm_split)) @ U_tilde
-                    print(U_prime_partial.shape)
-                    
-                    U_prime = np.empty((d, q+m+1))
-            
-                    self.comm.Allgather(U_prime_partial, U_prime)
-
-                    print(U_prime.shape)
-
-                # U_prime = np.hstack((self.U, X_pm)) @ U_tilde
-                self.U = U_prime[:, :q]
-                self.S = np.diag(S_tilde[:q])
-
-                self.total_variance = update_sample_variance(self.total_variance, s_m, self.mu, mu_m, n, m)
-                self.mu = update_sample_mean(self.mu, mu_m, n, m)
-                
-                new_obs = np.array([[]])
-
-    def retrieve_run_data(self):
-        """
-        Retrieve run data subject to intitialization parameters.
-
-        Returns
-        -------
-        formatted_images : ndarray, shape (d x n)
-            formatted image data from run
-        """
-        num_imgs = min(self.num_images, self.psi.max_events)
-
-        try:
-            imgs = self.psi.get_images(num_imgs, assemble=False)
-        except MemoryError:
-            print('Requested image set too large to fit in memory.')
-            return np.empty(0)
-
-        n, z, y, x = imgs.shape
-        d = self.reduced_indices.size if self.reduced_indices.size else x*y*z
-
-        formatted_images = np.empty((d, n))
-
-        for i in range(n):
-            if self.reduced_indices.size:
-                formatted_images[:, i:i+1] = np.reshape(imgs[i], (self.d, 1))[self.reduced_indices]
-            else:
-                formatted_images[:, i:i+1] = np.reshape(imgs[i], (self.d, 1))
         
-        return formatted_images
-
-    def batch_pca(self, img_data=None):
-        """
-        Run batch PCA on first num_images in run.
-
-        Parameters
-        ----------
-        img_data : ndarray, (d x n) (optional)
-            optional run data fetched and formatted through retrieve_run_data
-        """
-        formatted_imgs = img_data
-
-        if formatted_imgs is None:
-            imgs = self.psi.get_images(self.num_images, assemble=False)
-
-            n, z, y, x = imgs.shape
-            d = self.reduced_indices.size if self.reduced_indices.size else x*y*z
-
-            formatted_imgs = np.empty((d, n))
-
-            for i in range(n):
-                if self.reduced_indices.size:
-                    formatted_imgs[:, i:i+1] = np.reshape(imgs[i], (self.d, 1))[self.reduced_indices]
-                else:
-                    formatted_imgs[:, i:i+1] = np.reshape(imgs[i], (self.d, 1))
-        
-        d, n = formatted_imgs.shape
-            
-        mu_n = np.reshape(np.mean(formatted_imgs, axis=1), (d, 1))
-        mu_n_tiled = np.tile(mu_n, n)
-
-        imgs_centered = formatted_imgs - mu_n_tiled 
-
-        self.mu_pca = mu_n
-        self.U_pca, self.S_pca, _ = np.linalg.svd(imgs_centered, full_matrices=False)
-
-    def report_interval_data(self):
-        """
-        Report time interval data gathered during iPCA.
-        """
-        print(self.rank)
-        if len(self.ipca_intervals) == 0:
-            print('iPCA has not yet been performed.')
-            return
-        
-        for key in list(self.ipca_intervals.keys()):
-            interval_mean = np.mean(self.ipca_intervals[key])
-
-            if key is 'load_event':
-                print(f'Mean time to load each observation: {interval_mean:.4g}s')
-            else:
-                print(f'Mean per-iteration compute time of step \'{key}\': {interval_mean / self.block_size:.4g}s')
-
-def calculate_sample_mean_and_variance(imgs):
-    """
-    Compute the sample mean and variance of a flattened stack of n images.
-
-    Parameters
-    ----------
-    imgs : ndarray, shape (d x n)
-        horizonally stacked batch of flattened images 
-
-    Returns
-    -------
-    mu_m : ndarray, shape (d x 1)
-        mean of imgs
-    su_m : ndarray, shape (d x 1)
-        sample variance of imgs (1 dof)
-    """
-    d, m = imgs.shape
-
-    mu_m = np.reshape(np.mean(imgs, axis=1), (d, 1))
-    s_m  = np.zeros((d, 1))
-
-    if m > 1:
-        s_m = np.reshape(np.var(imgs, axis=1, ddof=1), (d, 1))
-    
-    return mu_m, s_m
-
-def update_sample_mean(mu_n, mu_m, n, m):
-    """
-    Combine combined mean of two blocks of data.
-
-    Parameters
-    ----------
-    mu_n : ndarray, shape (d x 1)
-        mean of first block of data
-    mu_m : ndarray, shape (d x 1)
-        mean of second block of data
-    n : int
-        number of observations in first block of data
-    m : int
-        number of observations in second block of data
-
-    Returns
-    -------
-    mu_nm : ndarray, shape (d x 1)
-        combined mean of both blocks of input data
-    """
-    mu_nm = mu_m
-
-    if n != 0:
-        mu_nm = (1 / (n + m)) * (n * mu_n + m * mu_m)
-
-    return mu_nm
-
-def update_sample_variance(s_n, s_m, mu_n, mu_m, n, m):
-    """
-    Compute combined sample variance of two blocks of data described by input parameters.
-
-    Parameters
-    ----------
-    s_n : ndarray, shape (d x 1)
-        sample variance of first block of data
-    s_m : ndarray, shape (d x 1)
-        sample variance of second block of data
-    mu_n : ndarray, shape (d x 1)
-        mean of first block of data
-    mu_m : ndarray, shape (d x 1)
-        mean of second block of data
-    n : int
-        number of observations in first block of data
-    m : int
-        number of observations in second block of data
-
-    Returns
-    -------
-    s_nm : ndarray, shape (d x 1)
-        combined sample variance of both blocks of data described by input parameters
-    """
-    s_nm = s_m
-
-    if n != 0:
-        s_nm = (((n - 1) * s_n + (m - 1) * s_m) + (n*m*(mu_n - mu_m)**2) / (n + m)) / (n + m - 1) 
-
-    return s_nm
-
-    def flatten_img(self, img):
-        """
-        Flatten unflattened input image.
-
-        Parameters
-        ----------
-        img : ndarray, shape (z, y, x)
-            unflattened input image, comprised of z (y x x) panels
-
-        Returns
-        -------
-        img_flattened : ndarray, shape (z*y*x, 1)
-            input image, flattened
-        """
-        z, y, x = self.psi.det.shape()
-        img_flattened = np.reshape(img, (z*y*x, 1))
-
-        return img_flattened
-    
-    def unflatten_image(self, img):
-        """
-        Unflatten flattened input image.
-
-        Parameters
-        ----------
-        img : ndarray, shape (z*y*x, 1)
-            flattened input image
-        
-        Returns
-        -------
-        img_unflattened : ndarray, shape (z, y, x)
-            input image, unflattened
-        """
-        z, y, x = self.psi.det.shape()
-        img_unflattened = np.reshape(img, (z, y, x))
-
-        return img_unflattened
-
-
-#### For command line use ####
-            
-def parse_input():
-    """
-    Parse command line input.
-    """
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-e', '--exp', help='Experiment name', required=True, type=str)
-    parser.add_argument('-r', '--run', help='Run number', required=True, type=int)
-    parser.add_argument('-d', '--det_type', help='Detector name, e.g epix10k2M or jungfrau4M',  required=True, type=str)
-    parser.add_argument('-q', '--components', help='Number of principal components to be extracted', required=False, type=int)
-    parser.add_argument('-m', '--block_size', help='iPCA block size', required=False, type=int)
-    parser.add_argument('-n', '--num_events', help='Number of events to process',  required=False, type=int)
-    parser.add_argument('--pca_init', help='Initialize on q elements using batch PCA', required=False, action='store_true')
-
-    return parser.parse_args()
-
-if __name__ == '__main__':
-    params = parse_input()
-    fe = FeatureExtractor(exp=params.exp, run=params.run, det_type=params.det_type)
-    fe.set_ipca_params(q=params.components, block_size=params.block_size, num_images=params.num_events, init_with_pca=params.pca_init)
-    fe.ipca()
-    fe.report_interval_data()
