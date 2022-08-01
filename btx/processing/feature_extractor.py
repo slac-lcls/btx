@@ -185,7 +185,7 @@ def parse_input():
     parser.add_argument('--q', help='Number of principal components to compute', required=False, type=int)
     parser.add_argument('--block_size', help='Desired block size', required=False, type=int)
     parser.add_argument('--num_images', help='Number of images', required=False, type=int)
-    parser.add_argument('--init_with_pca', help='Initialize with PCA', required=False, action=store_true)
+    parser.add_argument('--init_with_pca', help='Initialize with PCA', required=False, action='store_true')
 
     return parser.parse_args()
  
