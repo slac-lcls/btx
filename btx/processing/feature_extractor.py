@@ -182,7 +182,7 @@ def parse_input():
     parser.add_argument('-r', '--run', help='Run number', required=True, type=int)
     parser.add_argument('-d', '--det_type', help='Detector name, e.g epix10k2M or jungfrau4M',  required=True, type=str)
 
-    parser.add_argument('--q', help='Number of principal components to compute', required=False, type=int)
+    parser.add_argument('--components', help='Number of principal components to compute', required=False, type=int)
     parser.add_argument('--block_size', help='Desired block size', required=False, type=int)
     parser.add_argument('--num_images', help='Number of images', required=False, type=int)
     parser.add_argument('--init_with_pca', help='Initialize with PCA', required=False, action='store_true')
