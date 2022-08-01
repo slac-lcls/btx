@@ -120,4 +120,77 @@ class FeatureExtractor:
             
             parsed_images += 1
 
-        
+def compare_basis_vectors(U_1, U_2, q):
+    """
+    Quantitatively compare the first q basis vectors of U and U_prime. 
+
+    Parameters
+    ----------
+    U_1 : ndarray, shape (d x a), a >= q
+        first matrix of orthonormal basis vectors
+    U_2 : ndarray, shape (d x b), b >= q
+        second matrix of orthonormal basis vectors
+    q : int
+        number of vectors to compare
+    
+    Returns
+    -------
+    acc : float, 0 <= acc <= 1
+        quantitative measure of distance between basis vectors
+    """
+    if q > min(U_1.shape[1], U_2.shape[1]):
+        print('Desired number of vectors is greater than matrix dimension.')
+        return 0.
+    
+    acc = np.trace(np.abs(U_1[:, :q].T @ U_2[:, :q])) / q
+    return acc
+
+def compression_loss(X, U):
+    """
+    Calculate the compression loss between centered observation matrix X and its rank-q reconstruction.
+
+    Parameters
+    ----------
+    X : ndarray, shape (d x n)
+        flattened, centered image data from n run events
+    U : ndarray, shape (d x q)
+        first q singular vectors of X, forming orthonormal basis of q-dimensional subspace of R^d
+    
+    Returns
+    -------
+    Ln : float
+        compression loss of X
+    """
+    d, n = X.shape
+
+    UX = U.T @ X
+    UUX = U @ UX
+
+    Ln = ((np.linalg.norm(X - UUX, 'fro')) ** 2) / n
+    return Ln 
+
+#### For command line use ####
+            
+def parse_input():
+    """
+    Parse command line input.
+    """
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-e', '--exp', help='Experiment name', required=True, type=str)
+    parser.add_argument('-r', '--run', help='Run number', required=True, type=int)
+    parser.add_argument('-d', '--det_type', help='Detector name, e.g epix10k2M or jungfrau4M',  required=True, type=str)
+
+    parser.add_argument('--q', help='Number of principal components to compute', required=False, type=int)
+    parser.add_argument('--block_size', help='Desired block size', required=False, type=int)
+    parser.add_argument('--num_images', help='Number of images', required=False, type=int)
+    parser.add_argument('--init_with_pca', help='Initialize with PCA', required=False, action=store_true)
+
+    return parser.parse_args()
+ 
+if __name__ == '__main__':
+    
+    params = parse_input()
+    fe = FeatureExtractor(exp=params.exp, run=params.run, det_type=params.det_type, q=params.q, block_size=params.block_size, num_images=params.num_images)
+    fe.run_ipca()
+    fe.ipca.report_interval_data()
+    
