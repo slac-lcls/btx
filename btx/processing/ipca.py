@@ -66,7 +66,6 @@ class IPCA:
         self.task_durations['svd'] = []
         self.task_durations['update_basis'] = []
 
-
     def update_model(self, X):
         """
         Update model with new block of observations using iPCA.

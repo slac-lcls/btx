@@ -6,7 +6,7 @@ from btx.processing.ipca import *
 class FeatureExtractor:
     
     """
-    Class to manage performing of feature extraction on image data subject to initialization parameters.
+    Class to manage feature extraction on image data subject to initialization parameters.
     """
 
     def __init__(self, exp, run, det_type, q=50, block_size=10, num_images=100, init_with_pca=False):
@@ -30,7 +30,7 @@ class FeatureExtractor:
             print(f'Requested number of components too large, reduced to {self.q}')
 
         self.m = block_size
-        if self.m > self.num_events:
+        if self.m > self.num_images:
             self.m = self.num_images
             print(f'Requested block size too large, reduced to {self.m}')
 
