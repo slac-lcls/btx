@@ -103,18 +103,21 @@ class IPCA:
 
         self.comm.Barrier()
 
-        with TaskTimer(self.task_durations['update_basis']):
-            U_split = self.U[self.start_index:self.end_index, :]
-            X_pm_split = X_pm[self.start_index:self.end_index, :]
+        # with TaskTimer(self.task_durations['update_basis']):
+        #     U_split = self.U[self.start_index:self.end_index, :]
+        #     X_pm_split = X_pm[self.start_index:self.end_index, :]
 
-            U_prime_partial = np.hstack((U_split, X_pm_split)) @ U_tilde
-            print(U_prime_partial.shape)
+        #     U_prime_partial = np.hstack((U_split, X_pm_split)) @ U_tilde
+        #     print(U_prime_partial.shape)
             
-            U_prime = np.empty((d, q+m+1))
+        #     U_prime = np.empty((d, q+m+1))
 
-            self.comm.Allgather(U_prime_partial, U_prime)
+        #     self.comm.Allgather(U_prime_partial, U_prime)
 
-            print(U_prime.shape)
+        #     print(U_prime.shape)
+        
+        with TaskTimer(self.task_durations['update_basis']):
+            U_prime = np.hstack((self.U, X_pm)) @ U_tilde
         
         self.U = U_prime[:, :q]
         self.S = np.diag(S_tilde[:q])
