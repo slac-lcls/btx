@@ -169,7 +169,7 @@ class IPCA:
 
             f_path = '/cds/home/h/hepworth/data/'
 
-            with open(f_path + 'rank' + str(self.q) + 'size' + str(self.size), 'x') as f:
+            with open(f_path + 'comps' + str(self.q) + 'ranks' + str(self.size), 'x') as f:
 
                 if len(self.task_durations) == 0:
                     print('iPCA has not yet been performed.')
