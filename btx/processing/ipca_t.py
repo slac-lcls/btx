@@ -96,6 +96,8 @@ class IPCAT:
                     X_m = np.vstack((X_centered, np.sqrt(n * m / (n + m)) * (mu_m - self.mu)))
 
                 with TaskTimer(self.task_durations['ortho']):
+                    print(X_m.shape)
+                    print(self.U.shape)
                     UX_m = X_m @ self.U.T
                     dX_m = X_m - UX_m @ self.U
 
