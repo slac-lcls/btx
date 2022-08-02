@@ -82,50 +82,58 @@ class IPCA:
 
         mu_m, s_m = calculate_sample_mean_and_variance(X)
 
-        X_pm_loc = None
+        U_split = None
+        X_pm_split = None
 
-        with TaskTimer(self.task_durations['concat']):
-            X_centered = X - np.tile(mu_m, m)
-            X_m = np.hstack((X_centered, np.sqrt(n * m / (n + m)) * (mu_m - self.mu)))
+        if self.rank == 0:
+            with TaskTimer(self.task_durations['concat']):
+                X_centered = X - np.tile(mu_m, m)
+                X_m = np.hstack((X_centered, np.sqrt(n * m / (n + m)) * (mu_m - self.mu)))
 
-        with TaskTimer(self.task_durations['ortho']):
-            UX_m = self.U.T @ X_m
-            dX_m = X_m - self.U @ UX_m
-            X_pm, _ = np.linalg.qr(dX_m, mode='reduced')
-        
-        with TaskTimer(self.task_durations['build_r']):
-            R = np.block([[self.S, UX_m], [np.zeros((m + 1, q)), X_pm.T @ dX_m]])
-        
-        with TaskTimer(self.task_durations['svd']):
-            U_tilde, S_tilde, _ = np.linalg.svd(R)
-        
-        print(self.rank)
+            with TaskTimer(self.task_durations['ortho']):
+                UX_m = self.U.T @ X_m
+                dX_m = X_m - self.U @ UX_m
 
-        self.comm.Barrier()
-
-        # with TaskTimer(self.task_durations['update_basis']):
-        #     U_split = self.U[self.start_index:self.end_index, :]
-        #     X_pm_split = X_pm[self.start_index:self.end_index, :]
-
-        #     U_prime_partial = np.hstack((U_split, X_pm_split)) @ U_tilde
-        #     print(U_prime_partial.shape)
+                # need to distribute this step amongst ranks
+                X_pm, _ = np.linalg.qr(dX_m, mode='reduced')
             
-        #     U_prime = np.empty((d, q+m+1))
-
-        #     self.comm.Allgather(U_prime_partial, U_prime)
-
-        #     print(U_prime.shape)
+            with TaskTimer(self.task_durations['build_r']):
+                R = np.block([[self.S, UX_m], [np.zeros((m + 1, q)), X_pm.T @ dX_m]])
+            
+            with TaskTimer(self.task_durations['svd']):
+                U_tilde, S_tilde, _ = np.linalg.svd(R)
         
+            with TaskTimer(self.task_durations['MPI1']):
+                U_split = self.comm.scatter(U_tilde, root=0)
+                X_pm_split = self.comm.scatter(X_pm, root=0)
+
         with TaskTimer(self.task_durations['update_basis']):
-            U_prime = np.hstack((self.U, X_pm)) @ U_tilde
+            # U_split = self.U[self.start_index:self.end_index, :]
+            # X_pm_split = X_pm[self.start_index:self.end_index, :]
+
+            U_prime_partial = np.hstack((U_split, X_pm_split)) @ U_tilde
+            print(U_prime_partial.shape)
+    
+        with TaskTimer(self.task_durations['MPI2']):
+            if self.rank == 0:
+                U_prime = self.comm.gather(U_prime_partial)
+                print(U_prime.shape)
+
+                self.U = U_prime[:, :q]
+                self.S = np.diag(S_tilde[:q])
+
+                self.total_variance = update_sample_variance(self.total_variance, s_m, self.mu, mu_m, n, m)
+                self.mu = update_sample_mean(self.mu, mu_m, n, m)
+
+                self.n += m
         
-        self.U = U_prime[:, :q]
-        self.S = np.diag(S_tilde[:q])
+        # with TaskTimer(self.task_durations['update_basis']):
+        #     U_prime = np.hstack((self.U, X_pm)) @ U_tilde
 
-        self.total_variance = update_sample_variance(self.total_variance, s_m, self.mu, mu_m, n, m)
-        self.mu = update_sample_mean(self.mu, mu_m, n, m)
+        self.U = self.comm.bcast(self.U, root=0)
+        self.S = self.comm.bcast(self.S, root=0)
+        
 
-        self.n += m
 
     def initialize_model(self, X):
         """
