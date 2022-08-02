@@ -75,14 +75,14 @@ class IPCAT:
         X : ndarray, shape (d x m)
             block of m (d x 1) observations 
         """
+
+        print(X.shape)
         _, m = X.shape
         n = self.n
         q = self.q
         d = self.d
 
         mu_m, s_m = calculate_sample_mean_and_variance(X)
-
-        X_pm_loc = None
 
         with TaskTimer(self.task_durations['concat']):
             X_centered = X - mu_m
