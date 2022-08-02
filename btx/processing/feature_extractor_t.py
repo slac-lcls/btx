@@ -59,15 +59,16 @@ class FeatureExtractor:
         d = self.d
 
         imgs = self.psi.get_images(n, assemble=False)
-        formatted_imgs = np.empty((d, n))
 
-        for i in range(n):
-            if self.reduced_indices.size:
-                formatted_imgs[:, i:i+1] = np.reshape(imgs[i], (d, 1))[self.reduced_indices]
-            else:
-                formatted_imgs[:, i:i+1] = np.reshape(imgs[i], (d, 1))
+        if self.reduced_indices.size:
+            reduced_imgs = np.empty((n, d))
 
-        return formatted_imgs
+            for i in range(n):
+                reduced_imgs[i:i+1] = imgs[i][self.reduced_indices]
+            
+            return reduced_imgs
+
+        return imgs
 
     def generate_reduced_indices(self, new_dim):
         """
@@ -141,11 +142,11 @@ def compare_basis_vectors(U_1, U_2, q):
     acc : float, 0 <= acc <= 1
         quantitative measure of distance between basis vectors
     """
-    if q > min(U_1.shape[1], U_2.shape[1]):
+    if q > min(U_1.shape[0], U_2.shape[0]):
         print('Desired number of vectors is greater than matrix dimension.')
         return 0.
     
-    acc = np.trace(np.abs(U_1[:, :q].T @ U_2[:, :q])) / q
+    acc = np.trace(np.abs(U_1[:, :q] @ U_2[:, :q].T)) / q
     return acc
 
 def compression_loss(X, U):
@@ -164,12 +165,11 @@ def compression_loss(X, U):
     Ln : float
         compression loss of X
     """
-    d, n = X.shape
+    n, d = X.shape
+    XU = X @ U.T
+    XUU = XU @ U
 
-    UX = U.T @ X
-    UUX = U @ UX
-
-    Ln = ((np.linalg.norm(X - UUX, 'fro')) ** 2) / n
+    Ln = ((np.linalg.norm(X - XUU, 'fro')) ** 2) / n
     return Ln 
 
 #### For command line use ####
