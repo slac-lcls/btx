@@ -104,6 +104,7 @@ class IPCA:
                 U_tilde, S_tilde, _ = np.linalg.svd(R)
             
             concat = np.hstack((self.U, X_pm))
+            concat = np.split(concat, indices_or_sections=self.size, axis=0)
         else:
             concat = None
             U_tilde = None
