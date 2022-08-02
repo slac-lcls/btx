@@ -99,7 +99,6 @@ class IPCAT:
             print(UX_m.shape)
             print(dX_m.shape)
             print(X_pm.shape)
-            print(dX_m @ X_pm.T.shape)
             R = np.block([[self.S, np.zeros((q, m + 1))], [UX_m, dX_m @ X_pm.T]])
         
         with TaskTimer(self.task_durations['svd']):
