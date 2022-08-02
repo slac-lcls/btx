@@ -2,7 +2,7 @@ import argparse
 import numpy as np
 
 from btx.interfaces.psana_interface import *
-from btx.processing.ipca import *
+from btx.processing.ipca_t import *
 
 
 class FeatureExtractor:
