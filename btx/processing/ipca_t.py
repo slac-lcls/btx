@@ -123,16 +123,6 @@ class IPCAT:
             U_prime = self.comm.gather(U_prime, root=0)
 
             if self.rank == 0:
-                print(len(U_prime))
-                print(len(U_prime[0]))
-                print(len(U_prime[0][0]))
-
-                U_prime = np.empty((q+m+1, d))
-
-                for arr in U_prime:
-                    print(len(arr))
-                    print(len(arr[0]))
-    
                 U_prime = np.array([np.array(U_rank) for U_rank in U_prime], dtype=object)
                 print(U_prime.shape)
                 U_prime = np.hstack(U_prime)
