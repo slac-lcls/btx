@@ -39,7 +39,7 @@ class TaskTimer:
         """
         self.intervals.append(perf_counter() - self.start_time)
 
-class IPCA:
+class IPCAT:
 
     def __init__(self, d, q):
 

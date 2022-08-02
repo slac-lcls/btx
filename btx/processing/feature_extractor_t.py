@@ -5,7 +5,7 @@ from btx.interfaces.psana_interface import *
 from btx.processing.ipca_t import *
 
 
-class FeatureExtractor:
+class FeatureExtractorT:
     
     """
     Class to manage feature extraction on image data subject to initialization parameters.
@@ -106,7 +106,7 @@ class FeatureExtractor:
         q = self.q
         parsed_images = 0
 
-        self.ipca = IPCA(d, q)
+        self.ipca = IPCAT(d, q)
 
         if self.init_with_pca:
             img_block = self.fetch_formatted_images(q)
