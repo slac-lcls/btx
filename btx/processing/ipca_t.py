@@ -123,7 +123,7 @@ class IPCAT:
             U_prime = self.comm.gather(U_prime, root=0)
 
             if self.rank == 0:
-                U_prime = np.array([np.array(U_rank) for U_rank in U_prime], dtype=object)
+                U_prime = np.array(U_prime, dtype=object)
                 print(U_prime.shape)
                 U_prime = np.hstack(U_prime)
 
