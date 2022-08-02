@@ -125,7 +125,7 @@ class IPCAT:
             if self.rank == 0:
                 print(len(U_prime))
                 print(len(U_prime[0]))
-                print(len(U_prime[1]))
+                print(len(U_prime[0][0]))
 
                 U_prime = np.empty((q+m+1, d))
 
