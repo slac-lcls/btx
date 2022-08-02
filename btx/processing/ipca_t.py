@@ -110,6 +110,8 @@ class IPCAT:
 
             print(U_prime_partial.shape)
 
+            print(U_prime_partial.dtype)
+
             U_prime = np.empty((q+m+1, d))
 
             self.comm.Barrier()
