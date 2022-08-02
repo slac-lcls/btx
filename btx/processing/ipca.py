@@ -178,7 +178,7 @@ class IPCA:
                 for key in list(self.task_durations.keys()):
                     interval_mean = np.mean(self.task_durations[key])
 
-                    f.write(interval_mean)
+                    f.write(str(interval_mean))
                     # print(f'Mean per-block compute time of step \'{key}\': {interval_mean:.4g}s')
 
 
