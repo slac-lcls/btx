@@ -121,10 +121,7 @@ class IPCA:
             U_prime = self.comm.gather(U_prime, root=0)
 
             if self.rank == 0:
-                print(len(U_prime))
-                print(len(U_prime[0]))
-                U_prime = np.vstack(np.array(U_prime))
-                print(U_prime.shape)
+                U_prime = np.vstack(np.array(U_prime, dtype=object))
 
                 self.U = U_prime[:, :q]
                 self.S = np.diag(S_tilde[:q])
@@ -133,9 +130,6 @@ class IPCA:
                 self.mu = update_sample_mean(self.mu, mu_m, n, m)
 
                 self.n += m
-        
-        # with TaskTimer(self.task_durations['update_basis']):
-        #     U_prime = np.hstack((self.U, X_pm)) @ U_tilde
 
         with TaskTimer(self.task_durations['MPI3']):
             self.U = self.comm.bcast(self.U, root=0)
