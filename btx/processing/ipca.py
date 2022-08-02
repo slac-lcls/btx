@@ -118,7 +118,7 @@ class IPCA:
             print(U_prime.shape)
 
         with TaskTimer(self.task_durations['MPI2']):
-            U_prime = np.array(self.comm.gather(U_prime, root=0))
+            U_prime = np.vstack(self.comm.gather(U_prime, root=0))
             print(U_prime.shape)
 
             if self.rank == 0:
