@@ -121,7 +121,8 @@ class IPCA:
             U_prime = self.comm.gather(U_prime, root=0)
 
             if self.rank == 0:
-                print(U_prime.shape)
+                print(len(U_prime))
+                print(len(U_prime[0]))
                 U_prime = np.vstack(np.array(U_prime))
                 print(U_prime.shape)
 
