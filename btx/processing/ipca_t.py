@@ -90,7 +90,7 @@ class IPCAT:
         with TaskTimer(self.task_durations['ortho']):
             UX_m = X_m @ self.U.T
             dX_m = X_m - UX_m @ self.U
-            _, X_pm = sp.linalg.rq(dX_m, mode='reduced')
+            _, X_pm = sp.linalg.rq(dX_m, mode='economic')
             print(X_pm.shape)
             print(dX_m.shape)
         
