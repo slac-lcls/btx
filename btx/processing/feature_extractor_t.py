@@ -59,6 +59,8 @@ class FeatureExtractorT:
         d = self.d
 
         imgs = self.psi.get_images(n, assemble=False)
+        print(imgs.shape)
+        print(self.reduced_indices.size)
 
         if self.reduced_indices.size:
             reduced_imgs = np.empty((n, d))
