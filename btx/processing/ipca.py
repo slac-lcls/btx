@@ -65,6 +65,9 @@ class IPCA:
         self.task_durations['build_r'] = []
         self.task_durations['svd'] = []
         self.task_durations['update_basis'] = []
+        self.task_durations['MPI1'] = []
+        self.task_durations['MPI2'] = []
+        self.task_durations['MPI3'] = []
 
     def update_model(self, X):
         """
@@ -80,12 +83,9 @@ class IPCA:
         q = self.q
         d = self.d
 
-        mu_m, s_m = calculate_sample_mean_and_variance(X)
-
-        U_split = None
-        X_pm_split = None
-
         if self.rank == 0:
+            mu_m, s_m = calculate_sample_mean_and_variance(X)
+
             with TaskTimer(self.task_durations['concat']):
                 X_centered = X - np.tile(mu_m, m)
                 X_m = np.hstack((X_centered, np.sqrt(n * m / (n + m)) * (mu_m - self.mu)))
@@ -103,14 +103,11 @@ class IPCA:
             with TaskTimer(self.task_durations['svd']):
                 U_tilde, S_tilde, _ = np.linalg.svd(R)
         
-            with TaskTimer(self.task_durations['MPI1']):
-                U_split = self.comm.scatter(U_tilde, root=0)
-                X_pm_split = self.comm.scatter(X_pm, root=0)
+        with TaskTimer(self.task_durations['MPI1']):
+            U_split = self.comm.scatter(U_tilde, root=0)
+            X_pm_split = self.comm.scatter(X_pm, root=0)
 
         with TaskTimer(self.task_durations['update_basis']):
-            # U_split = self.U[self.start_index:self.end_index, :]
-            # X_pm_split = X_pm[self.start_index:self.end_index, :]
-
             U_prime_partial = np.hstack((U_split, X_pm_split)) @ U_tilde
             print(U_prime_partial.shape)
     
@@ -130,9 +127,9 @@ class IPCA:
         # with TaskTimer(self.task_durations['update_basis']):
         #     U_prime = np.hstack((self.U, X_pm)) @ U_tilde
 
-        self.U = self.comm.bcast(self.U, root=0)
-        self.S = self.comm.bcast(self.S, root=0)
-        
+        with TaskTimer(self.task_durations['MPI3']):
+            self.U = self.comm.bcast(self.U, root=0)
+            self.S = self.comm.bcast(self.S, root=0)
 
 
     def initialize_model(self, X):
