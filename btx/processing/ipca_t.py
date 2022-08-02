@@ -1,4 +1,5 @@
 import numpy as np
+import scipy as sp
 from mpi4py import MPI
 
 from time import perf_counter
@@ -75,8 +76,6 @@ class IPCAT:
         X : ndarray, shape (d x m)
             block of m (d x 1) observations 
         """
-
-        print(X.shape)
         _, m = X.shape
         n = self.n
         q = self.q
@@ -91,7 +90,7 @@ class IPCAT:
         with TaskTimer(self.task_durations['ortho']):
             UX_m = X_m @ self.U.T
             dX_m = X_m - UX_m @ self.U
-            X_pm, _ = np.linalg.qr(dX_m, mode='reduced')
+            _, X_pm = sp.linalg.rq(dX_m, mode='reduced')
             print(X_pm.shape)
             print(dX_m.shape)
         
@@ -100,6 +99,7 @@ class IPCAT:
         
         with TaskTimer(self.task_durations['svd']):
             U_tilde, S_tilde, _ = np.linalg.svd(R)
+            print(U_tilde.shape)
         
         print(self.rank)
 
