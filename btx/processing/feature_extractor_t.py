@@ -59,18 +59,16 @@ class FeatureExtractorT:
         d = self.d
 
         imgs = self.psi.get_images(n, assemble=False)
-        print(imgs.shape)
-        print(self.reduced_indices.size)
 
-        if self.reduced_indices.size:
-            reduced_imgs = np.empty((n, d))
+        formatted_imgs = np.empty((n, d))
 
-            for i in range(n):
-                reduced_imgs[i:i+1] = imgs[i][self.reduced_indices]
+        for i in range(n):
+            if self.reduced_indices.size:
+                formatted_imgs[i:i+1] = np.reshape(imgs[i], d)[self.reduced_indices]
+            else:
+                formatted_imgs[i:i+1] = np.reshape(imgs[i], d)
             
-            return reduced_imgs
-
-        return imgs
+        return formatted_imgs
 
     def generate_reduced_indices(self, new_dim):
         """
