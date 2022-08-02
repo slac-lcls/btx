@@ -82,6 +82,7 @@ class IPCAT:
         d = self.d
 
         mu_m, s_m = calculate_sample_mean_and_variance(X)
+        print(mu_m)
 
         with TaskTimer(self.task_durations['concat']):
             X_centered = X - mu_m
