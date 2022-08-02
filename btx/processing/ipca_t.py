@@ -117,14 +117,12 @@ class IPCAT:
         
         with TaskTimer(self.task_durations['update_basis']):
             U_prime = U_tilde @ concat
-            print(U_prime.shape)
 
         with TaskTimer(self.task_durations['MPI2']):
             U_prime = self.comm.gather(U_prime, root=0)
 
             if self.rank == 0:
                 U_prime = np.hstack(U_prime)
-                print(U_prime.shape)
 
                 self.U = U_prime[:q]
                 self.S = np.diag(S_tilde[:q])

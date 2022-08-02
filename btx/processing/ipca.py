@@ -115,13 +115,12 @@ class IPCA:
 
         with TaskTimer(self.task_durations['update_basis']):
             U_prime = concat @ U_tilde
-            print(U_prime.shape)
-
+        
         with TaskTimer(self.task_durations['MPI2']):
             U_prime = self.comm.gather(U_prime, root=0)
 
             if self.rank == 0:
-                U_prime = np.vstack(np.array(U_prime, dtype=object))
+                U_prime = np.vstack(U_prime)
 
                 self.U = U_prime[:, :q]
                 self.S = np.diag(S_tilde[:q])
