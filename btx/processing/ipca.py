@@ -110,17 +110,15 @@ class IPCA:
             U_tilde = None
 
         with TaskTimer(self.task_durations['MPI1']):
-            concat = self.comm.scatter(concat, root=0)
-            U_tilde = self.comm.bcast(U_tilde, root=0)
+            self.comm.Scatter(concat, root=0)
+            self.comm.Bcast(U_tilde, root=0)
 
         with TaskTimer(self.task_durations['update_basis']):
             U_prime = concat @ U_tilde
             print(U_prime.shape)
 
-        U_prime = None
-
         with TaskTimer(self.task_durations['MPI2']):
-            U_prime = self.comm.gather(U_prime, root=0)
+            self.comm.Gather(U_prime, root=0)
 
             if self.rank == 0:
                 print(U_prime.shape)
@@ -137,8 +135,8 @@ class IPCA:
         #     U_prime = np.hstack((self.U, X_pm)) @ U_tilde
 
         with TaskTimer(self.task_durations['MPI3']):
-            self.U = self.comm.bcast(self.U, root=0)
-            self.S = self.comm.bcast(self.S, root=0)
+            self.comm.Bcast(self.U, root=0)
+            self.comm.Bcast(self.S, root=0)
 
 
     def initialize_model(self, X):
