@@ -110,12 +110,8 @@ class IPCAT:
 
             print(U_prime_partial.shape)
 
-            print(U_prime_partial.dtype)
-
             U_prime = np.empty((q+m+1, d))
-
-            self.comm.Barrier()
-            self.comm.Allgather(U_prime_partial, U_prime)
+            self.comm.Allgather([U_prime_partial, MPI.FLOAT], [U_prime, MPI.FLOAT])
 
             print(U_prime.shape)
         
