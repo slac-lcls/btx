@@ -82,7 +82,6 @@ class IPCAT:
         d = self.d
 
         mu_m, s_m = calculate_sample_mean_and_variance(X)
-        print(mu_m.shape)
 
         with TaskTimer(self.task_durations['concat']):
             X_centered = X - mu_m
@@ -97,8 +96,7 @@ class IPCAT:
             R = np.block([[self.S, np.zeros((q, m + 1))], [UX_m, dX_m @ X_pm.T]])
         
         with TaskTimer(self.task_durations['svd']):
-            U_tilde, S_tilde, _ = np.linalg.svd(R)
-            print(U_tilde.shape)
+            _, S_tilde, U_tilde = np.linalg.svd(R)
         
         print(self.rank)
 
@@ -141,7 +139,7 @@ class IPCAT:
         self.mu, self.total_variance = calculate_sample_mean_and_variance(X)
 
         centered_data = X - self.mu
-        self.U, s, _ = np.linalg.svd(centered_data, full_matrices=False)
+        _, s, self.U = np.linalg.svd(centered_data, full_matrices=False)
         self.S = np.diag(s)
 
         self.n += q
