@@ -95,7 +95,7 @@ class IPCAT:
         with TaskTimer(self.task_durations['build_r']):
 
             print(self.S.shape)
-            print(np.zeros((q, m + 1).shape))
+            print(np.zeros((q, m + 1)).shape)
             print(UX_m.shape)
             print(dX_m @ X_pm.T.shape)
             R = np.block([[self.S, np.zeros((q, m + 1))], [UX_m, dX_m @ X_pm.T]])
