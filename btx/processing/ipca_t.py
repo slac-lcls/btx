@@ -67,6 +67,7 @@ class IPCAT:
         self.task_durations['svd'] = []
         self.task_durations['update_basis'] = []
 
+
     def update_model(self, X):
         """
         Update model with new block of observations using iPCA.
@@ -105,7 +106,7 @@ class IPCAT:
         with TaskTimer(self.task_durations['update_basis']):
             self.get_distributed_indices(m)
 
-            U_tilde_split = U_tilde[self.start_index:self.end_index, :]
+            U_tilde_split = U_tilde[self.start_index:self.end_index]
             U_prime_partial = U_tilde_split @ np.vstack((self.U, X_pm))
 
             print(U_prime_partial.shape)
@@ -136,8 +137,7 @@ class IPCAT:
 
         self.mu, self.total_variance = calculate_sample_mean_and_variance(X)
 
-        centered_data = X - self.mu
-        _, s, self.U = np.linalg.svd(centered_data, full_matrices=False)
+        _, s, self.U = np.linalg.svd(X - self.mu, full_matrices=False)
         self.S = np.diag(s)
 
         self.n += q
