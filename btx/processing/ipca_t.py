@@ -114,7 +114,7 @@ class IPCAT:
         with TaskTimer(self.task_durations['MPI1']):
             concat = self.comm.scatter(concat, root=0)
             U_tilde = self.comm.bcast(U_tilde, root=0)
-
+        
         with TaskTimer(self.task_durations['update_basis']):
             U_prime = U_tilde @ concat
             print(U_prime.shape)
@@ -123,6 +123,7 @@ class IPCAT:
             U_prime = self.comm.gather(U_prime, root=0)
 
             if self.rank == 0:
+                print(np.array(U_prime, dtype=object).shape)
                 U_prime = np.hstack(np.array(U_prime, dtype=object))
 
                 self.U = U_prime[:q]
