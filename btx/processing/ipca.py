@@ -125,7 +125,8 @@ class IPCA:
                     U_prime = self.comm.gather(U_prime, root=0)
 
                 if self.rank == 0:
-                    U_prime = np.vstack(U_prime)
+                    if self.size > 1:
+                        U_prime = np.vstack(U_prime)
 
                     self.U = U_prime[:, :q]
                     self.S = np.diag(S_tilde[:q])

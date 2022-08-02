@@ -96,8 +96,6 @@ class IPCAT:
                     X_m = np.vstack((X_centered, np.sqrt(n * m / (n + m)) * (mu_m - self.mu)))
 
                 with TaskTimer(self.task_durations['ortho']):
-                    print(X_m.shape)
-                    print(self.U.shape)
                     UX_m = X_m @ self.U.T
                     dX_m = X_m - UX_m @ self.U
 
@@ -134,7 +132,6 @@ class IPCAT:
                     if self.size > 1:
                         U_prime = np.hstack(U_prime)
 
-                    print(U_prime.shape)
                     self.U = U_prime[:q]
                     self.S = np.diag(S_tilde[:q])
 
