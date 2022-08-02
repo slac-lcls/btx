@@ -103,19 +103,18 @@ class IPCAT:
         self.comm.Barrier()
 
         with TaskTimer(self.task_durations['update_basis']):
+            self.get_distributed_indices(m)
 
-            U_prime = U_tilde @ np.vstack((self.U, X_pm))
-            # U_split = self.U[self.start_index:self.end_index, :]
-            # X_pm_split = X_pm[self.start_index:self.end_index, :]
+            U_tilde_split = U_tilde[self.start_index:self.end_index, :]
+            U_prime_partial = U_tilde_split @ np.vstack((self.U, X_pm))
 
-            # U_prime_partial = np.hstack((U_split, X_pm_split)) @ U_tilde
-            # print(U_prime_partial.shape)
-            
-            # U_prime = np.empty((d, q+m+1))
+            print(U_prime_partial.shape)
 
-            # self.comm.Allgather(U_prime_partial, U_prime)
+            U_prime = np.empty((q+m+1, d))
 
-            # print(U_prime.shape)
+            self.comm.allGather(U_prime_partial, U_prime)
+
+            print(U_prime.shape)
         
         self.U = U_prime[:q]
         self.S = np.diag(S_tilde[:q])
@@ -144,14 +143,14 @@ class IPCAT:
 
         self.n += q
 
-    def get_distributed_indices(self):
+    def get_distributed_indices(self, m):
         """
         Distribute indices over ranks in MPI world.
         """
         split_indices = np.zeros(self.size)
         for r in range(self.size):
-            num_per_rank = self.d // self.size
-            if r < (self.d % self.size):
+            num_per_rank = m // self.size
+            if r < (m % self.size):
                 num_per_rank += 1
             split_indices[r] = num_per_rank
         split_indices = np.append(np.array([0]), np.cumsum(split_indices)).astype(int)
