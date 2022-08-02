@@ -125,7 +125,9 @@ class IPCAT:
             if self.rank == 0:
                 print(len(U_prime))
                 print(len(U_prime[0]))
-                U_prime = np.hstack(np.array(U_prime, dtype=object))
+                U_prime = np.array([np.array(U_rank) for U_rank in U_prime], dtype=object)
+                print(U_prime.shape)
+                U_prime = np.hstack(U_prime)
 
                 self.U = U_prime[:q]
                 self.S = np.diag(S_tilde[:q])
