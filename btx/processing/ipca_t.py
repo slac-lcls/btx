@@ -76,7 +76,7 @@ class IPCAT:
         X : ndarray, shape (d x m)
             block of m (d x 1) observations 
         """
-        _, m = X.shape
+        m, _ = X.shape
         n = self.n
         q = self.q
         d = self.d
