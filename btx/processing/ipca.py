@@ -162,13 +162,15 @@ class IPCA:
         """
         Report time interval data gathered during iPCA.
         """
-        if len(self.task_durations) == 0:
-            print('iPCA has not yet been performed.')
-            return
-        
-        for key in list(self.task_durations.keys()):
-            interval_mean = np.mean(self.task_durations[key])
-            print(f'Mean per-block compute time of step \'{key}\': {interval_mean:.4g}s')
+        if self.rank == 0:
+            if len(self.task_durations) == 0:
+                print('iPCA has not yet been performed.')
+                return
+            
+            for key in list(self.task_durations.keys()):
+                interval_mean = np.mean(self.task_durations[key])
+
+                print(f'Mean per-block compute time of step \'{key}\': {interval_mean:.4g}s')
 
 
 def calculate_sample_mean_and_variance(imgs):
@@ -255,51 +257,4 @@ def update_sample_variance(s_n, s_m, mu_n, mu_m, n, m):
 
     return s_nm
 
-def compare_basis_vectors(U_1, U_2, q):
-    """
-    Quantitatively compare the first q basis vectors of U and U_prime. 
 
-    Parameters
-    ----------
-    U_1 : ndarray, shape (d x a), a >= q
-        first matrix of orthonormal basis vectors
-    U_2 : ndarray, shape (d x b), b >= q
-        second matrix of orthonormal basis vectors
-    q : int
-        number of vectors to compare
-    
-    Returns
-    -------
-    acc : float, 0 <= acc <= 1
-        quantitative measure of distance between basis vectors
-    """
-    if q > min(U_1.shape[1], U_2.shape[1]):
-        print('Desired number of vectors is greater than matrix dimension.')
-        return 0.
-    
-    acc = np.trace(np.abs(U_1[:, :q].T @ U_2[:, :q])) / q
-    return acc
-
-def compression_loss(X, U):
-    """
-    Calculate the compression loss between centered observation matrix X and its rank-q reconstruction.
-
-    Parameters
-    ----------
-    X : ndarray, shape (d x n)
-        flattened, centered image data from n run events
-    U : ndarray, shape (d x q)
-        first q singular vectors of X, forming orthonormal basis of q-dimensional subspace of R^d
-    
-    Returns
-    -------
-    Ln : float
-        compression loss of X
-    """
-    d, n = X.shape
-
-    UX = U.T @ X
-    UUX = U @ UX
-
-    Ln = ((np.linalg.norm(X - UUX, 'fro')) ** 2) / n
-    return Ln 
