@@ -112,6 +112,7 @@ class IPCAT:
 
             U_prime = np.empty((q+m+1, d))
 
+            self.comm.Barrier()
             self.comm.Allgather(U_prime_partial, U_prime)
 
             print(U_prime.shape)
