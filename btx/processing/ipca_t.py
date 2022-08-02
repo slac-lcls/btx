@@ -92,6 +92,8 @@ class IPCAT:
             UX_m = X_m @ self.U.T
             dX_m = X_m - UX_m @ self.U
             X_pm, _ = np.linalg.qr(dX_m, mode='reduced')
+            print(X_pm.shape)
+            print(dX_m.shape)
         
         with TaskTimer(self.task_durations['build_r']):
             R = np.block([[self.S, np.zeros((q, m + 1))], [UX_m, dX_m @ X_pm.T]])
