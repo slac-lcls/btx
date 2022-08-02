@@ -57,7 +57,7 @@ class IPCAT:
         self.mu = np.zeros(self.d)
         self.total_variance = np.zeros(self.d)
 
-        self.get_distributed_indices()
+        # self.get_distributed_indices()
 
         # attributes for computing timings of iPCA steps
         self.task_durations = dict({})
