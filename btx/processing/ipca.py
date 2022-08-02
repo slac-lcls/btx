@@ -103,6 +103,9 @@ class IPCA:
             with TaskTimer(self.task_durations['svd']):
                 U_tilde, S_tilde, _ = np.linalg.svd(R)
         
+        U_tilde = None
+        X_pm_split = None
+
         with TaskTimer(self.task_durations['MPI1']):
             U_split = self.comm.scatter(U_tilde, root=0)
             X_pm_split = self.comm.scatter(X_pm, root=0)
@@ -110,10 +113,13 @@ class IPCA:
         with TaskTimer(self.task_durations['update_basis']):
             U_prime_partial = np.hstack((U_split, X_pm_split)) @ U_tilde
             print(U_prime_partial.shape)
-    
+
+        U_prime = None
+
         with TaskTimer(self.task_durations['MPI2']):
+            U_prime = self.comm.gather(U_prime_partial, root=0)
+            
             if self.rank == 0:
-                U_prime = self.comm.gather(U_prime_partial)
                 print(U_prime.shape)
 
                 self.U = U_prime[:, :q]
