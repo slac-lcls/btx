@@ -82,7 +82,7 @@ class IPCAT:
         d = self.d
 
         mu_m, s_m = calculate_sample_mean_and_variance(X)
-        print(mu_m)
+        print(mu_m.shape)
 
         with TaskTimer(self.task_durations['concat']):
             X_centered = X - mu_m
@@ -94,12 +94,6 @@ class IPCAT:
             _, X_pm = sp.linalg.rq(dX_m, mode='economic')
         
         with TaskTimer(self.task_durations['build_r']):
-
-            print(self.S.shape)
-            print(np.zeros((q, m + 1)).shape)
-            print(UX_m.shape)
-            print(dX_m.shape)
-            print(X_pm.shape)
             R = np.block([[self.S, np.zeros((q, m + 1))], [UX_m, dX_m @ X_pm.T]])
         
         with TaskTimer(self.task_durations['svd']):
@@ -200,11 +194,11 @@ def calculate_sample_mean_and_variance(imgs):
     """
     m, d = imgs.shape
 
-    mu_m = np.mean(imgs)
+    mu_m = np.mean(imgs, axis=0)
     s_m  = np.zeros(d)
 
     if m > 1:
-        s_m = np.var(imgs, ddof=1)
+        s_m = np.var(imgs, ddof=1, axis=0)
     
     return mu_m, s_m
 
