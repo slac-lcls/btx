@@ -166,6 +166,18 @@ class IPCA:
         Report time interval data gathered during iPCA.
         """
         if self.rank == 0:
+            if len(self.task_durations):
+                for key in list(self.task_durations.keys()):
+                    interval_mean = np.mean(self.task_durations[key])
+                    
+                    print(f'Mean per-block compute time of step \'{key}\': {interval_mean:.4g}s')
+
+
+    def save_interval_data(self):
+        """
+        Save time interval data gathered during iPCA to file.
+        """
+        if self.rank == 0:
 
             dir_path = '/cds/home/h/hepworth/data/'
             file_name = 'comps' + str(self.q) + 'ranks' + str(self.size)
@@ -177,7 +189,6 @@ class IPCA:
                         interval_mean = np.mean(self.task_durations[key])
 
                         f.write(str(interval_mean) + '\n')
-                        # print(f'Mean per-block compute time of step \'{key}\': {interval_mean:.4g}s')
 
 
 def calculate_sample_mean_and_variance(imgs):
