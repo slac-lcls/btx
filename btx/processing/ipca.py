@@ -201,9 +201,8 @@ class IPCA:
                     writer.writerow(['n', self.n])
                     writer.writerow(['ranks', self.size])
 
-                    keys, values = self.task_durations.keys(), self.task_durations.values()
-                    print(np.array(values))
-                    print(np.array(values)).T
+                    keys = list(self.task_durations.keys())
+                    values = list(self.task_durations.values())
                     values_transposed = np.array(values).T
 
                     writer.writerow(keys)
