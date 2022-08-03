@@ -12,7 +12,7 @@ do
 #SBATCH -p psanaq
 #SBATCH -t 10:00:00
 #SBATCH --exclusive
-#SBATCH --job-name benchmark_${q}
+#SBATCH --job-name benchmark_${q}_t
 #SBATCH -n 1
 
 source /reg/g/psdm/etc/psconda.sh -py3  
