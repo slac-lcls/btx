@@ -12,18 +12,18 @@ do
 #SBATCH -t 1:00:00
 #SBATCH --exclusive
 #SBATCH --job-name benchmark_${q}
-#SBATCH --ntasks=1
+#SBATCH -n 1
 
 source /reg/g/psdm/etc/psconda.sh -py3  
 
 export PYTHONPATH="${PYTHONPATH}:/cds/home/h/hepworth/btx-callum" 
 
-mpirun -n -1 python ${FUNCTION_DIR} -e xpptut15 -r 580 -d jungfrau4M --components ${q} --block_size 20 --num_images 200
+mpirun -n 1 python ${FUNCTION_DIR} -e xpptut15 -r 580 -d jungfrau4M --components ${q} --block_size 20 --num_images 200
 echo "Benchmark with q = ${q} complete."
 EOF
 done
 
-echo "Job sent to queue"
+echo "Jobs sent to queue"
 
 
 
