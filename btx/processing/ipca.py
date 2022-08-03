@@ -1,3 +1,4 @@
+import csv
 import numpy as np
 from mpi4py import MPI
 
@@ -173,22 +174,28 @@ class IPCA:
                     print(f'Mean per-block compute time of step \'{key}\': {interval_mean:.4g}s')
 
 
-    def save_interval_data(self):
+    def save_interval_data(self, dir_path):
         """
         Save time interval data gathered during iPCA to file.
         """
         if self.rank == 0:
+            file_name = 'task_' + str(self.q) + str(self.d) + str(self.n) + str(self.size)
 
-            dir_path = '/cds/home/h/hepworth/data/single_rank_benchmark/'
-            file_name = 'comps' + str(self.q) + 'ranks' + str(self.size)
-
-            with open(dir_path + file_name, 'x') as f:
+            with open(dir_path + file_name, 'x', newline='', encoding='utf-8') as f:
 
                 if len(self.task_durations):
-                    for key in list(self.task_durations.keys()):
-                        interval_mean = np.mean(self.task_durations[key])
+                    writer = csv.writer(f)
 
-                        f.write(str(interval_mean) + '\n')
+                    writer.writerow(['q', self.q])
+                    writer.writerow(['d', self.d])
+                    writer.writerow(['n', self.n])
+                    writer.writerow(['ranks', self.size])
+
+                    keys, values = self.task_durations.keys(), self.task_durations.values()
+                    values_transposed = np.array(values).T
+
+                    writer.writerow(keys)
+                    writer.writerows(values_transposed)
 
 
 def calculate_sample_mean_and_variance(imgs):
