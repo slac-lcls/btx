@@ -29,6 +29,8 @@ FUNCTION_DIR="/cds/home/h/hepworth/btx-callum/btx/processing/feature_extractor.p
 COMPS=(1 5 10 20 50 100 150 200)
 
 sbatch << EOF
+#!/bin/bash
+
 #SBATCH -p psanaq
 #SBATCH -t 10:00:00
 #SBATCH --exclusive
