@@ -53,8 +53,8 @@ class FeatureExtractorT:
         
         Notes
         -----
-        PsanaInterface has internal counter that's updated on retrieval of images, ensuring
-        that images are retrieved sequentially using this method.
+        The PsanaInterface instance self.psi has an internal counter which is updated on calls 
+        to get_images, ensuring that images are retrieved sequentially using this method.
         """
         d = self.d
 
