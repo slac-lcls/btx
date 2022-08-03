@@ -169,7 +169,7 @@ class IPCA:
             if len(self.task_durations):
                 for key in list(self.task_durations.keys()):
                     interval_mean = np.mean(self.task_durations[key])
-                    
+
                     print(f'Mean per-block compute time of step \'{key}\': {interval_mean:.4g}s')
 
 
@@ -179,7 +179,7 @@ class IPCA:
         """
         if self.rank == 0:
 
-            dir_path = '/cds/home/h/hepworth/data/'
+            dir_path = '/cds/home/h/hepworth/data/single_rank_benchmark/'
             file_name = 'comps' + str(self.q) + 'ranks' + str(self.size)
 
             with open(dir_path + file_name, 'x') as f:
