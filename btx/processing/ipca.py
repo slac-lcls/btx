@@ -174,11 +174,21 @@ class IPCA:
                     print(f'Mean per-block compute time of step \'{key}\': {interval_mean:.4g}s')
 
 
-    def save_interval_data(self, dir_path):
+    def save_interval_data(self, dir_path=None):
         """
         Save time interval data gathered during iPCA to file.
+
+        Parameters
+        ----------
+        dir_path : str
+            Path to output directory.
         """
         if self.rank == 0:
+            
+            if dir_path is None:
+                print('Failed to specify output directory.')
+                return
+
             file_name = 'task_' + str(self.q) + str(self.d) + str(self.n) + str(self.size)
 
             with open(dir_path + file_name, 'x', newline='', encoding='utf-8') as f:
