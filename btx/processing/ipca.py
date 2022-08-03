@@ -189,7 +189,7 @@ class IPCA:
                 print('Failed to specify output directory.')
                 return
 
-            file_name = 'task_' + str(self.q) + str(self.d) + str(self.n) + str(self.size)
+            file_name = 'task_' + str(self.q) + str(self.d) + str(self.n) + str(self.size) + '.csv'
 
             with open(dir_path + file_name, 'x', newline='', encoding='utf-8') as f:
 

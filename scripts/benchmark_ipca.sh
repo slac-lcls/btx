@@ -1,7 +1,7 @@
 #!/bin/bash
 
-FUNCTION_PATH="/cds/home/h/hepworth/btx-callum/btx/processing/feature_extractor.py"
-OUTPUT_DIR="/cds/home/h/hepworth/data/single_rank_benchmark/"
+FUNCTION_PATH="/cds/home/h/hepworth/btx-callum/btx/processing/feature_extractor_t.py"
+OUTPUT_DIR="/cds/home/h/hepworth/data/single_rank_benchmark_t/"
 COMPS=(1 5 10 20 50 75 100 125 150 175 200)
 
 for q in ${COMPS[@]}

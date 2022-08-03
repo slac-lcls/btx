@@ -1,3 +1,4 @@
+import csv
 import numpy as np
 import scipy as sp
 from mpi4py import MPI
@@ -169,14 +170,46 @@ class IPCAT:
         Report time interval data gathered during iPCA.
         """
         if self.rank == 0:
-            if len(self.task_durations) == 0:
-                print('iPCA has not yet been performed.')
-                return
-            
-            for key in list(self.task_durations.keys()):
-                interval_mean = np.mean(self.task_durations[key])
+            if len(self.task_durations):
+                for key in list(self.task_durations.keys()):
+                    interval_mean = np.mean(self.task_durations[key])
 
-                print(f'Mean per-block compute time of step \'{key}\': {interval_mean:.4g}s')
+                    print(f'Mean per-block compute time of step \'{key}\': {interval_mean:.4g}s')
+
+
+    def save_interval_data(self, dir_path=None):
+        """
+        Save time interval data gathered during iPCA to file.
+
+        Parameters
+        ----------
+        dir_path : str
+            Path to output directory.
+        """
+        if self.rank == 0:
+            
+            if dir_path is None:
+                print('Failed to specify output directory.')
+                return
+
+            file_name = 'task_' + str(self.q) + str(self.d) + str(self.n) + str(self.size) + '.csv'
+
+            with open(dir_path + file_name, 'x', newline='', encoding='utf-8') as f:
+
+                if len(self.task_durations):
+                    writer = csv.writer(f)
+
+                    writer.writerow(['q', self.q])
+                    writer.writerow(['d', self.d])
+                    writer.writerow(['n', self.n])
+                    writer.writerow(['ranks', self.size])
+
+                    keys = list(self.task_durations.keys())
+                    values = list(self.task_durations.values())
+                    values_transposed = np.array(values).T
+
+                    writer.writerow(keys)
+                    writer.writerows(values_transposed)
 
 
 def calculate_sample_mean_and_variance(imgs):
