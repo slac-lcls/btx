@@ -75,7 +75,9 @@ class IPCA:
         self.task_durations['parallel QR'] = []
         self.task_durations['SVD of R'] = []
         self.task_durations['broadcast U tilde'] = []
+        self.task_durations['broadcast S_tilde'] = []
         self.task_durations['compute local U_prime'] = []
+
 
     def distribute_indices(self):
 
@@ -97,7 +99,6 @@ class IPCA:
         self.end_index = split_indices[rank+1]
     
     def parallel_qr(self, A):
-
         y, x = A.shape
 
         q_loc, r_loc = np.linalg.qr(A, mode='reduced')
