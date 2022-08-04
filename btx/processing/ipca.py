@@ -96,6 +96,8 @@ class IPCA:
         self.end_index = split_indices[rank+1]
     
     def parallel_qr(self, A):
+
+        y, x = A.shape
         print(A.shape, 'a')
 
         q_loc, r_loc = np.linalg.qr(A, mode='reduced')
@@ -108,16 +110,16 @@ class IPCA:
 
         else:
             q_tot, r_tilde = None, None
-
         
         q_tot = self.comm.bcast(q_tot, root=0)
         r_tilde = self.comm.bcast(r_tilde, root=0)
 
         print(q_loc.shape, self.rank)
         print(q_tot.shape, self.rank)
+        print(q_tot[self.rank*x:(self.rank+1)*x, :].shape, self.rank)
         print(r_tilde.shape, self.rank)
 
-        q_fin = q_loc @ q_tot[self.start_index:self.end_index, :]
+        q_fin = q_loc @ q_tot[self.rank*x:(self.rank+1)*x, :]
 
         return q_fin, r_tilde
 
