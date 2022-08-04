@@ -108,9 +108,13 @@ class IPCA:
 
         else:
             q_tot, r_tilde = None, None
+
         
         q_tot = self.comm.bcast(q_tot, root=0)
         r_tilde = self.comm.bcast(r_tilde, root=0)
+
+        print(q_tot.shape)
+        print(r_tilde.shape)
 
         q_fin = q_loc @ q_tot[self.start_index:self.end_index, :]
 
