@@ -101,8 +101,8 @@ class IPCA:
         r_tot = self.comm.gather(r_loc, root=0)
 
         if self.rank == 0:
+            r_tot = np.concatenate(r_tot, axis=0)
             print(r_tot.shape)
-            r_tot = np.vstack(r_tot)
             q_tot, r_tilde = np.linalg.qr(r_tot, mode='reduced')
         else:
             q_tot, r_tilde = None, None
