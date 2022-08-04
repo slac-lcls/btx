@@ -1,3 +1,4 @@
+from asyncio import Task
 import csv
 from xml.sax.handler import DTDHandler
 import numpy as np
@@ -98,14 +99,12 @@ class IPCA:
     def parallel_qr(self, A):
 
         y, x = A.shape
-        print(A.shape, 'a')
 
         q_loc, r_loc = np.linalg.qr(A, mode='reduced')
         r_tot = self.comm.gather(r_loc, root=0)
 
         if self.rank == 0:
             r_tot = np.concatenate(r_tot, axis=0)
-            print(r_tot.shape)
             q_tot, r_tilde = np.linalg.qr(r_tot, mode='reduced')
 
         else:
@@ -113,11 +112,6 @@ class IPCA:
         
         q_tot = self.comm.bcast(q_tot, root=0)
         r_tilde = self.comm.bcast(r_tilde, root=0)
-
-        print(q_loc.shape, self.rank)
-        print(q_tot.shape, self.rank)
-        print(q_tot[self.rank*x:(self.rank+1)*x, :].shape, self.rank)
-        print(r_tilde.shape, self.rank)
 
         q_fin = q_loc @ q_tot[self.rank*x:(self.rank+1)*x, :]
 
@@ -184,6 +178,9 @@ class IPCA:
 
             with TaskTimer(self.task_durations['broadcast U tilde']):
                 U_tilde = self.comm.bcast(U_tilde, root=0)
+            
+            with TaskTimer(self.task_durations['broadcast S_tilde']):
+                S_tilde = self.comm.bcast(S_tilde, root=0)
             
             with TaskTimer(self.task_durations['compute local U_prime']):
                 U_prime = UB_tilde @ U_tilde
