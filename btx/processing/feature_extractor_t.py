@@ -2,10 +2,10 @@ import argparse
 import numpy as np
 
 from btx.interfaces.psana_interface import *
-from btx.processing.ipca import *
+from btx.processing.ipca_t import *
 
 
-class FeatureExtractor:
+class FeatureExtractorT:
     
     """
     Class to manage feature extraction on image data subject to initialization parameters.
@@ -59,14 +59,15 @@ class FeatureExtractor:
         d = self.d
 
         imgs = self.psi.get_images(n, assemble=False)
-        formatted_imgs = np.empty((d, n))
+
+        formatted_imgs = np.empty((n, d))
 
         for i in range(n):
             if self.reduced_indices.size:
-                formatted_imgs[:, i:i+1] = np.reshape(imgs[i], (d, 1))[self.reduced_indices]
+                formatted_imgs[i:i+1] = np.reshape(imgs[i], d)[self.reduced_indices]
             else:
-                formatted_imgs[:, i:i+1] = np.reshape(imgs[i], (d, 1))
-
+                formatted_imgs[i:i+1] = np.reshape(imgs[i], d)
+            
         return formatted_imgs
 
     def generate_reduced_indices(self, new_dim):
@@ -105,7 +106,7 @@ class FeatureExtractor:
         q = self.q
         parsed_images = 0
 
-        self.ipca = IPCA(d, q, m)
+        self.ipca = IPCAT(d, q)
 
         if self.init_with_pca:
             img_block = self.fetch_formatted_images(q)
@@ -141,11 +142,11 @@ def compare_basis_vectors(U_1, U_2, q):
     acc : float, 0 <= acc <= 1
         quantitative measure of distance between basis vectors
     """
-    if q > min(U_1.shape[1], U_2.shape[1]):
+    if q > min(U_1.shape[0], U_2.shape[0]):
         print('Desired number of vectors is greater than matrix dimension.')
         return 0.
     
-    acc = np.trace(np.abs(U_1[:, :q].T @ U_2[:, :q])) / q
+    acc = np.trace(np.abs(U_1[:, :q] @ U_2[:, :q].T)) / q
     return acc
 
 def compression_loss(X, U):
@@ -164,12 +165,11 @@ def compression_loss(X, U):
     Ln : float
         compression loss of X
     """
-    d, n = X.shape
+    n, d = X.shape
+    XU = X @ U.T
+    XUU = XU @ U
 
-    UX = U.T @ X
-    UUX = U @ UX
-
-    Ln = ((np.linalg.norm(X - UUX, 'fro')) ** 2) / n
+    Ln = ((np.linalg.norm(X - XUU, 'fro')) ** 2) / n
     return Ln 
 
 #### For command line use ####
@@ -194,7 +194,7 @@ def parse_input():
 if __name__ == '__main__':
     
     params = parse_input()
-    fe = FeatureExtractor(exp=params.exp, run=params.run, det_type=params.det_type, q=params.components, block_size=params.block_size, num_images=params.num_images)
+    fe = FeatureExtractorT(exp=params.exp, run=params.run, det_type=params.det_type, q=params.components, block_size=params.block_size, num_images=params.num_images)
     fe.run_ipca()
     fe.ipca.save_interval_data(params.output_dir)
     

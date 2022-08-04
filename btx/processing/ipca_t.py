@@ -1,5 +1,6 @@
 import csv
 import numpy as np
+import scipy as sp
 from mpi4py import MPI
 
 from time import perf_counter
@@ -40,9 +41,9 @@ class TaskTimer:
         """
         self.intervals.append(perf_counter() - self.start_time)
 
-class IPCA:
+class IPCAT:
 
-    def __init__(self, d, q, m):
+    def __init__(self, d, q):
 
         self.comm = MPI.COMM_WORLD
         self.rank = self.comm.Get_rank()
@@ -50,13 +51,14 @@ class IPCA:
 
         self.d = d
         self.q = q
-        self.m = m
         self.n = 0
 
         self.S = np.eye(self.q)
-        self.U = np.zeros((self.d, self.q))
-        self.mu = np.zeros((self.d, 1))
-        self.total_variance = np.zeros((self.d, 1))
+        self.U = np.zeros((self.q, self.d))
+        self.mu = np.zeros(self.d)
+        self.total_variance = np.zeros(self.d)
+
+        # self.get_distributed_indices()
 
         # attributes for computing timings of iPCA steps
         self.task_durations = dict({})
@@ -70,6 +72,7 @@ class IPCA:
         self.task_durations['MPI3'] = []
         self.task_durations['total_update'] = []
 
+
     def update_model(self, X):
         """
         Update model with new block of observations using iPCA.
@@ -79,7 +82,7 @@ class IPCA:
         X : ndarray, shape (d x m)
             block of m (d x 1) observations 
         """
-        _, m = X.shape
+        m, _ = X.shape
         n = self.n
         q = self.q
         d = self.d
@@ -90,47 +93,47 @@ class IPCA:
                 mu_m, s_m = calculate_sample_mean_and_variance(X)
 
                 with TaskTimer(self.task_durations['concat']):
-                    X_centered = X - np.tile(mu_m, m)
-                    X_m = np.hstack((X_centered, np.sqrt(n * m / (n + m)) * (mu_m - self.mu)))
+                    X_centered = X - mu_m
+                    X_m = np.vstack((X_centered, np.sqrt(n * m / (n + m)) * (mu_m - self.mu)))
 
                 with TaskTimer(self.task_durations['ortho']):
-                    UX_m = self.U.T @ X_m
-                    dX_m = X_m - self.U @ UX_m
+                    UX_m = X_m @ self.U.T
+                    dX_m = X_m - UX_m @ self.U
 
                     # need to distribute this step amongst ranks
-                    X_pm, _ = np.linalg.qr(dX_m, mode='reduced')
-                
+                    _, X_pm = sp.linalg.rq(dX_m, mode='economic')
+            
                 with TaskTimer(self.task_durations['build_r']):
-                    R = np.block([[self.S, UX_m], [np.zeros((m + 1, q)), X_pm.T @ dX_m]])
-                
+                    R = np.block([[self.S, np.zeros((q, m + 1))], [UX_m, dX_m @ X_pm.T]])
+            
                 with TaskTimer(self.task_durations['svd']):
-                    U_tilde, S_tilde, _ = np.linalg.svd(R)
-                
-                    concat = np.hstack((self.U, X_pm))
-                    concat = np.array_split(concat, indices_or_sections=self.size, axis=0)
+                    _, S_tilde, U_tilde = np.linalg.svd(R)
+
+                    concat = np.vstack((self.U, X_pm))
+                    concat = np.array_split(concat, indices_or_sections=self.size, axis=1)
             else:
                 concat = None
                 U_tilde = None
-            
+
             with TaskTimer(self.task_durations['MPI1']):
                 if self.size == 1:
                     concat = concat[0]
                 else:
                     concat = self.comm.scatter(concat, root=0)
                     U_tilde = self.comm.bcast(U_tilde, root=0)
-
-            with TaskTimer(self.task_durations['update_basis']):
-                U_prime = concat @ U_tilde
             
+            with TaskTimer(self.task_durations['update_basis']):
+                U_prime = U_tilde @ concat
+
             with TaskTimer(self.task_durations['MPI2']):
                 if self.size > 1:
                     U_prime = self.comm.gather(U_prime, root=0)
 
                 if self.rank == 0:
                     if self.size > 1:
-                        U_prime = np.vstack(U_prime)
+                        U_prime = np.hstack(U_prime)
 
-                    self.U = U_prime[:, :q]
+                    self.U = U_prime[:q]
                     self.S = np.diag(S_tilde[:q])
 
                     self.total_variance = update_sample_variance(self.total_variance, s_m, self.mu, mu_m, n, m)
@@ -142,7 +145,7 @@ class IPCA:
                 if self.size > 1:
                     self.U = self.comm.bcast(self.U, root=0)
                     self.S = self.comm.bcast(self.S, root=0)
-
+        
 
     def initialize_model(self, X):
         """
@@ -157,8 +160,7 @@ class IPCA:
 
         self.mu, self.total_variance = calculate_sample_mean_and_variance(X)
 
-        centered_data = X - np.tile(self.mu, q)
-        self.U, s, _ = np.linalg.svd(centered_data, full_matrices=False)
+        _, s, self.U = np.linalg.svd(X - self.mu, full_matrices=False)
         self.S = np.diag(s)
 
         self.n += q
@@ -201,7 +203,6 @@ class IPCA:
                     writer.writerow(['d', self.d])
                     writer.writerow(['n', self.n])
                     writer.writerow(['ranks', self.size])
-                    writer.writerow(['m', self.m])
 
                     keys = list(self.task_durations.keys())
                     values = list(self.task_durations.values())
@@ -227,13 +228,13 @@ def calculate_sample_mean_and_variance(imgs):
     su_m : ndarray, shape (d x 1)
         sample variance of imgs (1 dof)
     """
-    d, m = imgs.shape
+    m, d = imgs.shape
 
-    mu_m = np.reshape(np.mean(imgs, axis=1), (d, 1))
-    s_m  = np.zeros((d, 1))
+    mu_m = np.mean(imgs, axis=0)
+    s_m  = np.zeros(d)
 
     if m > 1:
-        s_m = np.reshape(np.var(imgs, axis=1, ddof=1), (d, 1))
+        s_m = np.var(imgs, ddof=1, axis=0)
     
     return mu_m, s_m
 
