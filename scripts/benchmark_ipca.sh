@@ -7,7 +7,7 @@ FUNCTION_PATH="/cds/home/h/hepworth/btx-callum/btx/processing/feature_extractor.
 COMPS=(1 5)
 RANKS=(1 2)
 
-for r in ${RANKS{@}}
+for r in ${RANKS[@]}
 do
     OUTPUT_DIR="/cds/home/h/hepworth/data/mrbm_${r}"
     mkdir -p ${OUTPUT_DIR}
