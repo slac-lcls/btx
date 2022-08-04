@@ -112,6 +112,9 @@ class IPCA:
 
         q_fin = q_loc @ q_tot
 
+        print(q_fin.shape)
+        print(r_tilde.shape)
+
         return q_fin, r_tilde
 
     def get_model(self):
