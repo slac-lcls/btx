@@ -92,7 +92,7 @@ class IPCA:
             if r < (d % size):
                 num_per_rank += 1
             split_indices[r] = num_per_rank
-        split_indices = np.append(np.array([0]), np.cumsum(split_indices)).astype(int)   
+        split_indices = np.append(np.array([0]), np.cumsum(split_indices)).astype(int)
         
         # update self variables that determine start and end of this rank's batch
         self.start_index = split_indices[rank]
