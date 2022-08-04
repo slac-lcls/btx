@@ -1,4 +1,5 @@
 import csv
+from xml.sax.handler import DTDHandler
 import numpy as np
 from mpi4py import MPI
 
@@ -69,6 +70,24 @@ class IPCA:
         self.task_durations['MPI2'] = []
         self.task_durations['MPI3'] = []
         self.task_durations['total_update'] = []
+        self.task_durations['ortho_prep'] = []
+    
+    def parallel_qr(self, A):
+
+        q_loc, r_loc = np.linalg.qr(A, mode='reduced')
+        r_tot = self.comm.gather(r_loc, root=0)
+
+        if self.rank == 0:
+            q_tot, r_tilde = np.linalg.qr(r_tot, mode='reduced')
+        else:
+            q_tot, r_tilde = None, None
+        
+        q_tot = self.comm.bcast(q_tot, root=0)
+        r_tilde = self.comm.bcast(r_tilde, root=0)
+
+        q_fin = q_loc @ q_tot
+
+        return q_fin, r_tilde
 
     def update_model(self, X):
         """
@@ -86,6 +105,36 @@ class IPCA:
 
         with TaskTimer(self.task_durations['total_update']):
 
+            mu_m, s_m = calculate_sample_mean_and_variance(X)
+            
+            X_centered = X - np.tile(mu_m, m)
+            augment_vector = np.sqrt(n * m / (n + m)) * (mu_m - self.mu)
+
+            if self.rank == 0:
+                us = self.U[self.start_index:self.end_index, :] @ self.S
+            else:
+                us = self.U @ self.S
+
+            qr_input = np.hstack((us, X_centered[self.start_index:self.end_index, :], augment_vector[self.start_index:self.end_index, :]))
+            UB_tilde, R = self.parallel_qr(qr_input)
+
+            # parallel SVD of R
+            if self.rank == 0:
+                U_tilde, S_tilde, _ = np.linalg.svd(R)
+            else:
+                U_tilde, S_tilde, _ = None, None, None
+            
+            U_tilde = self.comm.bcast(U_tilde, root=0)
+
+            U_prime = UB_tilde @ U_tilde
+
+            U_prime = self.gather(U_prime, root=0)
+
+            self.U = U_prime
+            self.S = S_tilde
+            
+            
+
             if self.rank == 0:
                 mu_m, s_m = calculate_sample_mean_and_variance(X)
 
@@ -93,10 +142,26 @@ class IPCA:
                     X_centered = X - np.tile(mu_m, m)
                     X_m = np.hstack((X_centered, np.sqrt(n * m / (n + m)) * (mu_m - self.mu)))
 
-                with TaskTimer(self.task_durations['ortho']):
+                    # perform self.U @ self.S in parallel, divide X_m in parallel, concat and serve as inputs to parallel_qr
+                    # can just store self.U amd self.S at the end of each local run 
+
+            else:
+                X_m = None
+                # or just compute massive QR factorization here, parallelized. Less communication over the nextwork? (need to benchmark)
+                # parallelized QR yields an already distributed version of [U B_tilde], so less network operations
+
+            X_m = self.comm.scatter(X_m, root=0)
+            UB_tilde, R = self.parallel_qr(X_m)
+
+
+
+
+
+                with TaskTimer(self.task_durations['ortho_prep']):
                     UX_m = self.U.T @ X_m
                     dX_m = X_m - self.U @ UX_m
 
+                with TaskTimer(self.task_durations['ortho']):
                     # need to distribute this step amongst ranks
                     X_pm, _ = np.linalg.qr(dX_m, mode='reduced')
                 
