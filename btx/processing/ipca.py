@@ -96,6 +96,7 @@ class IPCA:
         self.end_index = split_indices[rank+1]
     
     def parallel_qr(self, A):
+        print(A.shape, 'a')
 
         q_loc, r_loc = np.linalg.qr(A, mode='reduced')
         r_tot = self.comm.gather(r_loc, root=0)
@@ -135,6 +136,8 @@ class IPCA:
         n = self.n
         q = self.q
         d = self.d
+
+        print(self.start_index, self.end_index)
 
         with TaskTimer(self.task_durations['total update']):
 
