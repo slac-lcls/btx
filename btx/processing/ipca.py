@@ -166,7 +166,7 @@ class IPCA:
             U_prime = UB_tilde @ U_tilde
 
             self.U = U_prime[:, :q]
-            self.S = S_tilde[:q]
+            self.S = np.diag(S_tilde[:q])
 
             print(U_prime.shape)
             print(self.U.shape)
