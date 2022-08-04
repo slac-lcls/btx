@@ -54,6 +54,8 @@ class IPCA:
         self.m = m
         self.n = 0
 
+        self.distribute_indices()
+
         self.S = np.eye(self.q)
         self.U = np.zeros((self.end_index - self.start_index, self.q))
 
@@ -73,6 +75,25 @@ class IPCA:
         self.task_durations['MPI3'] = []
         self.task_durations['total_update'] = []
         self.task_durations['ortho_prep'] = []
+
+    def distribute_indices(self):
+
+        d = self.d
+        size = self.size
+        rank = self.rank
+
+        # determine boundary indices between ranks
+        split_indices = np.zeros(size)
+        for r in range(size):
+            num_per_rank = d // size
+            if r < (d % size):
+                num_per_rank += 1
+            split_indices[r] = num_per_rank
+        split_indices = np.append(np.array([0]), np.cumsum(split_indices)).astype(int)   
+        
+        # update self variables that determine start and end of this rank's batch
+        self.start_index = split_indices[rank]
+        self.end_index = split_indices[rank+1]
     
     def parallel_qr(self, A):
 
