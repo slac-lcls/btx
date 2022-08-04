@@ -102,7 +102,6 @@ class IPCA:
 
         if self.rank == 0:
             r_tot = np.concatenate(r_tot, axis=0)
-            print(r_tot.shape)
             q_tot, r_tilde = np.linalg.qr(r_tot, mode='reduced')
         else:
             q_tot, r_tilde = None, None
@@ -165,6 +164,9 @@ class IPCA:
                 U_tilde, S_tilde, _ = np.linalg.svd(R)
             else:
                 U_tilde, S_tilde, _ = None, None, None
+            
+            print(U_tilde.shape)
+            print(S_tilde.shape)
             
             U_tilde = self.comm.bcast(U_tilde, root=0)
             U_prime = UB_tilde @ U_tilde
