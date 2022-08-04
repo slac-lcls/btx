@@ -111,9 +111,6 @@ class IPCA:
 
         q_fin = q_loc @ q_tot
 
-        print(q_fin.shape)
-        print(r_tilde.shape)
-
         return q_fin, r_tilde
 
     def get_model(self):
@@ -165,15 +162,15 @@ class IPCA:
             else:
                 U_tilde, S_tilde, _ = None, None, None
 
-            print(UB_tilde.shape)
-            print(U_tilde.shape)
-            
             U_tilde = self.comm.bcast(U_tilde, root=0)
-            print(U_tilde.shape)
             U_prime = UB_tilde @ U_tilde
 
             self.U = U_prime[:, :q]
             self.S = S_tilde[:q]
+
+            print(U_prime.shape)
+            print(self.U.shape)
+            print(self.S.shape)
 
             self.n += m
             
