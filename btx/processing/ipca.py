@@ -55,9 +55,11 @@ class IPCA:
         self.n = 0
 
         self.S = np.eye(self.q)
-        self.U = np.zeros((self.d, self.q))
-        self.mu = np.zeros((self.d, 1))
-        self.total_variance = np.zeros((self.d, 1))
+        self.U = np.zeros((self.end_index - self.start_index, self.q))
+
+        if self.rank == 0:
+            self.mu = np.zeros((self.d, 1))
+            self.total_variance = np.zeros((self.d, 1))
 
         # attributes for computing timings of iPCA steps
         self.task_durations = dict({})
@@ -89,6 +91,13 @@ class IPCA:
 
         return q_fin, r_tilde
 
+    def get_model(self):
+        
+        U_tot = self.gather(self.U, root=0)
+        S_tot = self.S
+
+        return U_tot, S_tot
+
     def update_model(self, X):
         """
         Update model with new block of observations using iPCA.
@@ -105,17 +114,24 @@ class IPCA:
 
         with TaskTimer(self.task_durations['total_update']):
 
-            mu_m, s_m = calculate_sample_mean_and_variance(X)
-            
-            X_centered = X - np.tile(mu_m, m)
-            augment_vector = np.sqrt(n * m / (n + m)) * (mu_m - self.mu)
-
             if self.rank == 0:
-                us = self.U[self.start_index:self.end_index, :] @ self.S
-            else:
-                us = self.U @ self.S
+                mu_m, s_m = calculate_sample_mean_and_variance(X)
+                
+                X_centered = X - np.tile(mu_m, m)
+                v_augment = np.sqrt(n * m / (n + m)) * (mu_m - self.mu)
 
-            qr_input = np.hstack((us, X_centered[self.start_index:self.end_index, :], augment_vector[self.start_index:self.end_index, :]))
+                self.total_variance = update_sample_variance(self.total_variance, s_m, self.mu, mu_m, n, m)
+                self.mu = update_sample_mean(self.mu, mu_m, n, m)
+            else:
+                X_centered = None
+                v_augment = None
+            
+            X_centered = self.comm.bcast(X_centered, root=0)
+            v_augment = self.comm.bcast(v_augment, root=0)
+
+            us = self.U @ self.S
+
+            qr_input = np.hstack((us, X_centered[self.start_index:self.end_index, :], v_augment[self.start_index:self.end_index, :]))
             UB_tilde, R = self.parallel_qr(qr_input)
 
             # parallel SVD of R
@@ -125,88 +141,18 @@ class IPCA:
                 U_tilde, S_tilde, _ = None, None, None
             
             U_tilde = self.comm.bcast(U_tilde, root=0)
-
             U_prime = UB_tilde @ U_tilde
 
-            U_prime = self.gather(U_prime, root=0)
+            self.U = U_prime[:, :q]
+            self.S = S_tilde[:q]
 
-            self.U = U_prime
-            self.S = S_tilde
+            self.n += m
             
-            
+            # perform self.U @ self.S in parallel, divide X_m in parallel, concat and serve as inputs to parallel_qr
+            # can just store self.U amd self.S at the end of each local run 
 
-            if self.rank == 0:
-                mu_m, s_m = calculate_sample_mean_and_variance(X)
-
-                with TaskTimer(self.task_durations['concat']):
-                    X_centered = X - np.tile(mu_m, m)
-                    X_m = np.hstack((X_centered, np.sqrt(n * m / (n + m)) * (mu_m - self.mu)))
-
-                    # perform self.U @ self.S in parallel, divide X_m in parallel, concat and serve as inputs to parallel_qr
-                    # can just store self.U amd self.S at the end of each local run 
-
-            else:
-                X_m = None
-                # or just compute massive QR factorization here, parallelized. Less communication over the nextwork? (need to benchmark)
-                # parallelized QR yields an already distributed version of [U B_tilde], so less network operations
-
-            X_m = self.comm.scatter(X_m, root=0)
-            UB_tilde, R = self.parallel_qr(X_m)
-
-
-
-
-
-                with TaskTimer(self.task_durations['ortho_prep']):
-                    UX_m = self.U.T @ X_m
-                    dX_m = X_m - self.U @ UX_m
-
-                with TaskTimer(self.task_durations['ortho']):
-                    # need to distribute this step amongst ranks
-                    X_pm, _ = np.linalg.qr(dX_m, mode='reduced')
-                
-                with TaskTimer(self.task_durations['build_r']):
-                    R = np.block([[self.S, UX_m], [np.zeros((m + 1, q)), X_pm.T @ dX_m]])
-                
-                with TaskTimer(self.task_durations['svd']):
-                    U_tilde, S_tilde, _ = np.linalg.svd(R)
-                
-                    concat = np.hstack((self.U, X_pm))
-                    concat = np.array_split(concat, indices_or_sections=self.size, axis=0)
-            else:
-                concat = None
-                U_tilde = None
-            
-            with TaskTimer(self.task_durations['MPI1']):
-                if self.size == 1:
-                    concat = concat[0]
-                else:
-                    concat = self.comm.scatter(concat, root=0)
-                    U_tilde = self.comm.bcast(U_tilde, root=0)
-
-            with TaskTimer(self.task_durations['update_basis']):
-                U_prime = concat @ U_tilde
-            
-            with TaskTimer(self.task_durations['MPI2']):
-                if self.size > 1:
-                    U_prime = self.comm.gather(U_prime, root=0)
-
-                if self.rank == 0:
-                    if self.size > 1:
-                        U_prime = np.vstack(U_prime)
-
-                    self.U = U_prime[:, :q]
-                    self.S = np.diag(S_tilde[:q])
-
-                    self.total_variance = update_sample_variance(self.total_variance, s_m, self.mu, mu_m, n, m)
-                    self.mu = update_sample_mean(self.mu, mu_m, n, m)
-
-                    self.n += m
-
-            with TaskTimer(self.task_durations['MPI3']):
-                if self.size > 1:
-                    self.U = self.comm.bcast(self.U, root=0)
-                    self.S = self.comm.bcast(self.S, root=0)
+            # or just compute massive QR factorization here, parallelized. Less communication over the nextwork? (need to benchmark)
+            # parallelized QR yields an already distributed version of [U B_tilde], so less network operations
 
 
     def initialize_model(self, X):
