@@ -42,7 +42,7 @@ class TaskTimer:
 
 class IPCA:
 
-    def __init__(self, d, q):
+    def __init__(self, d, q, m):
 
         self.comm = MPI.COMM_WORLD
         self.rank = self.comm.Get_rank()
@@ -50,6 +50,7 @@ class IPCA:
 
         self.d = d
         self.q = q
+        self.m = m
         self.n = 0
 
         self.S = np.eye(self.q)
@@ -200,6 +201,7 @@ class IPCA:
                     writer.writerow(['d', self.d])
                     writer.writerow(['n', self.n])
                     writer.writerow(['ranks', self.size])
+                    writer.writerow(['m', self.m])
 
                     keys = list(self.task_durations.keys())
                     values = list(self.task_durations.values())

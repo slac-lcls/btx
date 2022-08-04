@@ -105,7 +105,7 @@ class FeatureExtractor:
         q = self.q
         parsed_images = 0
 
-        self.ipca = IPCA(d, q)
+        self.ipca = IPCA(d, q, m)
 
         if self.init_with_pca:
             img_block = self.fetch_formatted_images(q)
