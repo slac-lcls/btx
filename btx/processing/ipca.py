@@ -65,16 +65,16 @@ class IPCA:
 
         # attributes for computing timings of iPCA steps
         self.task_durations = dict({})
-        self.task_durations['concat'] = []
-        self.task_durations['ortho'] = []
-        self.task_durations['build_r'] = []
-        self.task_durations['svd'] = []
-        self.task_durations['update_basis'] = []
-        self.task_durations['MPI1'] = []
-        self.task_durations['MPI2'] = []
-        self.task_durations['MPI3'] = []
-        self.task_durations['total_update'] = []
-        self.task_durations['ortho_prep'] = []
+        self.task_durations['total update'] = []
+        self.task_durations['update mean and variance'] = []
+        self.task_durations['center data and compute augment vector'] = []
+        self.task_durations['broadcast centered data and augment vector'] = []
+        self.task_durations['first matrix product U@S'] = []
+        self.task_durations['QR concatenate'] = []
+        self.task_durations['parallel QR'] = []
+        self.task_durations['SVD of R'] = []
+        self.task_durations['broadcast U tilde'] = []
+        self.task_durations['compute local U_prime'] = []
 
     def distribute_indices(self):
 
@@ -115,7 +115,7 @@ class IPCA:
 
     def get_model(self):
         
-        U_tot = self.gather(self.U, root=0)
+        U_tot = np.concatenate(self.comm.gather(self.U, root=0), axis=0)
         S_tot = self.S
 
         return U_tot, S_tot
@@ -134,43 +134,50 @@ class IPCA:
         q = self.q
         d = self.d
 
-        with TaskTimer(self.task_durations['total_update']):
+        with TaskTimer(self.task_durations['total update']):
 
             if self.rank == 0:
-                mu_m, s_m = calculate_sample_mean_and_variance(X)
-                
-                X_centered = X - np.tile(mu_m, m)
-                v_augment = np.sqrt(n * m / (n + m)) * (mu_m - self.mu)
+                with TaskTimer(self.task_durations['update mean and variance']):
+                    mu_n = self.mu
+                    mu_m, s_m = calculate_sample_mean_and_variance(X)
+                    self.total_variance = update_sample_variance(self.total_variance, s_m, mu_n, mu_m, n, m)
+                    self.mu = update_sample_mean(mu_n, mu_m, n, m)
 
-                self.total_variance = update_sample_variance(self.total_variance, s_m, self.mu, mu_m, n, m)
-                self.mu = update_sample_mean(self.mu, mu_m, n, m)
+                with TaskTimer(self.task_durations['center data and compute augment vector']):
+                    X_centered = X - np.tile(mu_m, m)
+                    v_augment = np.sqrt(n * m / (n + m)) * (mu_m - mu_n)
             else:
                 X_centered = None
                 v_augment = None
+
+            with TaskTimer(self.task_durations['broadcast centered data and augment vector']):
+                X_centered = self.comm.bcast(X_centered, root=0)
+                v_augment = self.comm.bcast(v_augment, root=0)
+
+            with TaskTimer(self.task_durations['first matrix product U@S']):
+                us = self.U @ self.S
+
+            with TaskTimer(self.task_durations['QR concatenate']):
+                qr_input = np.hstack((us, X_centered[self.start_index:self.end_index, :], v_augment[self.start_index:self.end_index, :]))
             
-            X_centered = self.comm.bcast(X_centered, root=0)
-            v_augment = self.comm.bcast(v_augment, root=0)
+            with TaskTimer(self.task_durations['parallel QR']):
+                UB_tilde, R = self.parallel_qr(qr_input)
 
-            us = self.U @ self.S
+            with TaskTimer(self.task_durations['SVD of R']):
+                # parallelize in the future?
+                if self.rank == 0:
+                    U_tilde, S_tilde, _ = np.linalg.svd(R)
+                else:
+                    U_tilde, S_tilde, _ = None, None, None
 
-            qr_input = np.hstack((us, X_centered[self.start_index:self.end_index, :], v_augment[self.start_index:self.end_index, :]))
-            UB_tilde, R = self.parallel_qr(qr_input)
-
-            # parallel SVD of R
-            if self.rank == 0:
-                U_tilde, S_tilde, _ = np.linalg.svd(R)
-            else:
-                U_tilde, S_tilde, _ = None, None, None
-
-            U_tilde = self.comm.bcast(U_tilde, root=0)
-            U_prime = UB_tilde @ U_tilde
+            with TaskTimer(self.task_durations['broadcast U tilde']):
+                U_tilde = self.comm.bcast(U_tilde, root=0)
+            
+            with TaskTimer(self.task_durations['compute local U_prime']):
+                U_prime = UB_tilde @ U_tilde
 
             self.U = U_prime[:, :q]
             self.S = np.diag(S_tilde[:q])
-
-            print(U_prime.shape)
-            print(self.U.shape)
-            print(self.S.shape)
 
             self.n += m
             
