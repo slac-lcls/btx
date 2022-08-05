@@ -89,7 +89,7 @@ class IPCA:
         finally:
             if task_description not in self.task_durations:
                 self.task_durations[task_description] = []
-            self.task_durations['task_durations'].append(perf_counter() - start_time)
+            self.task_durations[task_description].append(perf_counter() - start_time)
 
     def distribute_indices(self):
 
