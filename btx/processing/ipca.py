@@ -99,20 +99,27 @@ class IPCA:
     def parallel_qr(self, A):
         y, x = A.shape
 
-        q_loc, r_loc = np.linalg.qr(A, mode='reduced')
-        r_tot = self.comm.gather(r_loc, root=0)
+        with TaskTimer(self.task_durations, 'qr - local qr'):
+            q_loc, r_loc = np.linalg.qr(A, mode='reduced')
+
+        with TaskTimer(self.task_durations, 'qr - r_tot gather'):
+            r_tot = self.comm.gather(r_loc, root=0)
 
         if self.rank == 0:
-            r_tot = np.concatenate(r_tot, axis=0)
-            q_tot, r_tilde = np.linalg.qr(r_tot, mode='reduced')
-
+            with TaskTimer(self.task_durations, 'qr - concat'):
+                r_tot = np.concatenate(r_tot, axis=0)
+            with TaskTimer(self.task_durations, 'qr - global qr'):
+                q_tot, r_tilde = np.linalg.qr(r_tot, mode='reduced')
         else:
             q_tot, r_tilde = None, None
+        with TaskTimer(self.task_durations, 'qr - bcast q_tot'):
+            q_tot = self.comm.bcast(q_tot, root=0)
         
-        q_tot = self.comm.bcast(q_tot, root=0)
-        r_tilde = self.comm.bcast(r_tilde, root=0)
+        with TaskTimer(self.task_durations, 'qr - bcast r_tilde'):
+            r_tilde = self.comm.bcast(r_tilde, root=0)
 
-        q_fin = q_loc @ q_tot[self.rank*x:(self.rank+1)*x, :]
+        with TaskTimer(self.task_durations, 'qr - local matrix build'):
+            q_fin = q_loc @ q_tot[self.rank*x:(self.rank+1)*x, :]
 
         return q_fin, r_tilde
 
