@@ -1,3 +1,4 @@
+import os
 import csv
 
 import numpy as np
@@ -241,7 +242,7 @@ class IPCA:
 
             file_name = 'task_' + str(self.q) + str(self.d) + str(self.n) + str(self.size) + '.csv'
 
-            with open(dir_path + file_name, 'x', newline='', encoding='utf-8') as f:
+            with open(os.path.join(dir_path, file_name), 'x', newline='', encoding='utf-8') as f:
 
                 if len(self.task_durations):
                     writer = csv.writer(f)

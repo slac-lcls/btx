@@ -23,7 +23,7 @@ do
 source /reg/g/psdm/etc/psconda.sh -py3  
 export PYTHONPATH="${PYTHONPATH}:/cds/home/h/hepworth/btx-callum" 
 
-mpirun -n ${r} python ${FUNCTION_PATH} -e xpptut15 -r 580 -d jungfrau4M --components ${q} --block_size 20 --num_images 200 --output_dir "${OUTPUT_DIR}/"
+mpirun -n ${r} python ${FUNCTION_PATH} -e xpptut15 -r 580 -d jungfrau4M --components ${q} --block_size 20 --num_images 200 --output_dir ${OUTPUT_DIR}
 echo "Benchmark with q = ${q}, r = ${r} complete."
 EOF
     done
