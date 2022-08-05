@@ -14,21 +14,26 @@ class TaskTimer:
     ----------
     start_time : float
         reference time for start time of task
-    intervals : list
-        list containing time interval data
+    task_durations : dict
+        Dictionary containing iinterval data and their corresponding tasks
+    task_description : str
+        description of current task
     """
     
-    def __init__(self, intervals):
+    def __init__(self, task_durations, task_description):
         """
         Construct all necessary attributes for the TaskTimer context manager.
 
         Parameters
         ----------
-        intervals : list of float
-            List containing interval data
+        task_durations : dict
+            Dictionary containing iinterval data and their corresponding tasks
+        task_description : str
+            description of current task
         """
         self.start_time = 0.
-        self.intervals = intervals
+        self.task_durations = task_durations
+        self.task_description = task_description
     
     def __enter__(self):
         """
@@ -38,9 +43,13 @@ class TaskTimer:
     
     def __exit__(self, *args, **kwargs):
         """
-        Mutate interval list with interval duration of current task.
+        Mutate duration dict with time interval of current task.
         """
-        self.intervals.append(perf_counter() - self.start_time)
+        time_interval = perf_counter() - self.start_time
+
+        if self.task_description not in self.task_durations:
+            self.task_durations[self.task_description] = []
+        self.task_durations[self.task_description].append(time_interval)
 
 class IPCA:
 
@@ -57,6 +66,9 @@ class IPCA:
 
         self.distribute_indices()
 
+        # attribute for storing interval data
+        self.task_durations = dict({})
+
         self.S = np.eye(self.q)
         self.U = np.zeros((self.end_index - self.start_index, self.q))
 
@@ -64,35 +76,8 @@ class IPCA:
             self.mu = np.zeros((self.d, 1))
             self.total_variance = np.zeros((self.d, 1))
 
-        # attributes for computing timings of iPCA steps
-        self.task_durations = dict({})
-        self.task_durations['total update'] = []
-        self.task_durations['update mean and variance'] = []
-        self.task_durations['center data and compute augment vector'] = []
-        self.task_durations['broadcast centered data and augment vector'] = []
-        self.task_durations['first matrix product U@S'] = []
-        self.task_durations['QR concatenate'] = []
-        self.task_durations['parallel QR'] = []
-        self.task_durations['SVD of R'] = []
-        self.task_durations['broadcast U tilde'] = []
-        self.task_durations['broadcast S_tilde'] = []
-        self.task_durations['compute local U_prime'] = []
-
-    @contextmanager
-    def _record_interval(self, task_description):
-        start_time = perf_counter()
-
-        try:
-            yield
-        finally:
-            time_interval = perf_counter() - start_time
-
-            if task_description not in self.task_durations:
-                self.task_durations[task_description] = []
-            self.task_durations[task_description].append(time_interval)
 
     def distribute_indices(self):
-
         d = self.d
         size = self.size
         rank = self.rank
@@ -151,49 +136,49 @@ class IPCA:
         q = self.q
         d = self.d
 
-        with TaskTimer(self.task_durations['total update']):
+        with TaskTimer(self.task_durations, 'total update'):
 
             if self.rank == 0:
-                with TaskTimer(self.task_durations['update mean and variance']):
+                with TaskTimer(self.task_durations, 'update mean and variance'):
                     mu_n = self.mu
                     mu_m, s_m = calculate_sample_mean_and_variance(X)
                     self.total_variance = update_sample_variance(self.total_variance, s_m, mu_n, mu_m, n, m)
                     self.mu = update_sample_mean(mu_n, mu_m, n, m)
 
-                with TaskTimer(self.task_durations['center data and compute augment vector']):
+                with TaskTimer(self.task_durations, 'center data and compute augment vector'):
                     X_centered = X - np.tile(mu_m, m)
                     v_augment = np.sqrt(n * m / (n + m)) * (mu_m - mu_n)
             else:
                 X_centered = None
                 v_augment = None
 
-            with TaskTimer(self.task_durations['broadcast centered data and augment vector']):
+            with TaskTimer(self.task_durations, 'broadcast centered data and augment vector'):
                 X_centered = self.comm.bcast(X_centered, root=0)
                 v_augment = self.comm.bcast(v_augment, root=0)
 
-            with TaskTimer(self.task_durations['first matrix product U@S']):
+            with TaskTimer(self.task_durations, 'first matrix product U@S'):
                 us = self.U @ self.S
 
-            with TaskTimer(self.task_durations['QR concatenate']):
+            with TaskTimer(self.task_durations, 'QR concatenate'):
                 qr_input = np.hstack((us, X_centered[self.start_index:self.end_index, :], v_augment[self.start_index:self.end_index, :]))
             
-            with TaskTimer(self.task_durations['parallel QR']):
+            with TaskTimer(self.task_durations, 'parallel QR'):
                 UB_tilde, R = self.parallel_qr(qr_input)
 
-            with TaskTimer(self.task_durations['SVD of R']):
+            with TaskTimer(self.task_durations, 'SVD of R'):
                 # parallelize in the future?
                 if self.rank == 0:
                     U_tilde, S_tilde, _ = np.linalg.svd(R)
                 else:
                     U_tilde, S_tilde, _ = None, None, None
 
-            with TaskTimer(self.task_durations['broadcast U tilde']):
+            with TaskTimer(self.task_durations, 'broadcast U tilde'):
                 U_tilde = self.comm.bcast(U_tilde, root=0)
             
-            with TaskTimer(self.task_durations['broadcast S_tilde']):
+            with TaskTimer(self.task_durations, 'broadcast S_tilde'):
                 S_tilde = self.comm.bcast(S_tilde, root=0)
             
-            with TaskTimer(self.task_durations['compute local U_prime']):
+            with TaskTimer(self.task_durations, 'compute local U_prime'):
                 U_prime = UB_tilde @ U_tilde
 
             self.U = U_prime[:, :q]
@@ -358,5 +343,3 @@ def update_sample_variance(s_n, s_m, mu_n, mu_m, n, m):
         s_nm = (((n - 1) * s_n + (m - 1) * s_m) + (n*m*(mu_n - mu_m)**2) / (n + m)) / (n + m - 1) 
 
     return s_nm
-
-
