@@ -26,7 +26,7 @@ class FeatureExtractor:
             print(f'Requested number of images too large, reduced to {self.num_images}')
 
         # ensure that requested dimension is valid
-        # self.q = q
+        self.q = q
         # if self.q > self.num_images:
         #     self.q = self.num_images
         #     print(f'Requested number of components too large, reduced to {self.q}')
