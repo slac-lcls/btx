@@ -18,7 +18,7 @@ class FeatureExtractor:
         self.reduced_indices = np.array([])
 
         self.init_with_pca = init_with_pca
-        self.benchmark = benchmark_mode
+        self.benchmark_mode = benchmark_mode
 
         # ensure that requested number of images is valid
         self.num_images = num_images
@@ -113,7 +113,7 @@ class FeatureExtractor:
 
         self.ipca = IPCA(d, q, m)
 
-        if self.init_with_pca:
+        if self.init_with_pca and not self.benchmark_mode:
             img_block = self.fetch_formatted_images(q)
             self.ipca.initialize_model(img_block)
 
