@@ -199,9 +199,11 @@ def parse_input():
     return parser.parse_args()
  
 if __name__ == '__main__':
-    
+
     params = parse_input()
-    fe = FeatureExtractor(exp=params.exp, run=params.run, det_type=params.det_type, q=params.components, block_size=params.block_size, num_images=params.num_images, init_with_pca=params.init_with_pca, benchmark_mode=params.benchmark_mode)
+    kwargs = {k: v for k, v in vars(params).items() if v is not None}
+
+    fe = FeatureExtractor(**kwargs)
     fe.run_ipca()
     fe.ipca.save_interval_data(params.output_dir)
     
