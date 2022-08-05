@@ -5,7 +5,6 @@ import numpy as np
 from mpi4py import MPI
 
 from time import perf_counter
-from contextlib import contextmanager
 
 class TaskTimer:
     """

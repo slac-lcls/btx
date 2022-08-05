@@ -11,13 +11,14 @@ class FeatureExtractor:
     Class to manage feature extraction on image data subject to initialization parameters.
     """
 
-    def __init__(self, exp, run, det_type, q=50, block_size=10, num_images=100, init_with_pca=False):
+    def __init__(self, exp, run, det_type, q=50, block_size=10, num_images=100, init_with_pca=False, benchmark_mode=False):
         self.psi = PsanaInterface(exp=exp, run=run, det_type=det_type)
 
         self.d = np.prod(self.psi.det.shape())
         self.reduced_indices = np.array([])
 
         self.init_with_pca = init_with_pca
+        self.benchmark = benchmark_mode
 
         # ensure that requested number of images is valid
         self.num_images = num_images
@@ -27,9 +28,9 @@ class FeatureExtractor:
 
         # ensure that requested dimension is valid
         self.q = q
-        # if self.q > self.num_images:
-        #     self.q = self.num_images
-        #     print(f'Requested number of components too large, reduced to {self.q}')
+        if self.q > self.num_images:
+            self.q = self.num_images
+            print(f'Requested number of components too large, reduced to {self.q}')
 
         # ensure block size is valid
         self.m = block_size
@@ -104,6 +105,11 @@ class FeatureExtractor:
         m = self.m
         q = self.q
         parsed_images = 0
+        num_images = self.num_images
+
+        if self.benchmark_mode:
+            num_images = 60
+            m = 20
 
         self.ipca = IPCA(d, q, m)
 
@@ -113,9 +119,9 @@ class FeatureExtractor:
 
             parsed_images = q
 
-        while parsed_images <= self.num_images:
+        while parsed_images <= num_images:
 
-            if parsed_images == self.num_images or (parsed_images % m == 0 and parsed_images != 0):
+            if parsed_images == num_images or (parsed_images % m == 0 and parsed_images != 0):
                 current_block_size = parsed_images % m if parsed_images % m else m
 
                 img_block = self.fetch_formatted_images(current_block_size)
@@ -188,14 +194,14 @@ def parse_input():
     parser.add_argument('--block_size', help='Desired block size', required=False, type=int)
     parser.add_argument('--num_images', help='Number of images', required=False, type=int)
     parser.add_argument('--init_with_pca', help='Initialize with PCA', required=False, action='store_true')
-    parser.add_argument('--run_benchmark', help='Run algorithm in benchmark mode.', required=False, action='store_true')
+    parser.add_argument('--benchmark_mode', help='Run algorithm in benchmark mode.', required=False, action='store_true')
 
     return parser.parse_args()
  
 if __name__ == '__main__':
     
     params = parse_input()
-    fe = FeatureExtractor(exp=params.exp, run=params.run, det_type=params.det_type, q=params.components, block_size=params.block_size, num_images=params.num_images)
+    fe = FeatureExtractor(exp=params.exp, run=params.run, det_type=params.det_type, q=params.components, block_size=params.block_size, num_images=params.num_images, init_with_pca=params.init_with_pca, benchmark_mode=params.benchmark_mode)
     fe.run_ipca()
     fe.ipca.save_interval_data(params.output_dir)
     
