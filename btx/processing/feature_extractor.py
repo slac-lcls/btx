@@ -26,10 +26,10 @@ class FeatureExtractor:
             print(f'Requested number of images too large, reduced to {self.num_images}')
 
         # ensure that requested dimension is valid
-        self.q = q
-        if self.q > self.num_images:
-            self.q = self.num_images
-            print(f'Requested number of components too large, reduced to {self.q}')
+        # self.q = q
+        # if self.q > self.num_images:
+        #     self.q = self.num_images
+        #     print(f'Requested number of components too large, reduced to {self.q}')
 
         # ensure block size is valid
         self.m = block_size
@@ -188,6 +188,7 @@ def parse_input():
     parser.add_argument('--block_size', help='Desired block size', required=False, type=int)
     parser.add_argument('--num_images', help='Number of images', required=False, type=int)
     parser.add_argument('--init_with_pca', help='Initialize with PCA', required=False, action='store_true')
+    parser.add_argument('--run_benchmark', help='Run algorithm in benchmark mode.', required=False, action='store_true')
 
     return parser.parse_args()
  
