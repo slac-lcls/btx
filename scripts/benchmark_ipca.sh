@@ -1,11 +1,8 @@
 #!/bin/bash
 
 FUNCTION_PATH="/cds/home/h/hepworth/btx-callum/btx/processing/feature_extractor.py"
-# COMPS=(1 5 10 20 50 75 100 125 150 165 175 180 185 190 195 200 205 250)
-# RANKS=(1 2 4 6 8 10 12)
-
-COMPS=(1 5)
-RANKS=(1 2)
+COMPS=(1 5 10 20 50 75 100 125 150 175 185 195 205 250)
+RANKS=(1 2 4 6 8 10 12)
 
 for r in ${RANKS[@]}
 do
