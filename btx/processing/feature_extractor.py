@@ -11,7 +11,7 @@ class FeatureExtractor:
     Class to manage feature extraction on image data subject to initialization parameters.
     """
 
-    def __init__(self, exp, run, det_type, q=50, block_size=10, num_images=100, init_with_pca=False, benchmark_mode=False):
+    def __init__(self, exp, run, det_type, q=50, block_size=10, num_images=100, init_with_pca=False, benchmark_mode=False, output_dir=''):
         self.psi = PsanaInterface(exp=exp, run=run, det_type=det_type)
 
         self.d = np.prod(self.psi.det.shape())
@@ -19,6 +19,8 @@ class FeatureExtractor:
 
         self.init_with_pca = init_with_pca
         self.benchmark_mode = benchmark_mode
+        
+        self.output_dir = output_dir
 
         # ensure that requested number of images is valid
         self.num_images = num_images
@@ -129,6 +131,9 @@ class FeatureExtractor:
             
             parsed_images += 1
 
+        if self.benchmark_mode:
+            self.ipca.save_interval_data(self.output_dir)
+
 def compare_basis_vectors(U_1, U_2, q):
     """
     Quantitatively compare the first q basis vectors of U and U_prime. 
@@ -205,5 +210,3 @@ if __name__ == '__main__':
 
     fe = FeatureExtractor(**kwargs)
     fe.run_ipca()
-    fe.ipca.save_interval_data(params.output_dir)
-    
