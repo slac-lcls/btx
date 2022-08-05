@@ -1,10 +1,10 @@
-from asyncio import Task
 import csv
-from xml.sax.handler import DTDHandler
+
 import numpy as np
 from mpi4py import MPI
 
 from time import perf_counter
+from contextlib import contextmanager
 
 class TaskTimer:
     """
@@ -78,6 +78,18 @@ class IPCA:
         self.task_durations['broadcast S_tilde'] = []
         self.task_durations['compute local U_prime'] = []
 
+
+
+    @contextmanager
+    def record_interval(self, task_description):
+        start_time = perf_counter()
+        
+        try:
+            yield
+        finally:
+            if task_description not in self.intervals:
+                self.intervals[task_description] = []
+            self.intervals.append(perf_counter() - start_time)
 
     def distribute_indices(self):
 
