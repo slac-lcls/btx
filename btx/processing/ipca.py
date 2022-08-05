@@ -78,8 +78,6 @@ class IPCA:
         self.task_durations['broadcast S_tilde'] = []
         self.task_durations['compute local U_prime'] = []
 
-        self.task_durations = dict({})
-
 
 
     @contextmanager
