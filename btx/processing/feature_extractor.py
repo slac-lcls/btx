@@ -11,7 +11,7 @@ class FeatureExtractor:
     Class to manage feature extraction on image data subject to initialization parameters.
     """
 
-    def __init__(self, exp, run, det_type, q=50, block_size=10, num_images=100, init_with_pca=False, benchmark_mode=False, output_dir=''):
+    def __init__(self, exp, run, det_type, num_components=50, block_size=10, num_images=100, init_with_pca=False, benchmark_mode=False, output_dir=''):
         self.psi = PsanaInterface(exp=exp, run=run, det_type=det_type)
 
         self.d = np.prod(self.psi.det.shape())
@@ -29,7 +29,7 @@ class FeatureExtractor:
             print(f'Requested number of images too large, reduced to {self.num_images}')
 
         # ensure that requested dimension is valid
-        self.q = q
+        self.q = num_components
         if self.q > self.num_images:
             self.q = self.num_images
             print(f'Requested number of components too large, reduced to {self.q}')
