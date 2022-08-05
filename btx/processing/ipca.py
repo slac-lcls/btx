@@ -78,18 +78,18 @@ class IPCA:
         self.task_durations['broadcast S_tilde'] = []
         self.task_durations['compute local U_prime'] = []
 
-
-
     @contextmanager
-    def record_interval(self, task_description):
+    def _record_interval(self, task_description):
         start_time = perf_counter()
 
         try:
             yield
         finally:
+            time_interval = perf_counter() - start_time
+
             if task_description not in self.task_durations:
                 self.task_durations[task_description] = []
-            self.task_durations[task_description].append(perf_counter() - start_time)
+            self.task_durations[task_description].append(time_interval)
 
     def distribute_indices(self):
 
@@ -150,8 +150,6 @@ class IPCA:
         n = self.n
         q = self.q
         d = self.d
-
-        print(self.start_index, self.end_index)
 
         with TaskTimer(self.task_durations['total update']):
 
