@@ -29,7 +29,7 @@ class FeatureExtractor:
             print(f'Requested number of images too large, reduced to {self.num_images}')
 
         if self.benchmark_mode:
-            self.num_images = min(60, self.num_images)
+            self.num_images = min(80, self.num_images)
             self.q = num_components
             self.m = 10
         else:
