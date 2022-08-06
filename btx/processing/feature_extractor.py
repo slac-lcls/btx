@@ -28,17 +28,23 @@ class FeatureExtractor:
             self.num_images = self.psi.max_events
             print(f'Requested number of images too large, reduced to {self.num_images}')
 
-        # ensure that requested dimension is valid
-        self.q = num_components
-        if self.q > self.num_images:
-            self.q = self.num_images
-            print(f'Requested number of components too large, reduced to {self.q}')
+        if self.benchmark_mode:
+            self.num_images = min(60, self.num_images)
+            self.q = num_components
+            self.m = 10
+        
+        else:
+            # ensure that requested dimension is valid
+            self.q = num_components
+            if self.q > self.num_images:
+                self.q = self.num_images
+                print(f'Requested number of components too large, reduced to {self.q}')
 
-        # ensure block size is valid
-        self.m = block_size
-        if self.m > self.num_images:
-            self.m = self.num_images
-            print(f'Requested block size too large, reduced to {self.m}')
+            # ensure block size is valid
+            self.m = block_size
+            if self.m > self.num_images:
+                self.m = self.num_images
+                print(f'Requested block size too large, reduced to {self.m}')
 
     def fetch_formatted_images(self, n):
         """
@@ -108,10 +114,6 @@ class FeatureExtractor:
         q = self.q
         parsed_images = 0
         num_images = self.num_images
-
-        if self.benchmark_mode:
-            num_images = 60
-            m = 10
 
         self.ipca = IPCA(d, q, m)
 
