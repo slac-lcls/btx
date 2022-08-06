@@ -111,7 +111,7 @@ class FeatureExtractor:
 
         if self.benchmark_mode:
             num_images = 60
-            m = 20
+            m = 10
 
         self.ipca = IPCA(d, q, m)
 
