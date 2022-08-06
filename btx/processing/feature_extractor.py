@@ -32,7 +32,6 @@ class FeatureExtractor:
             self.num_images = min(60, self.num_images)
             self.q = num_components
             self.m = 10
-        
         else:
             # ensure that requested dimension is valid
             self.q = num_components

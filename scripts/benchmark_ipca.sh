@@ -4,7 +4,7 @@ FUNCTION_PATH="/cds/home/h/hepworth/btx-callum/btx/processing/feature_extractor.
 # COMPS=(1 5 10 25 50 75 100 125 150 165 175 185 195 205 250)
 # RANKS=(1 2 4 6 8 10 12 16)
 
-COMPS=(100)
+COMPS=(75 100 150)
 RANKS=(1 8)
 
 for r in ${RANKS[@]}
