@@ -103,6 +103,8 @@ class IPCA:
         m = self.m
         y, x = A.shape
 
+        print(self.rank, A)
+
         with TaskTimer(self.task_durations, 'qr - local qr'):
             q_loc, r_loc = np.linalg.qr(A, mode='reduced')
 
