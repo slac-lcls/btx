@@ -171,7 +171,7 @@ class IPCA:
                     X_aug = np.hstack((X_centered, v_augment))
             else:
                 X_aug = None
-                
+
             self.comm.Barrier()
 
             with TaskTimer(self.task_durations, 'scatter aug data'):
@@ -181,8 +181,8 @@ class IPCA:
             with TaskTimer(self.task_durations, 'first matrix product U@S'):
                 us = self.U @ self.S
 
-            print(us.shape)
-            print(X_aug_loc.shape)
+            print(us.shape, self.rank)
+            print(X_aug_loc.shape, self.rank)
 
             with TaskTimer(self.task_durations, 'QR concatenate'):
                 qr_input = np.hstack((us, X_aug_loc))
@@ -193,6 +193,7 @@ class IPCA:
             with TaskTimer(self.task_durations, 'SVD of R'):
                 # parallelize in the future?
                 if self.rank == 0:
+                    print(R.shape, self.rank)
                     U_tilde, S_tilde, _ = np.linalg.svd(R)
                 else:
                     U_tilde = np.empty((q+m+1, q+m+1))
