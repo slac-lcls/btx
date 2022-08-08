@@ -122,8 +122,6 @@ class IPCA:
         print(r_tot.shape)
 
         if self.rank == 0:
-            with TaskTimer(self.task_durations, 'qr - concat'):
-                r_tot = np.concatenate(r_tot, axis=0)
             with TaskTimer(self.task_durations, 'qr - global qr'):
                 q_tot, r_tilde = np.linalg.qr(r_tot, mode='reduced')
         else:
