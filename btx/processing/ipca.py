@@ -172,7 +172,7 @@ class IPCA:
                     X_aug = np.hstack((X_centered, v_augment))
 
             with TaskTimer(self.task_durations, 'scatter aug data'):
-                X_aug_loc = np.empty(self.split_counts[self.rank])
+                X_aug_loc = np.empty((self.split_counts[self.rank], m+1))
                 self.comm.Scatterv([X_aug, self.split_counts, self.start_indices, MPI.FLOAT], X_aug_loc, root=0)
 
             with TaskTimer(self.task_durations, 'first matrix product U@S'):
