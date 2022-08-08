@@ -127,6 +127,9 @@ class IPCA:
         with TaskTimer(self.task_durations, 'qr - bcast r_tilde'):
             self.comm.Bcast(r_tilde, root=0)
 
+        print(self.rank, q_loc)
+        print(self.rank, q_tot)
+
         with TaskTimer(self.task_durations, 'qr - local matrix build'):
             q_fin = q_loc @ q_tot[self.rank*x:(self.rank+1)*x, :]
 
@@ -181,9 +184,6 @@ class IPCA:
             with TaskTimer(self.task_durations, 'first matrix product U@S'):
                 us = self.U @ self.S
 
-            print(us.shape, self.rank)
-            print(X_aug_loc.shape, self.rank)
-
             with TaskTimer(self.task_durations, 'QR concatenate'):
                 qr_input = np.hstack((us, X_aug_loc))
             
@@ -193,8 +193,6 @@ class IPCA:
             with TaskTimer(self.task_durations, 'SVD of R'):
                 # parallelize in the future?
                 if self.rank == 0:
-                    print(R.shape, self.rank)
-                    print(R)
                     U_tilde, S_tilde, _ = np.linalg.svd(R)
                 else:
                     U_tilde = np.empty((q+m+1, q+m+1))
