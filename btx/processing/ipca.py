@@ -99,7 +99,7 @@ class IPCA:
             self.split_counts[i] = split_indices[i+1] - split_indices[i]
     
     def parallel_qr(self, A):
-        d= self.d
+        d = self.d
         q = self.q
         m = self.m
         y, x = A.shape
@@ -193,10 +193,10 @@ class IPCA:
                     S_tilde = np.empty((q+m+1, q+m+1))
 
             with TaskTimer(self.task_durations, 'broadcast U tilde'):
-                self.comm.Bcast(U_tilde, U_tilde, root=0)
+                self.comm.Bcast(U_tilde, root=0)
             
             with TaskTimer(self.task_durations, 'broadcast S_tilde'):
-                self.comm.Bcast(S_tilde, S_tilde, root=0)
+                self.comm.Bcast(S_tilde, root=0)
             
             with TaskTimer(self.task_durations, 'compute local U_prime'):
                 U_prime = UB_tilde @ U_tilde
