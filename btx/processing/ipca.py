@@ -93,26 +93,31 @@ class IPCA:
         split_indices = np.append(np.array([0]), np.cumsum(split_indices)).astype(int)
 
         self.start_indices = split_indices[:-1]
-        self.split_counts = np.array([], dtype=int)
+        self.split_counts = np.empty(self.size, dtype=int)
 
-        for i in range(1, len(split_indices)):
-            count = split_indices[i] - split_indices[i-1]
-            self.split_counts = np.append(self.split_counts, count)
+        for i in range(len(split_indices) - 1):
+            self.split_counts[i] = split_indices[i+1] - split_indices[i]
         
         # update self variables that determine start and end of this rank's batch
         self.start_index = split_indices[rank]
         self.end_index = split_indices[rank+1]
     
     def parallel_qr(self, A):
+        d= self.d
+        q = self.q
+        m = self.m
         y, x = A.shape
 
         with TaskTimer(self.task_durations, 'qr - local qr'):
             q_loc, r_loc = np.linalg.qr(A, mode='reduced')
 
-        print(r_loc.shape)
+        if self.rank == 0:
+            r_tot = np.empty((self.size*(q+m+1), q+m+1))
+        else: 
+            r_tot = None
 
         with TaskTimer(self.task_durations, 'qr - r_tot gather'):
-            r_tot = self.comm.gather(r_loc, root=0)
+            self.comm.Gather(r_loc, r_tot, root=0)
 
         if self.rank == 0:
             with TaskTimer(self.task_durations, 'qr - concat'):
@@ -122,6 +127,9 @@ class IPCA:
         else:
             q_tot, r_tilde = None, None
 
+        print(q_tot.shape)
+        print(r_tilde.shape)
+        
         with TaskTimer(self.task_durations, 'qr - bcast q_tot'):
             q_tot = self.comm.bcast(q_tot, root=0)
         
@@ -170,7 +178,7 @@ class IPCA:
                     X_aug = np.hstack((X_centered, v_augment))
 
             # segment and broadcast centered and augmented array
-            X_aug_loc = np.zeros(self.split_counts[self.rank])
+            X_aug_loc = np.empty(self.split_counts[self.rank])
             self.comm.Scatterv([X_aug, self.split_counts, self.start_indices, MPI.FLOAT], X_aug_loc, root=0)
 
             with TaskTimer(self.task_durations, 'first matrix product U@S'):
