@@ -195,7 +195,7 @@ class IPCA:
                     U_tilde, S_tilde, _ = np.linalg.svd(R)
                 else:
                     U_tilde = np.empty((q+m+1, q+m+1))
-                    S_tilde = np.empty((q+m+1, q+m+1))
+                    S_tilde = np.empty(q+m+1)
 
             with TaskTimer(self.task_durations, 'broadcast U tilde'):
                 self.comm.Bcast(U_tilde, root=0)
