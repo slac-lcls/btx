@@ -171,8 +171,7 @@ class IPCA:
 
                     X_aug = np.hstack((X_centered, v_augment))
 
-            # segment and broadcast centered and augmented array
-            with TaskTimer(self.task_durations, 'center data and compute augment vector'):
+            with TaskTimer(self.task_durations, 'scatter aug data'):
                 X_aug_loc = np.empty(self.split_counts[self.rank])
                 self.comm.Scatterv([X_aug, self.split_counts, self.start_indices, MPI.FLOAT], X_aug_loc, root=0)
 
