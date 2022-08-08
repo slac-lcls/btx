@@ -114,7 +114,9 @@ class FeatureExtractor:
         parsed_images = 0
         num_images = self.num_images
 
+        print('123')
         self.ipca = IPCA(d, q, m)
+        print('abc')
 
         if self.init_with_pca and not self.benchmark_mode:
             img_block = self.fetch_formatted_images(q)

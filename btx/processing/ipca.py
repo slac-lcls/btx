@@ -133,13 +133,24 @@ class IPCA:
         return q_fin, r_tilde
 
     def get_model(self):
-        U_tot = np.empty((self.d, self.q))
-        S_tot = self.S
-
-        self.comm.Gatherv(self.U, [U_tot, self.split_counts, self.start_indices, MPI.DOUBLE], root=0)
-
+        """
+        Notes
+        -----
+        Intended to be called from the root process.
+        """
         if self.rank == 0:
-            return U_tot, S_tot, self.mu, self.total_variance
+            U_tot = np.empty((self.d, self.q))
+            self.comm.Gatherv(self.U, [U_tot, self.split_counts, self.start_indices, MPI.DOUBLE], root=0)
+
+            S_tot = self.S
+            mu = self.mu
+            var = self.total_variance
+        else:
+            U_tot, S_tot, mu, var = None, None, None, None
+
+        return U_tot, S_tot, mu, var
+
+
 
     def update_model(self, X):
         """
