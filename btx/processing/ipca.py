@@ -181,6 +181,8 @@ class IPCA:
             with TaskTimer(self.task_durations, 'first matrix product U@S'):
                 us = self.U @ self.S
 
+            print(self.rank, us.shape, self.U.shape, self.S.shape, self.X_aug_loc.shape)
+
             with TaskTimer(self.task_durations, 'QR concatenate'):
                 qr_input = np.hstack((us, X_aug_loc))
             
@@ -200,9 +202,6 @@ class IPCA:
             
             with TaskTimer(self.task_durations, 'broadcast S_tilde'):
                 self.comm.Bcast(S_tilde, root=0)
-            
-            print(self.rank, U_tilde)
-            print(self.rank, S_tilde)
 
             with TaskTimer(self.task_durations, 'compute local U_prime'):
                 U_prime = UB_tilde @ U_tilde
