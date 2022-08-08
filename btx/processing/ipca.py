@@ -80,7 +80,6 @@ class IPCA:
     def distribute_indices(self):
         d = self.d
         size = self.size
-        rank = self.rank
 
         # determine boundary indices between ranks
         split_indices = np.zeros(size)
@@ -93,7 +92,7 @@ class IPCA:
         split_indices = np.append(np.array([0]), np.cumsum(split_indices)).astype(int)
 
         self.start_indices = split_indices[:-1]
-        self.split_counts = np.empty(self.size, dtype=int)
+        self.split_counts = np.empty(size, dtype=int)
 
         for i in range(len(split_indices) - 1):
             self.split_counts[i] = split_indices[i+1] - split_indices[i]
@@ -107,12 +106,12 @@ class IPCA:
         with TaskTimer(self.task_durations, 'qr - local qr'):
             q_loc, r_loc = np.linalg.qr(A, mode='reduced')
 
-        if self.rank == 0:
-            r_tot = np.empty((self.size*(q+m+1), q+m+1))
-        else: 
-            r_tot = None
-
         with TaskTimer(self.task_durations, 'qr - r_tot gather'):
+            if self.rank == 0:
+                r_tot = np.empty((self.size*(q+m+1), q+m+1))
+            else: 
+                r_tot = None
+
             self.comm.Gather(r_loc, r_tot, root=0)
 
         if self.rank == 0:
@@ -170,6 +169,8 @@ class IPCA:
                     v_augment = np.sqrt(n * m / (n + m)) * (mu_m - mu_n)
 
                     X_aug = np.hstack((X_centered, v_augment))
+            else:
+                X_aug = None
 
             with TaskTimer(self.task_durations, 'scatter aug data'):
                 X_aug_loc = np.empty((self.split_counts[self.rank], m+1))
