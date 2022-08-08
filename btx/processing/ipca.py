@@ -172,6 +172,7 @@ class IPCA:
                     v_augment = np.sqrt(n * m / (n + m)) * (mu_m - mu_n)
 
                     X_aug = np.hstack((X_centered, v_augment))
+                    print(self.rank + 10, X_aug.dtype)
             else:
                 X_aug = None
 
@@ -181,7 +182,7 @@ class IPCA:
                 X_aug_loc = np.empty((self.split_counts[self.rank], m+1))
                 print(self.rank, self.split_counts)
                 print(self.rank, self.start_indices)
-                self.comm.Scatterv([X_aug, self.split_counts, self.start_indices], X_aug_loc, root=0)
+                self.comm.Scatterv([X_aug, self.split_counts, self.start_indices, MPI.DOUBLE], X_aug_loc, root=0)
 
             with TaskTimer(self.task_durations, 'first matrix product U@S'):
                 us = self.U @ self.S
