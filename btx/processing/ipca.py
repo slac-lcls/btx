@@ -181,7 +181,7 @@ class IPCA:
             with TaskTimer(self.task_durations, 'first matrix product U@S'):
                 us = self.U @ self.S
 
-            print(self.rank, us.shape, self.U.shape, self.S.shape, self.X_aug_loc.shape)
+            print(self.rank, us.shape, self.U.shape, self.S.shape, X_aug_loc.shape)
 
             with TaskTimer(self.task_durations, 'QR concatenate'):
                 qr_input = np.hstack((us, X_aug_loc))
