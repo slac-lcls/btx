@@ -103,11 +103,8 @@ class IPCA:
         m = self.m
         y, x = A.shape
 
-        print(self.rank, np.any(np.isnan(A)))
-
         with TaskTimer(self.task_durations, 'qr - local qr'):
             q_loc, r_loc = np.linalg.qr(A, mode='reduced')
-            print(self.rank, q_loc, r_loc)
 
         with TaskTimer(self.task_durations, 'qr - r_tot gather'):
             if self.rank == 0:
@@ -172,7 +169,6 @@ class IPCA:
                     v_augment = np.sqrt(n * m / (n + m)) * (mu_m - mu_n)
 
                     X_aug = np.hstack((X_centered, v_augment))
-                    print(self.rank + 10, X_aug.dtype)
             else:
                 X_aug = None
 
@@ -180,8 +176,6 @@ class IPCA:
 
             with TaskTimer(self.task_durations, 'scatter aug data'):
                 X_aug_loc = np.empty((self.split_counts[self.rank], m+1))
-                print(self.rank, self.split_counts)
-                print(self.rank, self.start_indices)
                 self.comm.Scatterv([X_aug, self.split_counts, self.start_indices, MPI.DOUBLE], X_aug_loc, root=0)
 
             with TaskTimer(self.task_durations, 'first matrix product U@S'):
@@ -207,6 +201,9 @@ class IPCA:
             with TaskTimer(self.task_durations, 'broadcast S_tilde'):
                 self.comm.Bcast(S_tilde, root=0)
             
+            print(self.rank, U_tilde)
+            print(self.rank, S_tilde)
+
             with TaskTimer(self.task_durations, 'compute local U_prime'):
                 U_prime = UB_tilde @ U_tilde
 
