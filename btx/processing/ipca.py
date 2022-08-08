@@ -93,7 +93,7 @@ class IPCA:
         split_indices = np.append(np.array([0]), np.cumsum(split_indices)).astype(int)
 
         self.start_indices = split_indices[:-1]
-        self.split_counts = np.array([])
+        self.split_counts = np.array([], dtype=int)
 
         for i in range(1, len(split_indices)):
             count = split_indices[i] - split_indices[i-1]
