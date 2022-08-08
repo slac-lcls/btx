@@ -135,6 +135,55 @@ class FeatureExtractor:
         if self.benchmark_mode:
             self.ipca.save_interval_data(self.output_dir)
 
+    def verify_model_accuracy(self):
+        n = self.num_images
+        q = self.q
+
+        print('Verifying Model Accuracy...')
+
+        # store current event index and reset to get same image batch
+        event_index = self.psi.counter
+        self.psi.counter = 0
+
+        # run svd on centered image batch
+        X = self.fetch_formatted_images(n)
+        mu_pca = np.reshape(np.mean(X, axis=1), (X.shape[0], 1))
+        var_pca = np.reshape(np.var(X, ddof=1, axis=1), (X.shape[0], 1))
+        mu_n = np.tile(mu_pca, n)
+        X_centered = X - mu_n
+
+        U_pca, S_pca, _ = np.linalg.svd(X_centered, full_matrices=False)
+        U, S, mu, var = self.ipca.get_model()
+
+        print(f'iPCA Compression Loss: {compression_loss(X, U)}')
+        print(f'PCA Compression Loss: {compression_loss(X, U_pca)}')
+        print('\n')
+
+        print(f'iPCA Total Variance: {np.sum(var)}')
+        print(f'PCA Total Variance: {np.sum(var_pca)}')
+        print('\n')
+
+        print(f'iPCA Explained Variane: {(np.sum(S[:q]**2) / (n-1)) / np.sum(var)}')
+        print(f'PCA Explained Variane: {(np.sum(S_pca[:q]**2) / (n-1)) / np.sum(var_pca)}')
+        print('\n')
+
+        print(f'IPCA Singular Values: \n')
+        print(S)
+
+        print(f'PCA Singular Values: \n')
+        print(S_pca)
+
+        print(f'Normalized Mean Inner Product: {(mu / np.linalg.norm(mu)).T @ (mu_pca / np.linalg.norm(mu_pca))}')
+
+        print('Basis Inner Product: \n')
+        print(np.diagonal(np.abs(U[:, :q].T @ S_pca[:, :q])))
+
+        # reset counter
+        self.psi_counter = event_index
+
+
+
+
 def compare_basis_vectors(U_1, U_2, q):
     """
     Quantitatively compare the first q basis vectors of U and U_prime. 
@@ -211,3 +260,4 @@ if __name__ == '__main__':
 
     fe = FeatureExtractor(**kwargs)
     fe.run_ipca()
+    fe.verify_model_accuracy()
