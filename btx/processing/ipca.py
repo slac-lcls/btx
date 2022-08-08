@@ -172,14 +172,15 @@ class IPCA:
                     X_aug = np.hstack((X_centered, v_augment))
 
             # segment and broadcast centered and augmented array
-            X_aug_loc = np.empty(self.split_counts[self.rank])
-            self.comm.Scatterv([X_aug, self.split_counts, self.start_indices, MPI.FLOAT], X_aug_loc, root=0)
+            with TaskTimer(self.task_durations, 'center data and compute augment vector'):
+                X_aug_loc = np.empty(self.split_counts[self.rank])
+                self.comm.Scatterv([X_aug, self.split_counts, self.start_indices, MPI.FLOAT], X_aug_loc, root=0)
 
             with TaskTimer(self.task_durations, 'first matrix product U@S'):
                 us = self.U @ self.S
 
             with TaskTimer(self.task_durations, 'QR concatenate'):
-                qr_input = np.hstack((us, X_aug))
+                qr_input = np.hstack((us, X_aug_loc))
             
             with TaskTimer(self.task_durations, 'parallel QR'):
                 UB_tilde, R = self.parallel_qr(qr_input)
