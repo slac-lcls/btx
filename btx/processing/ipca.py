@@ -138,9 +138,11 @@ class IPCA:
         return q_fin, r_tilde
 
     def get_model(self):
-        
-        U_tot = np.concatenate(self.comm.gather(self.U, root=0), axis=0)
+
+        U_tot = np.empty((self.d, self.q))
         S_tot = self.S
+
+        self.comm.Gather(self.U, U_tot, root=0)
 
         return U_tot, S_tot
 
@@ -191,13 +193,14 @@ class IPCA:
                 if self.rank == 0:
                     U_tilde, S_tilde, _ = np.linalg.svd(R)
                 else:
-                    U_tilde, S_tilde, _ = None, None, None
+                    U_tilde = np.empty((q+m+1, q+m+1))
+                    S_tilde = np.empty((q+m+1, q+m+1))
 
             with TaskTimer(self.task_durations, 'broadcast U tilde'):
-                U_tilde = self.comm.bcast(U_tilde, root=0)
+                self.comm.Bcast(U_tilde, U_tilde, root=0)
             
             with TaskTimer(self.task_durations, 'broadcast S_tilde'):
-                S_tilde = self.comm.bcast(S_tilde, root=0)
+                self.comm.Bcast(S_tilde, S_tilde, root=0)
             
             with TaskTimer(self.task_durations, 'compute local U_prime'):
                 U_prime = UB_tilde @ U_tilde
