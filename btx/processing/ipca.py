@@ -119,6 +119,8 @@ class IPCA:
         with TaskTimer(self.task_durations, 'qr - r_tot gather'):
             self.comm.Gather(r_loc, r_tot, root=0)
 
+        print(r_tot.shape)
+
         if self.rank == 0:
             with TaskTimer(self.task_durations, 'qr - concat'):
                 r_tot = np.concatenate(r_tot, axis=0)
@@ -129,7 +131,7 @@ class IPCA:
 
         print(q_tot.shape)
         print(r_tilde.shape)
-        
+
         with TaskTimer(self.task_durations, 'qr - bcast q_tot'):
             q_tot = self.comm.bcast(q_tot, root=0)
         
