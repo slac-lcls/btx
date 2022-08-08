@@ -1,5 +1,6 @@
 import argparse
 import numpy as np
+from mpi4py import MPI
 
 from btx.interfaces.psana_interface import *
 from btx.processing.ipca import *
@@ -165,8 +166,8 @@ class FeatureExtractor:
         print(f'PCA Total Variance: {np.sum(var_pca)}')
         print('\n')
 
-        print(f'iPCA Explained Variane: {(np.sum(S[:q]**2) / (n-1)) / np.sum(var)}')
-        print(f'PCA Explained Variane: {(np.sum(S_pca[:q]**2) / (n-1)) / np.sum(var_pca)}')
+        print(f'iPCA Explained Variance: {(np.sum(S[:q]**2) / (n-1)) / np.sum(var)}')
+        print(f'PCA Explained Variance: {(np.sum(S_pca[:q]**2) / (n-1)) / np.sum(var_pca)}')
         print('\n')
 
         print(f'IPCA Singular Values: \n')
@@ -182,9 +183,6 @@ class FeatureExtractor:
 
         # reset counter
         self.psi_counter = event_index
-
-
-
 
 def compare_basis_vectors(U_1, U_2, q):
     """
@@ -260,6 +258,7 @@ if __name__ == '__main__':
     params = parse_input()
     kwargs = {k: v for k, v in vars(params).items() if v is not None}
 
-    fe = FeatureExtractor(**kwargs)
-    fe.run_ipca()
-    fe.verify_model_accuracy()
+    if MPI.COMM_WORLD.Get_rank() == 0:
+        fe = FeatureExtractor(**kwargs)
+        fe.run_ipca()
+        fe.verify_model_accuracy()
