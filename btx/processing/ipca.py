@@ -70,7 +70,7 @@ class IPCA:
         self.task_durations = dict({})
 
         self.S = np.eye(self.q)
-        self.U = np.zeros((self.end_index - self.start_index, self.q))
+        self.U = np.zeros((self.split_counts[self.rank], self.q))
 
         if self.rank == 0:
             self.mu = np.zeros((self.d, 1))
@@ -97,10 +97,6 @@ class IPCA:
 
         for i in range(len(split_indices) - 1):
             self.split_counts[i] = split_indices[i+1] - split_indices[i]
-        
-        # update self variables that determine start and end of this rank's batch
-        self.start_index = split_indices[rank]
-        self.end_index = split_indices[rank+1]
     
     def parallel_qr(self, A):
         d= self.d
