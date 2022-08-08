@@ -11,13 +11,16 @@ class FeatureExtractor:
     Class to manage feature extraction on image data subject to initialization parameters.
     """
 
-    def __init__(self, exp, run, det_type, q=50, block_size=10, num_images=100, init_with_pca=False):
+    def __init__(self, exp, run, det_type, num_components=50, block_size=10, num_images=100, init_with_pca=False, benchmark_mode=False, output_dir=''):
         self.psi = PsanaInterface(exp=exp, run=run, det_type=det_type)
 
         self.d = np.prod(self.psi.det.shape())
         self.reduced_indices = np.array([])
 
         self.init_with_pca = init_with_pca
+        self.benchmark_mode = benchmark_mode
+        
+        self.output_dir = output_dir
 
         # ensure that requested number of images is valid
         self.num_images = num_images
@@ -25,17 +28,22 @@ class FeatureExtractor:
             self.num_images = self.psi.max_events
             print(f'Requested number of images too large, reduced to {self.num_images}')
 
-        # ensure that requested dimension is valid
-        self.q = q
-        if self.q > self.num_images:
-            self.q = self.num_images
-            print(f'Requested number of components too large, reduced to {self.q}')
+        if self.benchmark_mode:
+            self.num_images = min(80, self.num_images)
+            self.q = num_components
+            self.m = 10
+        else:
+            # ensure that requested dimension is valid
+            self.q = num_components
+            if self.q > self.num_images:
+                self.q = self.num_images
+                print(f'Requested number of components too large, reduced to {self.q}')
 
-        # ensure block size is valid
-        self.m = block_size
-        if self.m > self.num_images:
-            self.m = self.num_images
-            print(f'Requested block size too large, reduced to {self.m}')
+            # ensure block size is valid
+            self.m = block_size
+            if self.m > self.num_images:
+                self.m = self.num_images
+                print(f'Requested block size too large, reduced to {self.m}')
 
     def fetch_formatted_images(self, n):
         """
@@ -104,24 +112,28 @@ class FeatureExtractor:
         m = self.m
         q = self.q
         parsed_images = 0
+        num_images = self.num_images
 
         self.ipca = IPCA(d, q, m)
 
-        if self.init_with_pca:
+        if self.init_with_pca and not self.benchmark_mode:
             img_block = self.fetch_formatted_images(q)
             self.ipca.initialize_model(img_block)
 
             parsed_images = q
 
-        while parsed_images <= self.num_images:
+        while parsed_images <= num_images:
 
-            if parsed_images == self.num_images or (parsed_images % m == 0 and parsed_images != 0):
+            if parsed_images == num_images or (parsed_images % m == 0 and parsed_images != 0):
                 current_block_size = parsed_images % m if parsed_images % m else m
 
                 img_block = self.fetch_formatted_images(current_block_size)
                 self.ipca.update_model(img_block)
             
             parsed_images += 1
+
+        if self.benchmark_mode:
+            self.ipca.save_interval_data(self.output_dir)
 
 def compare_basis_vectors(U_1, U_2, q):
     """
@@ -184,17 +196,18 @@ def parse_input():
     parser.add_argument('-d', '--det_type', help='Detector name, e.g epix10k2M or jungfrau4M',  required=True, type=str)
     parser.add_argument('--output_dir', help='Path to output directory.', required=True, type=str)
 
-    parser.add_argument('--components', help='Number of principal components to compute', required=False, type=int)
-    parser.add_argument('--block_size', help='Desired block size', required=False, type=int)
-    parser.add_argument('--num_images', help='Number of images', required=False, type=int)
-    parser.add_argument('--init_with_pca', help='Initialize with PCA', required=False, action='store_true')
+    parser.add_argument('-c', '--num_components', help='Number of principal components to compute', required=False, type=int)
+    parser.add_argument('-m', '--block_size', help='Desired block size', required=False, type=int)
+    parser.add_argument('-n', '--num_images', help='Number of images', required=False, type=int)
+    parser.add_argument('-i', '--init_with_pca', help='Initialize with PCA', required=False, action='store_true')
+    parser.add_argument('-b', '--benchmark_mode', help='Run algorithm in benchmark mode.', required=False, action='store_true')
 
     return parser.parse_args()
  
 if __name__ == '__main__':
-    
+
     params = parse_input()
-    fe = FeatureExtractor(exp=params.exp, run=params.run, det_type=params.det_type, q=params.components, block_size=params.block_size, num_images=params.num_images)
+    kwargs = {k: v for k, v in vars(params).items() if v is not None}
+
+    fe = FeatureExtractor(**kwargs)
     fe.run_ipca()
-    fe.ipca.save_interval_data(params.output_dir)
-    

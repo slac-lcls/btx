@@ -1,4 +1,6 @@
+import os
 import csv
+
 import numpy as np
 from mpi4py import MPI
 
@@ -12,21 +14,26 @@ class TaskTimer:
     ----------
     start_time : float
         reference time for start time of task
-    intervals : list
-        list containing time interval data
+    task_durations : dict
+        Dictionary containing iinterval data and their corresponding tasks
+    task_description : str
+        description of current task
     """
     
-    def __init__(self, intervals):
+    def __init__(self, task_durations, task_description):
         """
         Construct all necessary attributes for the TaskTimer context manager.
 
         Parameters
         ----------
-        intervals : list of float
-            List containing interval data
+        task_durations : dict
+            Dictionary containing iinterval data and their corresponding tasks
+        task_description : str
+            description of current task
         """
         self.start_time = 0.
-        self.intervals = intervals
+        self.task_durations = task_durations
+        self.task_description = task_description
     
     def __enter__(self):
         """
@@ -36,9 +43,13 @@ class TaskTimer:
     
     def __exit__(self, *args, **kwargs):
         """
-        Mutate interval list with interval duration of current task.
+        Mutate duration dict with time interval of current task.
         """
-        self.intervals.append(perf_counter() - self.start_time)
+        time_interval = perf_counter() - self.start_time
+
+        if self.task_description not in self.task_durations:
+            self.task_durations[self.task_description] = []
+        self.task_durations[self.task_description].append(time_interval)
 
 class IPCA:
 
@@ -53,22 +64,70 @@ class IPCA:
         self.m = m
         self.n = 0
 
-        self.S = np.eye(self.q)
-        self.U = np.zeros((self.d, self.q))
-        self.mu = np.zeros((self.d, 1))
-        self.total_variance = np.zeros((self.d, 1))
+        self.distribute_indices()
 
-        # attributes for computing timings of iPCA steps
+        # attribute for storing interval data
         self.task_durations = dict({})
-        self.task_durations['concat'] = []
-        self.task_durations['ortho'] = []
-        self.task_durations['build_r'] = []
-        self.task_durations['svd'] = []
-        self.task_durations['update_basis'] = []
-        self.task_durations['MPI1'] = []
-        self.task_durations['MPI2'] = []
-        self.task_durations['MPI3'] = []
-        self.task_durations['total_update'] = []
+
+        self.S = np.eye(self.q)
+        self.U = np.zeros((self.end_index - self.start_index, self.q))
+
+        if self.rank == 0:
+            self.mu = np.zeros((self.d, 1))
+            self.total_variance = np.zeros((self.d, 1))
+
+
+    def distribute_indices(self):
+        d = self.d
+        size = self.size
+        rank = self.rank
+
+        # determine boundary indices between ranks
+        split_indices = np.zeros(size)
+        for r in range(size):
+            num_per_rank = d // size
+            if r < (d % size):
+                num_per_rank += 1
+            split_indices[r] = num_per_rank
+        split_indices = np.append(np.array([0]), np.cumsum(split_indices)).astype(int)
+        
+        # update self variables that determine start and end of this rank's batch
+        self.start_index = split_indices[rank]
+        self.end_index = split_indices[rank+1]
+    
+    def parallel_qr(self, A):
+        y, x = A.shape
+
+        with TaskTimer(self.task_durations, 'qr - local qr'):
+            q_loc, r_loc = np.linalg.qr(A, mode='reduced')
+
+        with TaskTimer(self.task_durations, 'qr - r_tot gather'):
+            r_tot = self.comm.gather(r_loc, root=0)
+
+        if self.rank == 0:
+            with TaskTimer(self.task_durations, 'qr - concat'):
+                r_tot = np.concatenate(r_tot, axis=0)
+            with TaskTimer(self.task_durations, 'qr - global qr'):
+                q_tot, r_tilde = np.linalg.qr(r_tot, mode='reduced')
+        else:
+            q_tot, r_tilde = None, None
+        with TaskTimer(self.task_durations, 'qr - bcast q_tot'):
+            q_tot = self.comm.bcast(q_tot, root=0)
+        
+        with TaskTimer(self.task_durations, 'qr - bcast r_tilde'):
+            r_tilde = self.comm.bcast(r_tilde, root=0)
+
+        with TaskTimer(self.task_durations, 'qr - local matrix build'):
+            q_fin = q_loc @ q_tot[self.rank*x:(self.rank+1)*x, :]
+
+        return q_fin, r_tilde
+
+    def get_model(self):
+        
+        U_tot = np.concatenate(self.comm.gather(self.U, root=0), axis=0)
+        S_tot = self.S
+
+        return U_tot, S_tot
 
     def update_model(self, X):
         """
@@ -84,64 +143,61 @@ class IPCA:
         q = self.q
         d = self.d
 
-        with TaskTimer(self.task_durations['total_update']):
+        with TaskTimer(self.task_durations, 'total update'):
 
             if self.rank == 0:
-                mu_m, s_m = calculate_sample_mean_and_variance(X)
+                with TaskTimer(self.task_durations, 'update mean and variance'):
+                    mu_n = self.mu
+                    mu_m, s_m = calculate_sample_mean_and_variance(X)
+                    self.total_variance = update_sample_variance(self.total_variance, s_m, mu_n, mu_m, n, m)
+                    self.mu = update_sample_mean(mu_n, mu_m, n, m)
 
-                with TaskTimer(self.task_durations['concat']):
+                with TaskTimer(self.task_durations, 'center data and compute augment vector'):
                     X_centered = X - np.tile(mu_m, m)
-                    X_m = np.hstack((X_centered, np.sqrt(n * m / (n + m)) * (mu_m - self.mu)))
-
-                with TaskTimer(self.task_durations['ortho']):
-                    UX_m = self.U.T @ X_m
-                    dX_m = X_m - self.U @ UX_m
-
-                    # need to distribute this step amongst ranks
-                    X_pm, _ = np.linalg.qr(dX_m, mode='reduced')
-                
-                with TaskTimer(self.task_durations['build_r']):
-                    R = np.block([[self.S, UX_m], [np.zeros((m + 1, q)), X_pm.T @ dX_m]])
-                
-                with TaskTimer(self.task_durations['svd']):
-                    U_tilde, S_tilde, _ = np.linalg.svd(R)
-                
-                    concat = np.hstack((self.U, X_pm))
-                    concat = np.array_split(concat, indices_or_sections=self.size, axis=0)
+                    v_augment = np.sqrt(n * m / (n + m)) * (mu_m - mu_n)
             else:
-                concat = None
-                U_tilde = None
-            
-            with TaskTimer(self.task_durations['MPI1']):
-                if self.size == 1:
-                    concat = concat[0]
-                else:
-                    concat = self.comm.scatter(concat, root=0)
-                    U_tilde = self.comm.bcast(U_tilde, root=0)
+                X_centered = None
+                v_augment = None
 
-            with TaskTimer(self.task_durations['update_basis']):
-                U_prime = concat @ U_tilde
-            
-            with TaskTimer(self.task_durations['MPI2']):
-                if self.size > 1:
-                    U_prime = self.comm.gather(U_prime, root=0)
+            with TaskTimer(self.task_durations, 'broadcast centered data and augment vector'):
+                X_centered = self.comm.bcast(X_centered, root=0)
+                v_augment = self.comm.bcast(v_augment, root=0)
 
+            with TaskTimer(self.task_durations, 'first matrix product U@S'):
+                us = self.U @ self.S
+
+            with TaskTimer(self.task_durations, 'QR concatenate'):
+                qr_input = np.hstack((us, X_centered[self.start_index:self.end_index, :], v_augment[self.start_index:self.end_index, :]))
+            
+            with TaskTimer(self.task_durations, 'parallel QR'):
+                UB_tilde, R = self.parallel_qr(qr_input)
+
+            with TaskTimer(self.task_durations, 'SVD of R'):
+                # parallelize in the future?
                 if self.rank == 0:
-                    if self.size > 1:
-                        U_prime = np.vstack(U_prime)
+                    U_tilde, S_tilde, _ = np.linalg.svd(R)
+                else:
+                    U_tilde, S_tilde, _ = None, None, None
 
-                    self.U = U_prime[:, :q]
-                    self.S = np.diag(S_tilde[:q])
+            with TaskTimer(self.task_durations, 'broadcast U tilde'):
+                U_tilde = self.comm.bcast(U_tilde, root=0)
+            
+            with TaskTimer(self.task_durations, 'broadcast S_tilde'):
+                S_tilde = self.comm.bcast(S_tilde, root=0)
+            
+            with TaskTimer(self.task_durations, 'compute local U_prime'):
+                U_prime = UB_tilde @ U_tilde
 
-                    self.total_variance = update_sample_variance(self.total_variance, s_m, self.mu, mu_m, n, m)
-                    self.mu = update_sample_mean(self.mu, mu_m, n, m)
+            self.U = U_prime[:, :q]
+            self.S = np.diag(S_tilde[:q])
 
-                    self.n += m
+            self.n += m
+            
+            # perform self.U @ self.S in parallel, divide X_m in parallel, concat and serve as inputs to parallel_qr
+            # can just store self.U amd self.S at the end of each local run 
 
-            with TaskTimer(self.task_durations['MPI3']):
-                if self.size > 1:
-                    self.U = self.comm.bcast(self.U, root=0)
-                    self.S = self.comm.bcast(self.S, root=0)
+            # or just compute massive QR factorization here, parallelized. Less communication over the nextwork? (need to benchmark)
+            # parallelized QR yields an already distributed version of [U B_tilde], so less network operations
 
 
     def initialize_model(self, X):
@@ -192,7 +248,7 @@ class IPCA:
 
             file_name = 'task_' + str(self.q) + str(self.d) + str(self.n) + str(self.size) + '.csv'
 
-            with open(dir_path + file_name, 'x', newline='', encoding='utf-8') as f:
+            with open(os.path.join(dir_path, file_name), 'x', newline='', encoding='utf-8') as f:
 
                 if len(self.task_durations):
                     writer = csv.writer(f)
@@ -294,5 +350,3 @@ def update_sample_variance(s_n, s_m, mu_n, mu_m, n, m):
         s_nm = (((n - 1) * s_n + (m - 1) * s_m) + (n*m*(mu_n - mu_m)**2) / (n + m)) / (n + m - 1) 
 
     return s_nm
-
-
