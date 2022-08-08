@@ -89,17 +89,27 @@ class IPCA:
             if r < (d % size):
                 num_per_rank += 1
             split_indices[r] = num_per_rank
+
         split_indices = np.append(np.array([0]), np.cumsum(split_indices)).astype(int)
+
+        self.start_indices = split_indices[:-1]
+        self.split_counts = np.array([])
+
+        for i in range(1, len(self.split_indices)):
+            count = split_indices[i] - split_indices[i-1]
+            self.split_counts = np.append(self.split_counts, count)
         
         # update self variables that determine start and end of this rank's batch
-        self.start_index = split_indices[rank]
-        self.end_index = split_indices[rank+1]
+        self.start_index = self.split_indices[rank]
+        self.end_index = self.split_indices[rank+1]
     
     def parallel_qr(self, A):
         y, x = A.shape
 
         with TaskTimer(self.task_durations, 'qr - local qr'):
             q_loc, r_loc = np.linalg.qr(A, mode='reduced')
+
+        print(r_loc.shape)
 
         with TaskTimer(self.task_durations, 'qr - r_tot gather'):
             r_tot = self.comm.gather(r_loc, root=0)
@@ -111,6 +121,7 @@ class IPCA:
                 q_tot, r_tilde = np.linalg.qr(r_tot, mode='reduced')
         else:
             q_tot, r_tilde = None, None
+
         with TaskTimer(self.task_durations, 'qr - bcast q_tot'):
             q_tot = self.comm.bcast(q_tot, root=0)
         
@@ -155,19 +166,18 @@ class IPCA:
                 with TaskTimer(self.task_durations, 'center data and compute augment vector'):
                     X_centered = X - np.tile(mu_m, m)
                     v_augment = np.sqrt(n * m / (n + m)) * (mu_m - mu_n)
-            else:
-                X_centered = None
-                v_augment = None
 
-            with TaskTimer(self.task_durations, 'broadcast centered data and augment vector'):
-                X_centered = self.comm.bcast(X_centered, root=0)
-                v_augment = self.comm.bcast(v_augment, root=0)
+                    X_aug = np.hstack((X_centered, v_augment))
+
+            # segment and broadcast centered and augmented array
+            X_aug_loc = np.zeros(self.split_counts[self.rank])
+            self.comm.Scatterv([X_aug, self.split_counts, self.start_indices, MPI.FLOAT], X_aug_loc, root=0)
 
             with TaskTimer(self.task_durations, 'first matrix product U@S'):
                 us = self.U @ self.S
 
             with TaskTimer(self.task_durations, 'QR concatenate'):
-                qr_input = np.hstack((us, X_centered[self.start_index:self.end_index, :], v_augment[self.start_index:self.end_index, :]))
+                qr_input = np.hstack((us, X_aug))
             
             with TaskTimer(self.task_durations, 'parallel QR'):
                 UB_tilde, R = self.parallel_qr(qr_input)
