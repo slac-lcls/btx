@@ -100,8 +100,8 @@ class IPCA:
             self.split_counts = np.append(self.split_counts, count)
         
         # update self variables that determine start and end of this rank's batch
-        self.start_index = self.split_indices[rank]
-        self.end_index = self.split_indices[rank+1]
+        self.start_index = split_indices[rank]
+        self.end_index = split_indices[rank+1]
     
     def parallel_qr(self, A):
         y, x = A.shape
