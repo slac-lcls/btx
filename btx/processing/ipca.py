@@ -171,6 +171,8 @@ class IPCA:
                     X_aug = np.hstack((X_centered, v_augment))
             else:
                 X_aug = None
+                
+            self.comm.Barrier()
 
             with TaskTimer(self.task_durations, 'scatter aug data'):
                 X_aug_loc = np.empty((self.split_counts[self.rank], m+1))
