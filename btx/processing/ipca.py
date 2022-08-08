@@ -103,10 +103,11 @@ class IPCA:
         m = self.m
         y, x = A.shape
 
-        print(self.rank, A)
+        print(self.rank, A.shape)
 
         with TaskTimer(self.task_durations, 'qr - local qr'):
             q_loc, r_loc = np.linalg.qr(A, mode='reduced')
+            print(self.rank, q_loc, r_loc)
 
         with TaskTimer(self.task_durations, 'qr - r_tot gather'):
             if self.rank == 0:
@@ -128,9 +129,6 @@ class IPCA:
         
         with TaskTimer(self.task_durations, 'qr - bcast r_tilde'):
             self.comm.Bcast(r_tilde, root=0)
-
-        print(self.rank, q_loc)
-        print(self.rank, q_tot)
 
         with TaskTimer(self.task_durations, 'qr - local matrix build'):
             q_fin = q_loc @ q_tot[self.rank*x:(self.rank+1)*x, :]
