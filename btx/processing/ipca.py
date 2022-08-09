@@ -135,6 +135,8 @@ class IPCA:
             U_tot = np.empty((self.d, self.q))
             print(self.rank, self.size, self.U.shape)
             print(self.rank, self.size, U_tot.shape)
+            print(self.split_counts)
+            print(self.start_indices)
             self.comm.Gatherv(self.U, [U_tot, self.split_counts, self.start_indices, MPI.DOUBLE], root=0)
 
             mu_tot = np.empty((self.d, 1))
