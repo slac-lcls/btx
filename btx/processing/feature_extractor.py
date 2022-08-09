@@ -174,16 +174,16 @@ class FeatureExtractor:
 
             try: 
                 print('Verifying Model Accuracy\n------------------------\n')
-                print('Gathering images for batch PCA...')
 
                 # run svd on centered image batch
+                print('Gathering images for batch PCA...')
                 X = self.fetch_formatted_images(n)
+
+                print('Performing batch PCA...')
                 mu_pca = np.reshape(np.mean(X, axis=1), (X.shape[0], 1))
                 var_pca = np.reshape(np.var(X, ddof=1, axis=1), (X.shape[0], 1))
                 mu_n = np.tile(mu_pca, n)
                 X_centered = X - mu_n
-
-                print('Performing SVD...')
                 U_pca, S_pca, _ = np.linalg.svd(X_centered, full_matrices=False)
 
                 print('Retrieving model parameters...')
