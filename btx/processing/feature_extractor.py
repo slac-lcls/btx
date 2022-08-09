@@ -4,6 +4,8 @@ import numpy as np
 from btx.interfaces.psana_interface import *
 from btx.processing.ipca import *
 
+from matplotlib import pyplot as plt
+
 
 class FeatureExtractor:
     
@@ -214,6 +216,12 @@ class FeatureExtractor:
 
                 print('Basis Inner Product: \n')
                 print(np.diagonal(np.abs(U[:, :q].T @ U_pca[:, :q])))
+
+                b = plt.imshow(np.abs(U[:, :q].T @ U_pca[:, :q]))
+                plt.colorbar(b)
+                plt.show()
+
+
 
             finally:
                 # reset counter
