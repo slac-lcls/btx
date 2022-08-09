@@ -108,22 +108,26 @@ class IPCA:
         if self.rank == 0:
             with TaskTimer(self.task_durations, 'qr - global qr'):
                 q_tot, r_tilde = np.linalg.qr(r_tot, mode='reduced')
-                q_tot *= -1
-                r_tilde *= -1
+
+            U_tilde, S_tilde, _ = np.linalg.svd(r_tilde)
         else:
             q_tot = np.empty((self.size*(q+m+1), q+m+1))
-            r_tilde = np.empty((q+m+1, q+m+1))
+            U_tilde = np.empty((q+m+1, q+m+1))
+            S_tilde = np.empty(q+m+1)
     
         with TaskTimer(self.task_durations, 'qr - bcast q_tot'):
             self.comm.Bcast(q_tot, root=0)
         
-        with TaskTimer(self.task_durations, 'qr - bcast r_tilde'):
-            self.comm.Bcast(r_tilde, root=0)
-
         with TaskTimer(self.task_durations, 'qr - local matrix build'):
             q_fin = q_loc @ q_tot[self.rank*x:(self.rank+1)*x, :]
+        
+        with TaskTimer(self.task_durations, 'qr - bcast S_tilde'):
+            self.comm.Bcast(S_tilde, root=0)
 
-        return q_fin, r_tilde
+        with TaskTimer(self.task_durations, 'qr - bcast S_tilde'):
+            self.comm.Bcast(U_tilde, root=0)
+
+        return q_fin, U_tilde, S_tilde
 
     def get_model(self):
         """
@@ -185,21 +189,7 @@ class IPCA:
                 qr_input = np.hstack((us, X_aug))
             
             with TaskTimer(self.task_durations, 'parallel QR'):
-                UB_tilde, R = self.parallel_qr(qr_input)
-
-            with TaskTimer(self.task_durations, 'SVD of R'):
-                # parallelize in the future?
-                if self.rank == 0:
-                    U_tilde, S_tilde, _ = np.linalg.svd(R)
-                else:
-                    U_tilde = np.empty((q+m+1, q+m+1))
-                    S_tilde = np.empty(q+m+1)
-
-            with TaskTimer(self.task_durations, 'broadcast U tilde'):
-                self.comm.Bcast(U_tilde, root=0)
-            
-            with TaskTimer(self.task_durations, 'broadcast S_tilde'):
-                self.comm.Bcast(S_tilde, root=0)
+                UB_tilde, U_tilde, S_tilde = self.parallel_qr(qr_input)
 
             with TaskTimer(self.task_durations, 'compute local U_prime'):
                 U_prime = UB_tilde @ U_tilde[:, :q]
