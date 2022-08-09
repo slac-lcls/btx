@@ -140,7 +140,7 @@ class IPCA:
             print(self.rank, self.size, U_tot.shape, U_tot.dtype)
             print(self.split_counts)
             print(self.start_indices)
-            self.comm.Gatherv(self.U, [U_tot, self.split_counts, self.start_indices, MPI.DOUBLE], root=0)
+            self.comm.Gatherv(self.U, [U_tot, self.split_counts*10, self.start_indices, MPI.DOUBLE], root=0)
 
             mu_tot = np.empty((self.d, 1))
             self.comm.Gatherv(self.mu, [mu_tot, self.split_counts, self.start_indices, MPI.DOUBLE], root=0)
