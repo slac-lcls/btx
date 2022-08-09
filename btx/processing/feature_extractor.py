@@ -12,6 +12,11 @@ class FeatureExtractor:
     """
 
     def __init__(self, exp, run, det_type, num_components=50, block_size=10, num_images=100, init_with_pca=False, benchmark_mode=False, output_dir=''):
+
+        self.comm = MPI.COMM_WORLD
+        self.rank = self.comm.Get_rank()
+        self.size = self.comm.Get_size()
+
         self.psi = PsanaInterface(exp=exp, run=run, det_type=det_type)
 
         self.d = np.prod(self.psi.det.shape())
@@ -44,6 +49,22 @@ class FeatureExtractor:
             if self.m > self.num_images:
                 self.m = self.num_images
                 print(f'Requested block size too large, reduced to {self.m}')
+
+    def distribute_indices(self):
+        d = self.d
+        size = self.size
+
+        # determine boundary indices between ranks
+        split_indices = np.zeros(size)
+        for r in range(size):
+            num_per_rank = d // size
+            if r < (d % size):
+                num_per_rank += 1
+            split_indices[r] = num_per_rank
+
+        split_indices = np.append(np.array([0]), np.cumsum(split_indices)).astype(int)
+
+        self.split_indices = split_indices
 
     def fetch_formatted_images(self, n):
         """
@@ -111,16 +132,21 @@ class FeatureExtractor:
         d = self.d
         m = self.m
         q = self.q
+        rank = self.rank
+
         parsed_images = 0
         num_images = self.num_images
 
         print('123')
-        self.ipca = IPCA(d, q, m)
+        self.distribute_indices()
+        split_indices = self.split_indices
+
+        self.ipca = IPCA(d, q, m, split_indices)
         print('abc')
 
         if self.init_with_pca and not self.benchmark_mode:
             img_block = self.fetch_formatted_images(q)
-            self.ipca.initialize_model(img_block)
+            self.ipca.initialize_model(img_block[split_indices[rank]:split_indices[rank+1]])
 
             parsed_images = q
 
@@ -130,7 +156,7 @@ class FeatureExtractor:
                 current_block_size = parsed_images % m if parsed_images % m else m
 
                 img_block = self.fetch_formatted_images(current_block_size)
-                self.ipca.update_model(img_block)
+                self.ipca.update_model(img_block[split_indices[self.rank]:split_indices[self.rank+1]])
             
             parsed_images += 1
 

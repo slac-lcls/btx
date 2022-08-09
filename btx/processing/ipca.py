@@ -53,7 +53,7 @@ class TaskTimer:
 
 class IPCA:
 
-    def __init__(self, d, q, m):
+    def __init__(self, d, q, m, split_indices):
 
         self.comm = MPI.COMM_WORLD
         self.rank = self.comm.Get_rank()
@@ -64,7 +64,8 @@ class IPCA:
         self.m = m
         self.n = 0
 
-        self.distribute_indices()
+        # compute number of counts in and start indices over ranks
+        self.split_counts, self.start_indices = self.distribute_indices(split_indices)
 
         # attribute for storing interval data
         self.task_durations = dict({})
@@ -77,25 +78,17 @@ class IPCA:
             self.total_variance = np.zeros((self.d, 1))
 
 
-    def distribute_indices(self):
-        d = self.d
+    def distribute_indices(self, split_indices):
         size = self.size
 
-        # determine boundary indices between ranks
-        split_indices = np.zeros(size)
-        for r in range(size):
-            num_per_rank = d // size
-            if r < (d % size):
-                num_per_rank += 1
-            split_indices[r] = num_per_rank
-
-        split_indices = np.append(np.array([0]), np.cumsum(split_indices)).astype(int)
-
-        self.start_indices = split_indices[:-1]
-        self.split_counts = np.empty(size, dtype=int)
+        start_indices = split_indices[:-1]
+        split_counts = np.empty(size, dtype=int)
 
         for i in range(len(split_indices) - 1):
-            self.split_counts[i] = split_indices[i+1] - split_indices[i]
+            split_counts[i] = split_indices[i+1] - split_indices[i]
+        
+        return split_counts, start_indices
+
     
     def parallel_qr(self, A):
         d = self.d
@@ -142,15 +135,18 @@ class IPCA:
             U_tot = np.empty((self.d, self.q))
             self.comm.Gatherv(self.U, [U_tot, self.split_counts, self.start_indices, MPI.DOUBLE], root=0)
 
+            mu_tot = np.empty((self.d, 1))
+            self.comm.Gatherv(self.mu, [mu_tot, self.split_counts, self.start_indices, MPI.DOUBLE], root=0)
+
+            var_tot = np.empty((self.d, 1))
+            self.comm.Gatherv(self.mu, [var_tot, self.split_counts, self.start_indices, MPI.DOUBLE], root=0)
+
             S_tot = self.S
-            mu = self.mu
-            var = self.total_variance
         else:
             U_tot, S_tot, mu, var = None, None, None, None
 
         return U_tot, S_tot, mu, var
-
-
+    
 
     def update_model(self, X):
         """
@@ -168,34 +164,29 @@ class IPCA:
 
         with TaskTimer(self.task_durations, 'total update'):
 
-            if self.rank == 0:
-                with TaskTimer(self.task_durations, 'update mean and variance'):
-                    mu_n = self.mu
-                    mu_m, s_m = calculate_sample_mean_and_variance(X)
-                    self.total_variance = update_sample_variance(self.total_variance, s_m, mu_n, mu_m, n, m)
-                    self.mu = update_sample_mean(mu_n, mu_m, n, m)
+            with TaskTimer(self.task_durations, 'update mean and variance'):
+                mu_n = self.mu
+                mu_m, s_m = calculate_sample_mean_and_variance(X)
+                self.total_variance = update_sample_variance(self.total_variance, s_m, mu_n, mu_m, n, m)
+                self.mu = update_sample_mean(mu_n, mu_m, n, m)
 
-                with TaskTimer(self.task_durations, 'center data and compute augment vector'):
-                    X_centered = X - np.tile(mu_m, m)
-                    v_augment = np.sqrt(n * m / (n + m)) * (mu_m - mu_n)
+            with TaskTimer(self.task_durations, 'center data and compute augment vector'):
+                X_centered = X - np.tile(mu_m, m)
+                v_augment = np.sqrt(n * m / (n + m)) * (mu_m - mu_n)
 
-                    X_aug = np.hstack((X_centered, v_augment))
-            else:
-                X_aug = None
+                X_aug = np.hstack((X_centered, v_augment))
 
-            self.comm.Barrier()
-
-            with TaskTimer(self.task_durations, 'scatter aug data'):
-                X_aug_loc = np.empty((self.split_counts[self.rank], m+1))
-                self.comm.Scatterv([X_aug, self.split_counts, self.start_indices, MPI.DOUBLE], X_aug_loc, root=0)
+            # with TaskTimer(self.task_durations, 'scatter aug data'):
+            #     X_aug_loc = np.empty((self.split_counts[self.rank], m+1))
+            #     self.comm.Scatterv([X_aug, self.split_counts, self.start_indices, MPI.DOUBLE], X_aug_loc, root=0)
 
             with TaskTimer(self.task_durations, 'first matrix product U@S'):
                 us = self.U @ self.S
 
-            print(self.rank, us.shape, self.U.shape, self.S.shape, X_aug_loc.shape)
+            print(self.rank, us.shape, self.U.shape, self.S.shape, X_aug.shape)
 
             with TaskTimer(self.task_durations, 'QR concatenate'):
-                qr_input = np.hstack((us, X_aug_loc))
+                qr_input = np.hstack((us, X_aug))
             
             with TaskTimer(self.task_durations, 'parallel QR'):
                 UB_tilde, R = self.parallel_qr(qr_input)
