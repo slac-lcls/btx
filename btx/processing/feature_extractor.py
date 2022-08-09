@@ -169,7 +169,6 @@ class FeatureExtractor:
         n = self.num_images
         q = self.q
 
-        print('Retrieving model parameters...', self.rank)
         U, S, mu, var = self.ipca.get_model()
 
         if self.rank == 0:
@@ -219,9 +218,8 @@ class FeatureExtractor:
 
                 b = plt.imshow(np.abs(U[:, :q].T @ U_pca[:, :q]))
                 plt.colorbar(b)
+                plt.savefig('fig.png')
                 plt.show()
-
-
 
             finally:
                 # reset counter

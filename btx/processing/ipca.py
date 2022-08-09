@@ -134,16 +134,10 @@ class IPCA:
         mu_tot = np.empty((self.d, 1))
         var_tot = np.empty((self.d, 1))
 
-        print('a')
         self.comm.Gatherv(self.U, [U_tot, self.split_counts*self.q, self.start_indices, MPI.DOUBLE], root=0)
-
-        print('b')
         self.comm.Gatherv(self.mu, [mu_tot, self.split_counts*self.q, self.start_indices, MPI.DOUBLE], root=0)
-
-        print('c')
         self.comm.Gatherv(self.total_variance, [var_tot, self.split_counts*self.q, self.start_indices, MPI.DOUBLE], root=0)
-
-        print('d')
+        
         S_tot = self.S
 
         return U_tot, S_tot, mu_tot, var_tot
