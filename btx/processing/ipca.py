@@ -210,11 +210,10 @@ class IPCA:
                 self.comm.Bcast(S_tilde, root=0)
 
             with TaskTimer(self.task_durations, 'compute local U_prime'):
-                U_prime = UB_tilde @ U_tilde
+                U_prime = UB_tilde @ U_tilde[:, :q]
 
-            print(self.rank, self.U.flags)
-            self.U = U_prime[:, :q]
-            print(self.rank, self.U.flags)
+
+            self.U = U_prime
             self.S = np.diag(S_tilde[:q])
 
             self.n += m
