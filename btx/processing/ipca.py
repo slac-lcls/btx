@@ -1,4 +1,3 @@
-from curses import A_BOLD
 import os
 import csv
 
@@ -96,7 +95,7 @@ class IPCA:
         y, x = A.shape
 
         with TaskTimer(self.task_durations, 'qr - local qr'):
-            q_loc, r_loc = np.linalg.qr(A)
+            q_loc, r_loc = np.linalg.qr(A, mode='reduced')
 
         with TaskTimer(self.task_durations, 'qr - r_tot gather'):
             if self.rank == 0:
@@ -108,7 +107,9 @@ class IPCA:
 
         if self.rank == 0:
             with TaskTimer(self.task_durations, 'qr - global qr'):
-                q_tot, r_tilde = np.linalg.qr(r_tot)
+                q_tot, r_tilde = np.linalg.qr(r_tot, mode='reduced')
+                q_tot *= -1
+                r_tilde *= -1
         else:
             q_tot = np.empty((self.size*(q+m+1), q+m+1))
             r_tilde = np.empty((q+m+1, q+m+1))
@@ -174,10 +175,6 @@ class IPCA:
                 v_augment = np.sqrt(n * m / (n + m)) * (mu_m - mu_n)
 
                 X_aug = np.hstack((X_centered, v_augment))
-
-            # with TaskTimer(self.task_durations, 'scatter aug data'):
-            #     X_aug_loc = np.empty((self.split_counts[self.rank], m+1))
-            #     self.comm.Scatterv([X_aug, self.split_counts, self.start_indices, MPI.DOUBLE], X_aug_loc, root=0)
 
             with TaskTimer(self.task_durations, 'first matrix product U@S'):
                 us = self.U @ np.diag(self.S)
