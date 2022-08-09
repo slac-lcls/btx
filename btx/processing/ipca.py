@@ -70,7 +70,7 @@ class IPCA:
         # attribute for storing interval data
         self.task_durations = dict({})
 
-        self.S = np.eye(self.q)
+        self.S = np.ones(self.q)
         self.U = np.zeros((self.split_counts[self.rank], self.q))
 
         if self.rank == 0:
@@ -136,17 +136,13 @@ class IPCA:
         """
         if self.rank == 0:
             U_tot = np.empty((self.d, self.q))
-            print(self.rank, self.size, self.U.shape, self.U.dtype)
-            print(self.rank, self.size, U_tot.shape, U_tot.dtype)
-            print(self.split_counts)
-            print(self.start_indices)
-            self.comm.Gatherv(self.U, [U_tot, self.split_counts*10, self.start_indices, MPI.DOUBLE], root=0)
+            self.comm.Gatherv(self.U, [U_tot, self.split_counts*self.q, self.start_indices, MPI.DOUBLE], root=0)
 
             mu_tot = np.empty((self.d, 1))
-            self.comm.Gatherv(self.mu, [mu_tot, self.split_counts, self.start_indices, MPI.DOUBLE], root=0)
+            self.comm.Gatherv(self.mu, [mu_tot, self.split_counts*self.q, self.start_indices, MPI.DOUBLE], root=0)
 
             var_tot = np.empty((self.d, 1))
-            self.comm.Gatherv(self.mu, [var_tot, self.split_counts, self.start_indices, MPI.DOUBLE], root=0)
+            self.comm.Gatherv(self.mu, [var_tot, self.split_counts*self.q, self.start_indices, MPI.DOUBLE], root=0)
 
             S_tot = self.S
         else:
@@ -188,7 +184,7 @@ class IPCA:
             #     self.comm.Scatterv([X_aug, self.split_counts, self.start_indices, MPI.DOUBLE], X_aug_loc, root=0)
 
             with TaskTimer(self.task_durations, 'first matrix product U@S'):
-                us = self.U @ self.S
+                us = self.U @ np.diag(self.S)
 
             print(self.rank, us.shape, self.U.shape, self.S.shape, X_aug.shape)
 
@@ -216,7 +212,7 @@ class IPCA:
                 U_prime = UB_tilde @ U_tilde[:, :q]
 
             self.U = U_prime
-            self.S = np.diag(S_tilde[:q])
+            self.S = S_tilde[:q]
 
             self.n += m
             
@@ -241,8 +237,7 @@ class IPCA:
         self.mu, self.total_variance = calculate_sample_mean_and_variance(X)
 
         centered_data = X - np.tile(self.mu, q)
-        self.U, s, _ = np.linalg.svd(centered_data, full_matrices=False)
-        self.S = np.diag(s)
+        self.U, self.S, _ = np.linalg.svd(centered_data, full_matrices=False)
 
         self.n += q
 
