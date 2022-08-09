@@ -132,7 +132,7 @@ class IPCA:
         Intended to be called from the root process.
         """
         if self.rank == 0:
-            U_tot = np.empty((self.d, self.q))
+            U_tot = np.empty((10, self.q))
             print(self.rank, self.size, self.U.shape, self.U.dtype)
             print(self.rank, self.size, U_tot.shape, U_tot.dtype)
             print(self.split_counts)
@@ -212,7 +212,7 @@ class IPCA:
             with TaskTimer(self.task_durations, 'compute local U_prime'):
                 U_prime = UB_tilde @ U_tilde[:, :q]
 
-            self.U = U_prime
+            self.U = U_prime[:10]
             self.S = np.diag(S_tilde[:q])
 
             self.n += m
