@@ -1,6 +1,5 @@
 import argparse
 import numpy as np
-from mpi4py import MPI
 
 from btx.interfaces.psana_interface import *
 from btx.processing.ipca import *
@@ -258,7 +257,6 @@ if __name__ == '__main__':
     params = parse_input()
     kwargs = {k: v for k, v in vars(params).items() if v is not None}
 
-    if MPI.COMM_WORLD.Get_rank() == 0:
-        fe = FeatureExtractor(**kwargs)
-        fe.run_ipca()
-        fe.verify_model_accuracy()
+    fe = FeatureExtractor(**kwargs)
+    fe.run_ipca()
+    fe.verify_model_accuracy()
