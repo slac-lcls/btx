@@ -173,7 +173,8 @@ class FeatureExtractor:
             self.psi.counter = 0
 
             try: 
-                print('Verifying Model Accuracy...\n')
+                print('Verifying Model Accuracy\n------------------------\n')
+                print('Gathering images for batch PCA...')
 
                 # run svd on centered image batch
                 X = self.fetch_formatted_images(n)
@@ -182,7 +183,10 @@ class FeatureExtractor:
                 mu_n = np.tile(mu_pca, n)
                 X_centered = X - mu_n
 
+                print('Performing SVD...')
                 U_pca, S_pca, _ = np.linalg.svd(X_centered, full_matrices=False)
+
+                print('Retrieving model parameters...')
                 U, S, mu, var = self.ipca.get_model()
 
                 print(f'iPCA Compression Loss: {compression_loss(X, U)}')
