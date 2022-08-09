@@ -72,10 +72,8 @@ class IPCA:
 
         self.S = np.ones(self.q)
         self.U = np.zeros((self.split_counts[self.rank], self.q))
-
-        if self.rank == 0:
-            self.mu = np.zeros((self.d, 1))
-            self.total_variance = np.zeros((self.d, 1))
+        self.mu = np.zeros((self.split_counts[self.rank], 1))
+        self.total_variance = np.zeros((self.split_counts[self.rank], 1))
 
 
     def distribute_indices(self, split_indices):

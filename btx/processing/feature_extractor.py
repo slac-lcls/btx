@@ -173,7 +173,7 @@ class FeatureExtractor:
             self.psi.counter = 0
 
             try: 
-                print('Verifying Model Accuracy...')
+                print('Verifying Model Accuracy...\n')
 
                 # run svd on centered image batch
                 X = self.fetch_formatted_images(n)
@@ -197,7 +197,7 @@ class FeatureExtractor:
                 print(f'PCA Explained Variance: {(np.sum(S_pca[:q]**2) / (n-1)) / np.sum(var_pca)}')
                 print('\n')
 
-                print(f'IPCA Singular Values: \n')
+                print(f'iPCA Singular Values: \n')
                 print(S)
                 print('\n')
 
@@ -274,8 +274,8 @@ def parse_input():
     parser.add_argument('-e', '--exp', help='Experiment name', required=True, type=str)
     parser.add_argument('-r', '--run', help='Run number', required=True, type=int)
     parser.add_argument('-d', '--det_type', help='Detector name, e.g epix10k2M or jungfrau4M',  required=True, type=str)
-    parser.add_argument('--output_dir', help='Path to output directory.', required=True, type=str)
 
+    parser.add_argument('--output_dir', help='Path to output directory.', required=False, type=str)
     parser.add_argument('-c', '--num_components', help='Number of principal components to compute', required=False, type=int)
     parser.add_argument('-m', '--block_size', help='Desired block size', required=False, type=int)
     parser.add_argument('-n', '--num_images', help='Number of images', required=False, type=int)
