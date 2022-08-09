@@ -199,14 +199,17 @@ class FeatureExtractor:
 
                 print(f'IPCA Singular Values: \n')
                 print(S)
+                print('\n')
 
                 print(f'PCA Singular Values: \n')
                 print(S_pca)
+                print('\n')
 
-                print(f'Normalized Mean Inner Product: {(mu / np.linalg.norm(mu)).T @ (mu_pca / np.linalg.norm(mu_pca))}')
+                print(f'Normalized Mean Inner Product: {np.inner((mu / np.linalg.norm(mu)),  (mu_pca / np.linalg.norm(mu_pca)))}')
+                print('\n')
 
                 print('Basis Inner Product: \n')
-                print(np.diagonal(np.abs(U[:, :q].T @ S_pca[:, :q])))
+                print(np.diagonal(np.abs(U[:, :q].T @ U_pca[:, :q])))
 
             finally:
                 # reset counter
