@@ -86,15 +86,16 @@ class FeatureExtractor:
         to get_images, ensuring that images are retrieved sequentially using this method.
         """
         d = self.d
+        d_original = np.prod(self.psi.det.shape())
 
         imgs = self.psi.get_images(n, assemble=False)
         formatted_imgs = np.empty((d, n))
 
         for i in range(n):
             if self.reduced_indices.size:
-                formatted_imgs[:, i:i+1] = np.reshape(imgs[i], (d, 1))[self.reduced_indices]
+                formatted_imgs[:, i:i+1] = np.reshape(imgs[i], (d_original, 1))[self.reduced_indices]
             else:
-                formatted_imgs[:, i:i+1] = np.reshape(imgs[i], (d, 1))
+                formatted_imgs[:, i:i+1] = np.reshape(imgs[i], (d_original, 1))
 
         return formatted_imgs
 
