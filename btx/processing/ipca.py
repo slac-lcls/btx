@@ -129,23 +129,22 @@ class IPCA:
         -----
         Intended to be called from the root process.
         """
-        if self.rank == 0:
-            print('a')
-            U_tot = np.empty((self.d, self.q))
-            self.comm.Gatherv(self.U, [U_tot, self.split_counts*self.q, self.start_indices, MPI.DOUBLE], root=0)
 
-            print('b')
-            mu_tot = np.empty((self.d, 1))
-            self.comm.Gatherv(self.mu, [mu_tot, self.split_counts*self.q, self.start_indices, MPI.DOUBLE], root=0)
+        U_tot = np.empty((self.d, self.q))
+        mu_tot = np.empty((self.d, 1))
+        var_tot = np.empty((self.d, 1))
 
-            print('c')
-            var_tot = np.empty((self.d, 1))
-            self.comm.Gatherv(self.total_variance, [var_tot, self.split_counts*self.q, self.start_indices, MPI.DOUBLE], root=0)
+        print('a')
+        self.comm.Gatherv(self.U, [U_tot, self.split_counts*self.q, self.start_indices, MPI.DOUBLE], root=0)
 
-            print('d')
-            S_tot = self.S
-        else:
-            U_tot, S_tot, mu_tot, var_tot = None, None, None, None
+        print('b')
+        self.comm.Gatherv(self.mu, [mu_tot, self.split_counts*self.q, self.start_indices, MPI.DOUBLE], root=0)
+
+        print('c')
+        self.comm.Gatherv(self.total_variance, [var_tot, self.split_counts*self.q, self.start_indices, MPI.DOUBLE], root=0)
+
+        print('d')
+        S_tot = self.S
 
         return U_tot, S_tot, mu_tot, var_tot
     

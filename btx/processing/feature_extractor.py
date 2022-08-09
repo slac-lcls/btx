@@ -167,6 +167,9 @@ class FeatureExtractor:
         n = self.num_images
         q = self.q
 
+        print('Retrieving model parameters...', self.rank)
+        U, S, mu, var = self.ipca.get_model()
+
         if self.rank == 0:
             # store current event index and reset to get same image batch
             event_index = self.psi.counter
@@ -185,9 +188,6 @@ class FeatureExtractor:
                 mu_n = np.tile(mu_pca, n)
                 X_centered = X - mu_n
                 U_pca, S_pca, _ = np.linalg.svd(X_centered, full_matrices=False)
-
-                print('Retrieving model parameters...')
-                U, S, mu, var = self.ipca.get_model()
 
                 print(f'iPCA Compression Loss: {compression_loss(X, U)}')
                 print(f'PCA Compression Loss: {compression_loss(X, U_pca)}')
