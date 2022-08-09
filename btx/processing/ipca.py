@@ -133,8 +133,8 @@ class IPCA:
         """
         if self.rank == 0:
             U_tot = np.empty((self.d, self.q))
-            print(U_tot.shape)
-            print(self.U.shape)
+            print(U_tot.flags)
+            print(self.U.flags)
             print(self.split_counts)
             print(self.start_indices)
             self.comm.Gatherv(self.U, [U_tot, self.split_counts, self.start_indices, MPI.DOUBLE], root=0)
