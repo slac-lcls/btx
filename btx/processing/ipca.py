@@ -212,8 +212,9 @@ class IPCA:
             with TaskTimer(self.task_durations, 'compute local U_prime'):
                 U_prime = UB_tilde @ U_tilde[:, :q]
 
-
+            print(U_prime.shape)
             self.U = U_prime
+            print(self.U.shape)
             self.S = np.diag(S_tilde[:q])
 
             self.n += m
