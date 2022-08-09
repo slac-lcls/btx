@@ -1,3 +1,4 @@
+from curses import A_BOLD
 import os
 import csv
 
@@ -95,7 +96,7 @@ class IPCA:
         y, x = A.shape
 
         with TaskTimer(self.task_durations, 'qr - local qr'):
-            q_loc, r_loc = np.linalg.qr(A, mode='reduced')
+            q_loc, r_loc = np.linalg.qr(A)
 
         with TaskTimer(self.task_durations, 'qr - r_tot gather'):
             if self.rank == 0:
@@ -107,7 +108,7 @@ class IPCA:
 
         if self.rank == 0:
             with TaskTimer(self.task_durations, 'qr - global qr'):
-                q_tot, r_tilde = np.linalg.qr(r_tot, mode='reduced')
+                q_tot, r_tilde = np.linalg.qr(r_tot)
         else:
             q_tot = np.empty((self.size*(q+m+1), q+m+1))
             r_tilde = np.empty((q+m+1, q+m+1))
@@ -129,15 +130,18 @@ class IPCA:
         -----
         Intended to be called from the root process.
         """
-
-        U_tot = np.empty((self.d, self.q))
-        mu_tot = np.empty((self.d, 1))
-        var_tot = np.empty((self.d, 1))
+        if self.rank == 0:
+            U_tot = np.empty((self.d, self.q))
+            mu_tot = np.empty((self.d, 1))
+            var_tot = np.empty((self.d, 1))
+            S_tot = self.S
+        else:
+            U_tot, mu_tot, var_tot, S_tot = None, None, None, None
 
         self.comm.Gatherv(self.U, [U_tot, self.split_counts*self.q, self.start_indices, MPI.DOUBLE], root=0)
         self.comm.Gatherv(self.mu, [mu_tot, self.split_counts*self.q, self.start_indices, MPI.DOUBLE], root=0)
         self.comm.Gatherv(self.total_variance, [var_tot, self.split_counts*self.q, self.start_indices, MPI.DOUBLE], root=0)
-        
+
         S_tot = self.S
 
         return U_tot, S_tot, mu_tot, var_tot
