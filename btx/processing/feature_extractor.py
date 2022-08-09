@@ -205,7 +205,7 @@ class FeatureExtractor:
                 print(S_pca)
                 print('\n')
 
-                print(f'Normalized Mean Inner Product: {np.inner((mu / np.linalg.norm(mu)).T,  (mu_pca / np.linalg.norm(mu_pca)).T)}')
+                print(f'Normalized Mean Inner Product: {np.inner(np.reshape(mu, (self.d, 1)), np.reshape(mu_pca, (self.d, 1))) / (np.linalg.norm(mu) * np.linalg.norm(mu_pca))}')
                 print('\n')
 
                 print('Basis Inner Product: \n')
