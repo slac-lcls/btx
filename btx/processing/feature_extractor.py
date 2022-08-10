@@ -168,11 +168,10 @@ class FeatureExtractor:
     def verify_model_accuracy(self):
         n = self.num_images
         q = self.q
-        d = self.d
 
         U, S, mu, var = self.ipca.get_model()
 
-        if True:
+        if self.rank == 0:
             # store current event index and reset to get same image batch
             event_index = self.psi.counter
             self.psi.counter = 0
@@ -217,10 +216,11 @@ class FeatureExtractor:
                 print('Basis Inner Product: \n')
                 print(np.diagonal(np.abs(U[:, :q].T @ U_pca[:, :q])))
 
-                b = plt.imshow(np.abs(U[self.split_indices[self.rank]:self.split_indices[self.rank+1], :q].T @ U_pca[self.split_indices[self.rank]:self.split_indices[self.rank+1], :q]))
-                plt.colorbar(b)
-                plt.savefig(f'fig_{self.rank}.png')
-                plt.show()
+                for i in range(self.size):
+                    b = plt.imshow(np.abs(U[self.split_indices[i]:self.split_indices[i+1], :q].T @ U_pca[self.split_indices[i]:self.split_indices[i+1], :q]))
+                    plt.colorbar(b)
+                    plt.savefig(f'fig_{self.rank}.png')
+                    plt.show()
 
             finally:
                 # reset counter
