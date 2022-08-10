@@ -168,6 +168,7 @@ class FeatureExtractor:
     def verify_model_accuracy(self):
         n = self.num_images
         q = self.q
+        d = self.d
 
         U, S, mu, var = self.ipca.get_model()
 
@@ -216,7 +217,7 @@ class FeatureExtractor:
                 print('Basis Inner Product: \n')
                 print(np.diagonal(np.abs(U[:, :q].T @ U_pca[:, :q])))
 
-                b = plt.imshow(np.abs(U[:, :q].T @ U_pca[:, :q]))
+                b = plt.imshow(np.abs(U[self.split_indices[self.rank]:self.split_indices[self.rank+1], :q].T @ U_pca[self.split_indices[self.rank]:self.split_indices[self.rank+1], :q]))
                 plt.colorbar(b)
                 plt.savefig('fig.png')
                 plt.show()
