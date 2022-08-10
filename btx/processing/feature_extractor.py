@@ -170,8 +170,9 @@ class FeatureExtractor:
         m = self.m
         q = self.q
         n = self.num_images
-
-        self.U = np.reshape(np.arange((self.rank+1) * 1, (self.rank+1) *9), (4, 2))
+        a = np.arange((self.rank+1) * 1, (self.rank+1) *9)
+        print(a)
+        self.U = np.reshape(a, (4, 2))
 
         U, S, mu, var = self.ipca.get_model()
 
