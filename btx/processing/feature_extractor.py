@@ -219,7 +219,7 @@ class FeatureExtractor:
 
                 b = plt.imshow(np.abs(U[self.split_indices[self.rank]:self.split_indices[self.rank+1], :q].T @ U_pca[self.split_indices[self.rank]:self.split_indices[self.rank+1], :q]))
                 plt.colorbar(b)
-                plt.savefig('fig.png')
+                plt.savefig(f'fig_{self.rank}.png')
                 plt.show()
 
             finally:
