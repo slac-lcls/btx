@@ -144,9 +144,9 @@ class IPCA:
             U_tot, mu_tot, var_tot, S_tot = None, None, None, None
 
         self.comm.Gatherv(self.U, [U_tot, self.split_counts*self.q, self.start_indices, MPI.DOUBLE], root=0)
-        
+
         if self.rank == 0:
-            U_tot /= (np.linalg.norm(U_tot, axis=0)**2)
+            U_tot = U_tot / (np.linalg.norm(U_tot, axis=0)**2)
 
         self.comm.Gatherv(self.mu, [mu_tot, self.split_counts*self.q, self.start_indices, MPI.DOUBLE], root=0)
         self.comm.Gatherv(self.total_variance, [var_tot, self.split_counts*self.q, self.start_indices, MPI.DOUBLE], root=0)
