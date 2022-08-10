@@ -170,7 +170,7 @@ class FeatureExtractor:
         m = self.m
         q = self.q
         n = self.num_images
-        a = np.arange((self.rank+1) * 1, (self.rank+1) *9)
+        a = np.arange((self.rank*8) +1, (self.rank*8) +9)
         print(a)
         self.U = np.reshape(a, (4, 2))
 
