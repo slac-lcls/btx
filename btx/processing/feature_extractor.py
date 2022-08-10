@@ -312,4 +312,4 @@ if __name__ == '__main__':
 
     fe = FeatureExtractor(**kwargs)
     fe.run_ipca()
-    fe.verify_model_accuracy()
+    # fe.verify_model_accuracy()
