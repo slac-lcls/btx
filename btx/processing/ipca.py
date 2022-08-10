@@ -90,7 +90,8 @@ class IPCA:
     
     def parallel_qr(self, A):
         q = self.q
-        _, m = A.shape
+        _, x = A.shape
+        m = x-q-1
 
         with TaskTimer(self.task_durations, 'qr - local qr'):
             q_loc, r_loc = np.linalg.qr(A, mode='reduced')
@@ -117,7 +118,7 @@ class IPCA:
             self.comm.Bcast(q_tot, root=0)
         
         with TaskTimer(self.task_durations, 'qr - local matrix build'):
-            q_fin = q_loc @ q_tot[self.rank*m:(self.rank+1)*m, :]
+            q_fin = q_loc @ q_tot[self.rank*x:(self.rank+1)*x, :]
         
         with TaskTimer(self.task_durations, 'qr - bcast S_tilde'):
             self.comm.Bcast(S_tilde, root=0)
@@ -169,6 +170,8 @@ class IPCA:
         _, m = X.shape
         n = self.n
         q = self.q
+
+        print(f'Rank {self.rank}, {n} images considered so far.')
 
         with TaskTimer(self.task_durations, 'total update'):
 
