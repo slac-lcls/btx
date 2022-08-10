@@ -171,7 +171,7 @@ class IPCA:
         n = self.n
         q = self.q
 
-        print(f'Rank {self.rank}, factoring {m} sample{'s' if m > 1 else ''} into {n} sample model...')
+        print('Rank {r}, factoring {m} sample{s} into {n} sample model...'.format(r=self.rank, m=m, s='s' if m > 1 else '', n=n))
 
         with TaskTimer(self.task_durations, 'total update'):
 
