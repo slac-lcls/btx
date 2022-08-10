@@ -143,16 +143,18 @@ class IPCA:
         else:
             U_tot, mu_tot, var_tot, S_tot = None, None, None, None
         
-        axes = self.comm.gather(self.U, root=0)
+        # axes = self.comm.gather(self.U, root=0)
 
-        if self.rank == 0:
-            U_tot = axes[0]
+        # if self.rank == 0:
+        #     U_tot = axes[0]
 
-            for i in range(1, self.size):
-                U_tot = np.concatenate((U_tot, axes[i]), axis=0)
+        #     for i in range(1, self.size):
+        #         U_tot = np.concatenate((U_tot, axes[i]), axis=0)
 
-
+        print(U_tot)
+        self.comm.Gatherv(self.U, [U_tot, [8]*self.rank, np.arange(0, self.size)*8, MPI.DOUBLE], root=0)
         # self.comm.Gatherv(self.U, [U_tot, self.split_counts*self.q, self.start_indices, MPI.DOUBLE], root=0)
+        print(U_tot)
 
         self.comm.Gatherv(self.mu, [mu_tot, self.split_counts*self.q, self.start_indices, MPI.DOUBLE], root=0)
         self.comm.Gatherv(self.total_variance, [var_tot, self.split_counts*self.q, self.start_indices, MPI.DOUBLE], root=0)
@@ -181,6 +183,7 @@ class IPCA:
             with TaskTimer(self.task_durations, 'update mean and variance'):
                 mu_n = self.mu
                 mu_m, s_m = calculate_sample_mean_and_variance(X)
+
                 self.total_variance = update_sample_variance(self.total_variance, s_m, mu_n, mu_m, n, m)
                 self.mu = update_sample_mean(mu_n, mu_m, n, m)
 

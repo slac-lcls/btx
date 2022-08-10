@@ -171,6 +171,8 @@ class FeatureExtractor:
         q = self.q
         n = self.num_images
 
+        self.U = np.reshape(np.arange((self.rank+1) * 1, (self.rank+1) *9), (4, 2))
+
         U, S, mu, var = self.ipca.get_model()
 
         if self.rank == 0:
@@ -228,6 +230,9 @@ class FeatureExtractor:
                 plt.colorbar(b)
                 plt.savefig(f'fig.png')
                 plt.clf()
+                plt.show()
+
+                self.ipca.report_interval_data()
 
             finally:
                 # reset counter
