@@ -166,8 +166,10 @@ class FeatureExtractor:
             self.ipca.save_interval_data(self.output_dir)
 
     def verify_model_accuracy(self):
-        n = self.num_images
+        d = self.d
+        m = self.m
         q = self.q
+        n = self.num_images
 
         U, S, mu, var = self.ipca.get_model()
 
@@ -178,6 +180,11 @@ class FeatureExtractor:
 
             try: 
                 print('Verifying Model Accuracy\n------------------------\n')
+                print(f'q = {q}')
+                print(f'd = {d}')
+                print(f'n = {n}')
+                print(f'm = {m}')
+                print('\n')
 
                 # run svd on centered image batch
                 print('Gathering images for batch PCA...')
@@ -189,6 +196,7 @@ class FeatureExtractor:
                 mu_n = np.tile(mu_pca, n)
                 X_centered = X - mu_n
                 U_pca, S_pca, _ = np.linalg.svd(X_centered, full_matrices=False)
+                print('\n')
 
                 print(f'iPCA Compression Loss: {compression_loss(X, U)}')
                 print(f'PCA Compression Loss: {compression_loss(X, U_pca[:, :q])}')
@@ -216,11 +224,10 @@ class FeatureExtractor:
                 print('Basis Inner Product: \n')
                 print(np.diagonal(np.abs(U.T @ U_pca[:, :q])))
 
-                for i in range(self.size):
-                    b = plt.imshow(np.abs(U[self.split_indices[i]:self.split_indices[i+1], :q].T @ U_pca[self.split_indices[i]:self.split_indices[i+1], :q]))
-                    plt.colorbar(b)
-                    plt.savefig(f'fig_{i}.png')
-                    plt.clf()
+                b = plt.imshow(np.abs(U.T @ U_pca[:, :q]))
+                plt.colorbar(b)
+                plt.savefig(f'fig.png')
+                plt.clf()
 
             finally:
                 # reset counter
