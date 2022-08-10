@@ -108,8 +108,8 @@ class IPCA:
         if self.rank == 0:
             with TaskTimer(self.task_durations, 'qr - global qr'):
                 q_tot, r_tilde = np.linalg.qr(r_tot, mode='reduced')
-
-            U_tilde, S_tilde, _ = np.linalg.svd(r_tilde)
+            with TaskTimer(self.task_durations, 'qr - global svd'):
+                U_tilde, S_tilde, _ = np.linalg.svd(r_tilde)
         else:
             q_tot = np.empty((self.size*(q+m+1), q+m+1))
             U_tilde = np.empty((q+m+1, q+m+1))
@@ -124,7 +124,7 @@ class IPCA:
         with TaskTimer(self.task_durations, 'qr - bcast S_tilde'):
             self.comm.Bcast(S_tilde, root=0)
 
-        with TaskTimer(self.task_durations, 'qr - bcast S_tilde'):
+        with TaskTimer(self.task_durations, 'qr - bcast U_tilde'):
             self.comm.Bcast(U_tilde, root=0)
 
         return q_fin, U_tilde, S_tilde
