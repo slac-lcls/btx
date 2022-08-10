@@ -154,7 +154,7 @@ class IPCA:
 
         U_tot = np.empty((4*(self.size+1), 2))
         print(U_tot)
-        self.comm.Gatherv(self.U, [U_tot, [8]*self.rank, np.arange(0, self.size)*8, MPI.DOUBLE], root=0)
+        self.comm.Gatherv(self.U, [U_tot, [8]*self.size, np.arange(0, self.size)*8, MPI.DOUBLE], root=0)
         # self.comm.Gatherv(self.U, [U_tot, self.split_counts*self.q, self.start_indices, MPI.DOUBLE], root=0)
         print(U_tot)
 
