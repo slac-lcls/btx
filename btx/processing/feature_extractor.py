@@ -224,7 +224,7 @@ class FeatureExtractor:
                 print('Basis Inner Product: \n')
                 print(np.diagonal(np.abs(U.T @ U_pca[:, :q])))
 
-                b = plt.imshow(np.abs(U.T @ U_pca[:, :q]))
+                b = plt.imshow(np.abs(np.hstack((mu / np.linalg.norm(mu), U)).T @ np.hstack((mu_pca / np.linalg.norm(mu_pca), U_pca[:, :q]))))
                 plt.colorbar(b)
                 plt.savefig(f'fig.png')
                 plt.clf()
