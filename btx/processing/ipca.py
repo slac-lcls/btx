@@ -142,8 +142,10 @@ class IPCA:
             S_tot = self.S
         else:
             U_tot, mu_tot, var_tot, S_tot = None, None, None, None
+        
+        U_tot = np.concatenate(self.comm.gather(self.U, root=0), axis=0)
 
-        self.comm.Gatherv(self.U, [U_tot, self.split_counts*self.q, self.start_indices, MPI.DOUBLE], root=0)
+        # self.comm.Gatherv(self.U, [U_tot, self.split_counts*self.q, self.start_indices, MPI.DOUBLE], root=0)
 
         if self.rank == 0:
             U_tot = U_tot / (np.linalg.norm(U_tot, axis=0)**2)

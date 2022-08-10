@@ -214,7 +214,7 @@ class FeatureExtractor:
                 print('\n')
 
                 print('Basis Inner Product: \n')
-                print(np.diagonal(np.abs(U[:, :q].T @ U_pca[:, :q])))
+                print(np.diagonal(np.abs(U.T @ U_pca[:, :q])))
 
                 for i in range(self.size):
                     b = plt.imshow(np.abs(U[self.split_indices[i]:self.split_indices[i+1], :q].T @ U_pca[self.split_indices[i]:self.split_indices[i+1], :q]))
