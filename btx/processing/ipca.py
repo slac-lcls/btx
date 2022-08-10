@@ -143,7 +143,12 @@ class IPCA:
         else:
             U_tot, mu_tot, var_tot, S_tot = None, None, None, None
         
-        U_tot = np.vstack(self.comm.gather(self.U, root=0))
+        axes = self.comm.gather(self.U, root=0)
+        U_tot = axes[0]
+
+        for i in range(1, self.size):
+            U_tot = np.concatenate(U_tot, axes[i], axis=0)
+
 
         # self.comm.Gatherv(self.U, [U_tot, self.split_counts*self.q, self.start_indices, MPI.DOUBLE], root=0)
 
