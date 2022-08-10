@@ -143,18 +143,13 @@ class IPCA:
         else:
             U_tot, mu_tot, var_tot, S_tot = None, None, None, None
         
-        # axes = self.comm.gather(self.U, root=0)
+        axes_split = self.comm.gather(self.U, root=0)
 
-        # if self.rank == 0:
-        #     U_tot = axes[0]
+        if self.rank == 0:
+            U_tot = axes_split[0]
 
-        #     for i in range(1, self.size):
-        #         U_tot = np.concatenate((U_tot, axes[i]), axis=0)
-
-        U_tot = np.empty((4*self.size, 2))
-        self.comm.Gatherv(self.U, [U_tot, np.ones(self.size)*8, np.arange(0, self.size)*8, MPI.DOUBLE], root=0)
-        # self.comm.Gatherv(self.U, [U_tot, self.split_counts*self.q, self.start_indices, MPI.DOUBLE], root=0)
-        print(self.rank, U_tot)
+            for i in range(1, self.size):
+                U_tot = np.concatenate((U_tot, axes_split[i]), axis=0)
 
         self.comm.Gatherv(self.mu, [mu_tot, self.split_counts*self.q, self.start_indices, MPI.DOUBLE], root=0)
         self.comm.Gatherv(self.total_variance, [var_tot, self.split_counts*self.q, self.start_indices, MPI.DOUBLE], root=0)
