@@ -220,7 +220,7 @@ class FeatureExtractor:
                     b = plt.imshow(np.abs(U[self.split_indices[i]:self.split_indices[i+1], :q].T @ U_pca[self.split_indices[i]:self.split_indices[i+1], :q]))
                     plt.colorbar(b)
                     plt.savefig(f'fig_{i}.png')
-                    plt.show()
+                    plt.clf()
 
             finally:
                 # reset counter
