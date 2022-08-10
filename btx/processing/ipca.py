@@ -171,7 +171,7 @@ class IPCA:
         n = self.n
         q = self.q
 
-        print(f'Rank {self.rank}, {n} images considered so far.')
+        print(f'Rank {self.rank}, factoring {m} samples into {n} sample model...')
 
         with TaskTimer(self.task_durations, 'total update'):
 
