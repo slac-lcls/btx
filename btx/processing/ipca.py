@@ -152,8 +152,7 @@ class IPCA:
         #         U_tot = np.concatenate((U_tot, axes[i]), axis=0)
 
         U_tot = np.empty((4*self.size, 2))
-        print(self.rank, self.U)
-        self.comm.Gatherv(self.U, [U_tot, [8]*self.size, np.arange(0, self.size)*8, MPI.DOUBLE], root=0)
+        self.comm.Gatherv(self.U, [U_tot, np.ones(self.size)*8, np.arange(0, self.size)*8, MPI.DOUBLE], root=0)
         # self.comm.Gatherv(self.U, [U_tot, self.split_counts*self.q, self.start_indices, MPI.DOUBLE], root=0)
         print(self.rank, U_tot)
 
