@@ -140,7 +140,6 @@ class FeatureExtractor:
         parsed_images = 0
         num_images = self.num_images
 
-        print(rank)
         self.distribute_indices()
         split_indices = self.split_indices
 
@@ -158,7 +157,7 @@ class FeatureExtractor:
                 current_block_size = parsed_images % m if parsed_images % m else m
 
                 img_block = self.fetch_formatted_images(current_block_size)
-                self.ipca.update_model(img_block[split_indices[self.rank]:split_indices[self.rank+1]])
+                self.ipca.update_model(img_block[split_indices[rank]:split_indices[rank+1]])
             
             parsed_images += 1
 

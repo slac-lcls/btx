@@ -89,10 +89,8 @@ class IPCA:
 
     
     def parallel_qr(self, A):
-        d = self.d
         q = self.q
-        m = self.m
-        y, x = A.shape
+        _, m = A.shape
 
         with TaskTimer(self.task_durations, 'qr - local qr'):
             q_loc, r_loc = np.linalg.qr(A, mode='reduced')
@@ -119,7 +117,7 @@ class IPCA:
             self.comm.Bcast(q_tot, root=0)
         
         with TaskTimer(self.task_durations, 'qr - local matrix build'):
-            q_fin = q_loc @ q_tot[self.rank*x:(self.rank+1)*x, :]
+            q_fin = q_loc @ q_tot[self.rank*m:(self.rank+1)*m, :]
         
         with TaskTimer(self.task_durations, 'qr - bcast S_tilde'):
             self.comm.Bcast(S_tilde, root=0)
@@ -171,7 +169,6 @@ class IPCA:
         _, m = X.shape
         n = self.n
         q = self.q
-        d = self.d
 
         with TaskTimer(self.task_durations, 'total update'):
 
@@ -190,8 +187,6 @@ class IPCA:
 
             with TaskTimer(self.task_durations, 'first matrix product U@S'):
                 us = self.U @ np.diag(self.S)
-
-            print(self.rank, us.shape, self.U.shape, self.S.shape, X_aug.shape)
 
             with TaskTimer(self.task_durations, 'QR concatenate'):
                 qr_input = np.hstack((us, X_aug))
