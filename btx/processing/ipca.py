@@ -222,14 +222,14 @@ class IPCA:
         X : ndarray, shape (d x m)
             set of m (d x 1) observations
         """
-        q = self.q
+        print(f'Rank {self.rank}, initializing model with {self.q} samples...')
 
         self.mu, self.total_variance = calculate_sample_mean_and_variance(X)
 
-        centered_data = X - np.tile(self.mu, q)
+        centered_data = X - np.tile(self.mu, self.q)
         self.U, self.S, _ = np.linalg.svd(centered_data, full_matrices=False)
 
-        self.n += q
+        self.n += self.q
 
     def report_interval_data(self):
         """
