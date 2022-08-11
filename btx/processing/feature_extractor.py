@@ -1,4 +1,5 @@
 import argparse
+from inspect import formatargspec
 import numpy as np
 
 from btx.interfaces.psana_interface import *
@@ -87,19 +88,27 @@ class FeatureExtractor:
         The PsanaInterface instance self.psi has an internal counter which is updated on calls 
         to get_images, ensuring that images are retrieved sequentially using this method.
         """
-        d = self.d
         d_original = np.prod(self.psi.det.shape())
 
+        # get ranks start index, end index, and number of features to parse
+        start_index = self.split_indices[self.rank]
+        end_index = self.split_indices[self.rank+1]
+        num_features =  end_index - start_index
+
+        # may have to rewrite eventually when number of images becomes large, i.e. online
         imgs = self.psi.get_images(n, assemble=False)
-        formatted_imgs = np.empty((d, n))
+        rank_imgs = np.empty((num_features, n))
 
         for i in range(n):
-            if self.reduced_indices.size:
-                formatted_imgs[:, i:i+1] = np.reshape(imgs[i], (d_original, 1))[self.reduced_indices]
-            else:
-                formatted_imgs[:, i:i+1] = np.reshape(imgs[i], (d_original, 1))
+            
+            formatted_imgs = np.reshape(imgs[i], (d_original, 1))
 
-        return formatted_imgs
+            if self.reduced_indices.size:
+                formatted_imgs = formatted_imgs[self.reduced_indices]
+
+            rank_imgs[:, i:i+1] = formatted_imgs[start_index:end_index]
+
+        return rank_imgs
 
     def generate_reduced_indices(self, new_dim):
         """
@@ -146,7 +155,7 @@ class FeatureExtractor:
         num_images = self.num_images
 
         if self.init_with_pca and not self.benchmark_mode:
-            img_block = self.fetch_formatted_images(q)[split_indices[rank]:split_indices[rank+1]]
+            img_block = self.fetch_formatted_images(q)
             self.ipca.initialize_model(img_block)
 
             parsed_images = q
@@ -157,7 +166,7 @@ class FeatureExtractor:
 
         # update model with remaining blocks
         for block_size in block_sizes:
-            img_block = self.fetch_formatted_images(block_size)[split_indices[rank]:split_indices[rank+1]]
+            img_block = self.fetch_formatted_images(block_size)
             self.ipca.update_model(img_block)
 
         if self.benchmark_mode:
