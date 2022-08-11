@@ -137,13 +137,13 @@ class FeatureExtractor:
         q = self.q
         rank = self.rank
 
-        parsed_images = 0
-        num_images = self.num_images
-
         self.distribute_indices()
         split_indices = self.split_indices
 
         self.ipca = IPCA(d, q, m, split_indices)
+
+        parsed_images = 0
+        num_images = self.num_images
 
         if self.init_with_pca and not self.benchmark_mode:
             img_block = self.fetch_formatted_images(q)[split_indices[rank]:split_indices[rank+1]]
@@ -151,18 +151,14 @@ class FeatureExtractor:
 
             parsed_images = q
 
-        # if q == parsed_images, model training is complete
-        if not self.init_with_pca or parsed_images != num_images:
+        # divide remaning number of images into blocks
+        remaining_imgs = num_images - parsed_images
+        block_sizes = np.array([m] * int(remaining_imgs / m) + ([remaining_imgs % m] if remaining_imgs % m else []))
 
-            while parsed_images <= num_images:
-
-                if parsed_images == num_images or (parsed_images % m == 0 and parsed_images != 0):
-                    current_block_size = parsed_images % m if parsed_images % m else m
-
-                    img_block = self.fetch_formatted_images(current_block_size)[split_indices[rank]:split_indices[rank+1]]
-                    self.ipca.update_model(img_block)
-                
-                parsed_images += 1
+        # update model with remaining blocks
+        for block_size in block_sizes:
+            img_block = self.fetch_formatted_images(block_size)[split_indices[rank]:split_indices[rank+1]]
+            self.ipca.update_model(img_block)
 
         if self.benchmark_mode:
             self.ipca.save_interval_data(self.output_dir)
