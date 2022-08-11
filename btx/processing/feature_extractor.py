@@ -156,8 +156,8 @@ class FeatureExtractor:
             if parsed_images == num_images or (parsed_images % m == 0 and parsed_images != 0):
                 current_block_size = parsed_images % m if parsed_images % m else m
 
-                img_block = self.fetch_formatted_images(current_block_size)
-                self.ipca.update_model(img_block[split_indices[rank]:split_indices[rank+1]])
+                img_block = self.fetch_formatted_images(current_block_size)[split_indices[rank]:split_indices[rank+1]]
+                self.ipca.update_model(img_block)
             
             parsed_images += 1
 
