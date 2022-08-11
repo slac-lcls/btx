@@ -146,20 +146,23 @@ class FeatureExtractor:
         self.ipca = IPCA(d, q, m, split_indices)
 
         if self.init_with_pca and not self.benchmark_mode:
-            img_block = self.fetch_formatted_images(q)
-            self.ipca.initialize_model(img_block[split_indices[rank]:split_indices[rank+1]])
+            img_block = self.fetch_formatted_images(q)[split_indices[rank]:split_indices[rank+1]]
+            self.ipca.initialize_model(img_block)
 
             parsed_images = q
 
-        while parsed_images <= num_images:
+        # if q == parsed_images, model training is complete
+        if not self.init_with_pca or parsed_images != num_images:
 
-            if parsed_images == num_images or (parsed_images % m == 0 and parsed_images != 0):
-                current_block_size = parsed_images % m if parsed_images % m else m
+            while parsed_images <= num_images:
 
-                img_block = self.fetch_formatted_images(current_block_size)[split_indices[rank]:split_indices[rank+1]]
-                self.ipca.update_model(img_block)
-            
-            parsed_images += 1
+                if parsed_images == num_images or (parsed_images % m == 0 and parsed_images != 0):
+                    current_block_size = parsed_images % m if parsed_images % m else m
+
+                    img_block = self.fetch_formatted_images(current_block_size)[split_indices[rank]:split_indices[rank+1]]
+                    self.ipca.update_model(img_block)
+                
+                parsed_images += 1
 
         if self.benchmark_mode:
             self.ipca.save_interval_data(self.output_dir)
