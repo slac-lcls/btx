@@ -49,7 +49,7 @@ class TaskTimer:
 
         if self.task_description not in self.task_durations:
             self.task_durations[self.task_description] = []
-            
+
         self.task_durations[self.task_description].append(time_interval)
 
 class IPCA:
@@ -147,20 +147,25 @@ class IPCA:
         Intended to be called from the root process.
         """
         if self.rank == 0:
-            U_tot = np.empty((self.d, self.q))
+            U_tot = np.empty(self.d * self.q)
             mu_tot = np.empty((self.d, 1))
             var_tot = np.empty((self.d, 1))
             S_tot = self.S
         else:
             U_tot, mu_tot, var_tot, S_tot = None, None, None, None
         
-        axes_split = self.comm.gather(self.U, root=0)
+        self.comm.Gatherv(self.U.flatten(), [U_tot, self.split_counts*self.q, self.start_indices*self.q, MPI.DOUBLE], root=0)
 
         if self.rank == 0:
-            U_tot = axes_split[0]
+            np.reshape(U_tot, (self.d, self.q))
 
-            for i in range(1, self.size):
-                U_tot = np.concatenate((U_tot, axes_split[i]), axis=0)
+        # axes_split = self.comm.gather(self.U, root=0)
+
+        # if self.rank == 0:
+        #     U_tot = axes_split[0]
+
+        #     for i in range(1, self.size):
+        #         U_tot = np.concatenate((U_tot, axes_split[i]), axis=0)
 
         self.comm.Gatherv(self.mu, [mu_tot, self.split_counts*self.q, self.start_indices, MPI.DOUBLE], root=0)
         self.comm.Gatherv(self.total_variance, [var_tot, self.split_counts*self.q, self.start_indices, MPI.DOUBLE], root=0)
