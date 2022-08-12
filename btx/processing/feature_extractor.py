@@ -69,7 +69,7 @@ class FeatureExtractor:
 
         self.split_indices = split_indices
 
-    def fetch_formatted_images(self, n):
+    def fetch_formatted_images(self, n, rank_reduced=True):
         """
         Retrieve and format n images from run.
 
@@ -88,12 +88,13 @@ class FeatureExtractor:
         The PsanaInterface instance self.psi has an internal counter which is updated on calls 
         to get_images, ensuring that images are retrieved sequentially using this method.
         """
+        d = self.d
         d_original = np.prod(self.psi.det.shape())
 
         # get ranks start index, end index, and number of features to parse
         start_index = self.split_indices[self.rank]
         end_index = self.split_indices[self.rank+1]
-        num_features =  end_index - start_index
+        num_features =  (end_index - start_index) if rank_reduced else d
 
         # may have to rewrite eventually when number of images becomes large, i.e. online
         imgs = self.psi.get_images(n, assemble=False)
@@ -106,7 +107,10 @@ class FeatureExtractor:
             if self.reduced_indices.size:
                 formatted_imgs = formatted_imgs[self.reduced_indices]
 
-            rank_imgs[:, i:i+1] = formatted_imgs[start_index:end_index]
+            if rank_reduced:
+                formatted_imgs = formatted_imgs[start_index:end_index]
+            
+            rank_imgs[:, i:i+1] = formatted_imgs
 
         return rank_imgs
 
@@ -195,7 +199,7 @@ class FeatureExtractor:
 
                 # run svd on centered image batch
                 print('Gathering images for batch PCA...')
-                X = self.fetch_formatted_images(n)
+                X = self.fetch_formatted_images(n, rank_reduced=False)
 
                 print('Performing batch PCA...')
                 mu_pca = np.reshape(np.mean(X, axis=1), (X.shape[0], 1))
