@@ -209,8 +209,10 @@ class FeatureExtractor:
                 U_pca, S_pca, _ = np.linalg.svd(X_centered, full_matrices=False)
                 print('\n')
 
-                print(f'iPCA Compression Loss: {compression_loss(X, U, normalized=True)}')
-                print(f'PCA Compression Loss: {compression_loss(X, U_pca[:, :q], normalized=True)}')
+                # calculate compression loss, normalized if given flag
+                normalized = True
+                print('iPCA {norm}Compression Loss: {loss}'.format(norm='normalized ' if normalized else '', loss=compression_loss(X, U, normalized=normalized)))
+                print('PCA {norm}Compression Loss: {loss}'.format(norm='normalized ' if normalized else '', loss=compression_loss(X, U_pca[:, :q], normalized=normalized)))
                 print('\n')
 
                 print(f'iPCA Total Variance: {np.sum(var)}')
@@ -327,4 +329,4 @@ if __name__ == '__main__':
 
     fe = FeatureExtractor(**kwargs)
     fe.run_ipca()
-    fe.verify_model_accuracy()
+    # fe.verify_model_accuracy()

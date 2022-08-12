@@ -90,12 +90,14 @@ class IPCA:
     
     def parallel_qr(self, A):
         _, x = A.shape
-        
+
         q = self.q
         m = x-q-1
 
         with TaskTimer(self.task_durations, 'qr - local qr'):
             q_loc, r_loc = np.linalg.qr(A, mode='reduced')
+        
+        self.comm.Barrier()
 
         with TaskTimer(self.task_durations, 'qr - r_tot gather'):
             if self.rank == 0:
@@ -115,6 +117,8 @@ class IPCA:
             U_tilde = np.empty((q+m+1, q+m+1))
             S_tilde = np.empty(q+m+1)
             q_tot = None
+        
+        self.comm.Barrier()
     
         with TaskTimer(self.task_durations, 'qr - scatter q_tot'):
             q_tot_loc = np.empty((q+m+1, q+m+1))
@@ -123,8 +127,12 @@ class IPCA:
         with TaskTimer(self.task_durations, 'qr - local matrix build'):
             q_fin = q_loc @ q_tot_loc
         
+        self.comm.Barrier()
+        
         with TaskTimer(self.task_durations, 'qr - bcast S_tilde'):
             self.comm.Bcast(S_tilde, root=0)
+        
+        self.comm.Barrier()
 
         with TaskTimer(self.task_durations, 'qr - bcast U_tilde'):
             self.comm.Bcast(U_tilde, root=0)
