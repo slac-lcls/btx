@@ -37,9 +37,9 @@ class FeatureExtractor:
             print(f'Requested number of images too large, reduced to {self.num_images}')
 
         if self.benchmark_mode:
-            self.num_images = min(100, self.num_images)
+            self.num_images = min(60, self.num_images)
             self.q = num_components
-            self.m = 20
+            self.m = 10
         else:
             # ensure that requested dimension is valid
             self.q = num_components
@@ -96,7 +96,7 @@ class FeatureExtractor:
         end_index = self.split_indices[self.rank+1]
         num_features =  (end_index - start_index) if rank_reduced else d
 
-        # may have to rewrite eventually when number of images becomes large, i.e. online
+        # may have to rewrite eventually when number of images becomes large, i.e. streamed setting
         imgs = self.psi.get_images(n, assemble=False)
         rank_imgs = np.empty((num_features, n))
 
@@ -148,7 +148,6 @@ class FeatureExtractor:
         d = self.d
         m = self.m
         q = self.q
-        rank = self.rank
 
         self.distribute_indices()
         split_indices = self.split_indices
@@ -209,18 +208,20 @@ class FeatureExtractor:
                 U_pca, S_pca, _ = np.linalg.svd(X_centered, full_matrices=False)
                 print('\n')
 
+                q_pca = min(q, n)
+
                 # calculate compression loss, normalized if given flag
                 normalized = True
-                print('iPCA {norm}Compression Loss: {loss}'.format(norm='normalized ' if normalized else '', loss=compression_loss(X, U, normalized=normalized)))
-                print('PCA {norm}Compression Loss: {loss}'.format(norm='normalized ' if normalized else '', loss=compression_loss(X, U_pca[:, :q], normalized=normalized)))
+                print('iPCA {norm}Compression Loss: {loss}'.format(norm='normalized ' if normalized else '', loss=compression_loss(X, U[:, :q_pca], normalized=normalized)))
+                print('PCA {norm}Compression Loss: {loss}'.format(norm='normalized ' if normalized else '', loss=compression_loss(X, U_pca[:, :q_pca], normalized=normalized)))
                 print('\n')
 
                 print(f'iPCA Total Variance: {np.sum(var)}')
                 print(f'PCA Total Variance: {np.sum(var_pca)}')
                 print('\n')
 
-                print(f'iPCA Explained Variance: {(np.sum(S[:q]**2) / (n-1)) / np.sum(var)}')
-                print(f'PCA Explained Variance: {(np.sum(S_pca[:q]**2) / (n-1)) / np.sum(var_pca)}')
+                print(f'iPCA Explained Variance: {(np.sum(S[:q_pca]**2) / (n-1)) / np.sum(var)}')
+                print(f'PCA Explained Variance: {(np.sum(S_pca[:q_pca]**2) / (n-1)) / np.sum(var_pca)}')
                 print('\n')
 
                 print(f'iPCA Singular Values: \n')
@@ -237,7 +238,7 @@ class FeatureExtractor:
                 print('Basis Inner Product: \n')
                 print(np.diagonal(np.abs(U.T @ U_pca[:, :q])))
 
-                b = plt.imshow(np.abs(np.hstack((mu / np.linalg.norm(mu), U)).T @ np.hstack((mu_pca / np.linalg.norm(mu_pca), U_pca[:, :q]))))
+                b = plt.imshow(np.abs(np.hstack((mu / np.linalg.norm(mu), U[:, :q_pca])).T @ np.hstack((mu_pca / np.linalg.norm(mu_pca), U_pca[:, :q_pca]))))
                 plt.colorbar(b)
                 plt.savefig(f'fig.png')
                 plt.clf()
@@ -290,7 +291,7 @@ def compression_loss(X, U, normalized=False):
     Ln : float
         compression loss of X
     """
-    d, n = X.shape
+    _, n = X.shape
 
     UX = U.T @ X
     UUX = U @ UX
@@ -329,4 +330,4 @@ if __name__ == '__main__':
 
     fe = FeatureExtractor(**kwargs)
     fe.run_ipca()
-    # fe.verify_model_accuracy()
+    fe.verify_model_accuracy()
