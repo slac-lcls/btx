@@ -208,6 +208,7 @@ class IPCA:
             with TaskTimer(self.task_durations, 'parallel QR'):
                 UB_tilde, U_tilde, S_tilde = self.parallel_qr(qr_input)
 
+            # concatenating first preserves the memory contiguity of U_prime and thus self.U
             with TaskTimer(self.task_durations, 'compute local U_prime'):
                 U_prime = UB_tilde @ U_tilde[:, :q]
 
@@ -215,12 +216,6 @@ class IPCA:
             self.S = S_tilde[:q]
 
             self.n += m
-            
-            # perform self.U @ self.S in parallel, divide X_m in parallel, concat and serve as inputs to parallel_qr
-            # can just store self.U amd self.S at the end of each local run 
-
-            # or just compute massive QR factorization here, parallelized. Less communication over the nextwork? (need to benchmark)
-            # parallelized QR yields an already distributed version of [U B_tilde], so less network operations
 
 
     def initialize_model(self, X):

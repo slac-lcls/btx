@@ -9,7 +9,7 @@ RANKS=(32)
 
 for r in ${RANKS[@]}
 do
-    OUTPUT_DIR="/cds/home/h/hepworth/data/np_2/mrbm_${r}"
+    OUTPUT_DIR="/cds/home/h/hepworth/data/np_3/mrbm_${r}"
     mkdir -p ${OUTPUT_DIR}
 
     for q in ${COMPS[@]}
