@@ -181,6 +181,7 @@ class FeatureExtractor:
         q = self.q
         n = self.num_images
 
+        self.comm.Barrier()
         U, S, mu, var = self.ipca.get_model()
 
         if self.rank == 0:
