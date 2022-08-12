@@ -157,7 +157,7 @@ class IPCA:
         self.comm.Gatherv(self.U.flatten(), [U_tot, self.split_counts*self.q, self.start_indices*self.q, MPI.DOUBLE], root=0)
 
         if self.rank == 0:
-            np.reshape(U_tot, (self.d, self.q))
+            U_tot = np.reshape(U_tot, (self.d, self.q))
 
         # axes_split = self.comm.gather(self.U, root=0)
 
