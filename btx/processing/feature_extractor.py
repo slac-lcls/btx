@@ -229,7 +229,7 @@ class FeatureExtractor:
                 print('\n')
 
                 print(f'PCA Singular Values: \n')
-                print(S_pca[:q])
+                print(S_pca[:q_pca])
                 print('\n')
 
                 print(f'Normalized Mean Inner Product: {np.inner(mu.flatten(), mu_pca.flatten()) / (np.linalg.norm(mu) * np.linalg.norm(mu_pca))}')
