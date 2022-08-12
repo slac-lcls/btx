@@ -49,6 +49,7 @@ class TaskTimer:
 
         if self.task_description not in self.task_durations:
             self.task_durations[self.task_description] = []
+            
         self.task_durations[self.task_description].append(time_interval)
 
 class IPCA:

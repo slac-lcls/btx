@@ -4,7 +4,10 @@ FUNCTION_PATH="/cds/home/h/hepworth/btx-callum/btx/processing/feature_extractor.
 # COMPS=(1 5 10 25 50 75 100 125 150 165 180 195 210 230 250)
 # RANKS=(4 6 8 12 16 32 64 96 128)
 
-COMPS=(1 5 10 25 50 75 100 125 150 165 180 195 210 230 250)
+# COMPS=(1 5 10 25 50 75 100 125 150 165 180 195 210 230 250)
+# RANKS=(32)
+
+COMPS=(1)
 RANKS=(32)
 
 for r in ${RANKS[@]}
@@ -17,7 +20,7 @@ do
         sbatch << EOF
 #!/bin/bash
 
-#SBATCH -p psanaq
+#SBATCH -p ffbl4q
 #SBATCH -t 10:00:00
 #SBATCH --exclusive
 #SBATCH --job-name bm_${r}_${q}

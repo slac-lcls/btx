@@ -165,7 +165,7 @@ class FeatureExtractor:
 
         # divide remaning number of images into blocks
         remaining_imgs = num_images - parsed_images
-        block_sizes = np.array([m] * int(remaining_imgs / m) + ([remaining_imgs % m] if remaining_imgs % m else []))
+        block_sizes = np.array([m] * np.floor(remaining_imgs / m).astype(int) + ([remaining_imgs % m] if remaining_imgs % m else []))
 
         # update model with remaining blocks
         for block_size in block_sizes:
@@ -212,8 +212,8 @@ class FeatureExtractor:
 
                 # calculate compression loss, normalized if given flag
                 normalized = True
-                print('iPCA {norm}Compression Loss: {loss}'.format(norm='normalized ' if normalized else '', loss=compression_loss(X, U[:, :q_pca], normalized=normalized)))
-                print('PCA {norm}Compression Loss: {loss}'.format(norm='normalized ' if normalized else '', loss=compression_loss(X, U_pca[:, :q_pca], normalized=normalized)))
+                print('iPCA {norm}Compression Loss: {loss}'.format(norm='Normalized ' if normalized else '', loss=compression_loss(X, U[:, :q_pca], normalized=normalized)))
+                print('PCA {norm}Compression Loss: {loss}'.format(norm='Normalized ' if normalized else '', loss=compression_loss(X, U_pca[:, :q_pca], normalized=normalized)))
                 print('\n')
 
                 print(f'iPCA Total Variance: {np.sum(var)}')
