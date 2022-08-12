@@ -159,14 +159,6 @@ class IPCA:
         if self.rank == 0:
             U_tot = np.reshape(U_tot, (self.d, self.q))
 
-        # axes_split = self.comm.gather(self.U, root=0)
-
-        # if self.rank == 0:
-        #     U_tot = axes_split[0]
-
-        #     for i in range(1, self.size):
-        #         U_tot = np.concatenate((U_tot, axes_split[i]), axis=0)
-
         self.comm.Gatherv(self.mu, [mu_tot, self.split_counts*self.q, self.start_indices, MPI.DOUBLE], root=0)
         self.comm.Gatherv(self.total_variance, [var_tot, self.split_counts*self.q, self.start_indices, MPI.DOUBLE], root=0)
 
