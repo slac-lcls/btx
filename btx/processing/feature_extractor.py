@@ -198,7 +198,7 @@ class FeatureExtractor:
                 print('\n')
 
                 # run svd on centered image batch
-                print('Gathering images for batch PCA...')
+                print('\nGathering images for batch PCA...')
                 X = self.fetch_formatted_images(n, rank_reduced=False)
 
                 print('Performing batch PCA...')
