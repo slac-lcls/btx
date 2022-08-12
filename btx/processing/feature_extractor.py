@@ -209,8 +209,8 @@ class FeatureExtractor:
                 U_pca, S_pca, _ = np.linalg.svd(X_centered, full_matrices=False)
                 print('\n')
 
-                print(f'iPCA Compression Loss: {compression_loss(X, U)}')
-                print(f'PCA Compression Loss: {compression_loss(X, U_pca[:, :q])}')
+                print(f'iPCA Compression Loss: {compression_loss(X, U, normalized=True)}')
+                print(f'PCA Compression Loss: {compression_loss(X, U_pca[:, :q], normalized=True)}')
                 print('\n')
 
                 print(f'iPCA Total Variance: {np.sum(var)}')
@@ -272,7 +272,7 @@ def compare_basis_vectors(U_1, U_2, q):
     acc = np.trace(np.abs(U_1[:, :q].T @ U_2[:, :q])) / q
     return acc
 
-def compression_loss(X, U):
+def compression_loss(X, U, normalized=False):
     """
     Calculate the compression loss between centered observation matrix X and its rank-q reconstruction.
 
@@ -294,6 +294,10 @@ def compression_loss(X, U):
     UUX = U @ UX
 
     Ln = ((np.linalg.norm(X - UUX, 'fro')) ** 2) / n
+
+    if normalized:
+        Ln /= np.linalg.norm(X, 'fro')**2
+
     return Ln 
 
 #### For command line use ####

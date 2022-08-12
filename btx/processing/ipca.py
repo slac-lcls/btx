@@ -89,8 +89,9 @@ class IPCA:
 
     
     def parallel_qr(self, A):
-        q = self.q
         _, x = A.shape
+        
+        q = self.q
         m = x-q-1
 
         with TaskTimer(self.task_durations, 'qr - local qr'):
