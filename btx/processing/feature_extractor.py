@@ -181,7 +181,7 @@ class FeatureExtractor:
         U, S, mu, var = self.ipca.get_model()
 
         if self.rank == 0:
-            # store current event index and reset to get same image batch
+            # store current event index from self.psi and reset
             event_index = self.psi.counter
             self.psi.counter = 0
 
