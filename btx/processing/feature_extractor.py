@@ -113,6 +113,8 @@ class FeatureExtractor:
 
         formatted_imgs = np.reshape(imgs, (d, n)).T
 
+        print(formatted_imgs.shape)
+
         return formatted_imgs[start_index:end_index, :]
 
     def run_ipca(self):
