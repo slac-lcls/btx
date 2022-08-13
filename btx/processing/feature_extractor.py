@@ -1,5 +1,6 @@
 import argparse
 from random import sample
+from tracemalloc import start
 from turtle import down
 import numpy as np
 from scipy import signal
@@ -33,12 +34,11 @@ class FeatureExtractor:
         self.downsample = downsample
 
         det_shape = self.psi.det.shape()
+        self.d = np.prod(det_shape)
 
         if self.downsample:
-            self.sampling_window = np.floor(min(det_shape[1], det_shape[2]) * 0.30).astype(int)
-            self.d = det_shape[0] * (det_shape[1] - self.sampling_window + 1) * (det_shape[2] - self.sampling_window + 1)
-        else:
-            self.d = np.prod(det_shape)
+            self.bin_factor = 16 # need a better way to do this, rounded closest cf?
+            self.d /= self.bin_factor**2
 
         # ensure that requested number of images is valid
         self.num_images = num_images
@@ -99,35 +99,21 @@ class FeatureExtractor:
         to get_images, ensuring that images are retrieved sequentially using this method.
         """
         d = self.d
-        d_detector = np.prod(self.psi.det.shape())
 
-        # get ranks start index, end index, and number of features to parse
-        start_index = self.split_indices[self.rank]
-        end_index = self.split_indices[self.rank+1]
-        num_features =  d if fetch_all_features else (end_index - start_index)
+        # get start index, end index
+        start_index = 0 if fetch_all_features else self.split_indices[self.rank]
+        end_index = d if fetch_all_features else self.split_indices[self.rank+1]
 
         # may have to rewrite eventually when number of images becomes large, i.e. streamed setting
+        # either that or downsample aggressively
         imgs = self.psi.get_images(n, assemble=False)
-        formatted_imgs = np.empty((num_features, n))
 
-        for i in range(n):
+        if self.downsample:
+            imgs = bin_data(imgs, self.bin_factor)
 
-            img = imgs[i]
+        formatted_imgs = np.reshape(imgs, (d, n)).T
 
-            if self.downsample:
-                print('a')
-                img = downsample_image(img, self.sampling_window)
-                print('b')
-                formatted_img = np.reshape(img, (d, 1))
-            else:
-                formatted_img = np.reshape(img, (d_detector, 1))
-
-            if not fetch_all_features:
-                formatted_img = formatted_img[start_index:end_index]
-            
-            formatted_imgs[:, i:i+1] = formatted_img
-
-        return formatted_imgs
+        return formatted_imgs[start_index:end_index, :]
 
     def run_ipca(self):
         """
@@ -292,38 +278,37 @@ def compression_loss(X, U, normalized=False):
 
     return Ln 
 
-def downsample_image(panels, window):
-    """_summary_
-
-    Parameters
-    ----------
-    X : _type_
-        _description_
-    window_len : int
-        _description_
-
-    Returns
-    -------
-    _type_
-        _description_
+def bin_data(arr, bin_factor, det_shape=None):
     """
-    p, d, n = panels.shape
-    min_dim = min(n, d)
+    Bin detector data by bin_factor through averaging. 
+    Retrieved from https://github.com/apeck12/cmtip/blob/main/cmtip/prep_data.py
+    
+    :param arr: array shape (n_images, n_panels, panel_shape_x, panel_shape_y)
+      or if det_shape is given of shape (n_images, 1, n_pixels_per_image) 
+    :param bin_factor: how may fold to bin arr by
+    :param det_shape: tuple of detector shape, optional
+    :return arr_binned: binned data of same dimensions as arr
+    """
+    # reshape as needed
+    if det_shape is not None:
+        arr = np.array([arr[i].reshape(det_shape) for i in range(arr.shape[0])])
+    
+    # ensure that original shape is divisible by bin factor
+    assert arr.shape[2] % bin_factor == 0
+    assert arr.shape[3] % bin_factor == 0   
+    
+    # bin each panel of each image
+    binned_arr = arr.reshape(arr.shape[0], 
+                             arr.shape[1],
+                             int(arr.shape[2] / bin_factor),
+                             bin_factor,
+                             int(arr.shape[3] / bin_factor),
+                             bin_factor).mean(-1).mean(3)
 
-    if min_dim < window:
-        print('Invalid downsampling window, returning original data.')
-        return panels
-
-    new_d = d - window + 1
-    new_n = n - window + 1
-
-    downsampled_panels = np.empty((p, new_d, new_n))
-
-    for i in range(p):
-        sampling_window = np.full((window, window), 1 / window**2)
-        downsampled_panels[i] = signal.convolve2d(panels[i], sampling_window, mode='valid')
-
-    return downsampled_panels
+    # if input data were flattened, reflatten
+    if det_shape is not None:
+        binned_arr = binned_arr.reshape((binned_arr.shape[0],1) + (np.prod(np.array(binned_arr.shape[1:])),))
+    return binned_arr
 
 #### For command line use ####
             
