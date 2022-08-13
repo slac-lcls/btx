@@ -315,7 +315,7 @@ def downsample_image(panels, window):
     new_d = d - window + 1
     new_n = n - window + 1
 
-    downsampled_panels = np.array(p, new_d, new_n)
+    downsampled_panels = np.empty((p, new_d, new_n))
 
     for i in range(p):
         sampling_window = np.full((window, window), 1 / window**2)
