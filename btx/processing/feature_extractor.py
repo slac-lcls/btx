@@ -113,7 +113,7 @@ class FeatureExtractor:
             imgs = bin_data(imgs, self.bin_factor)
 
         print(imgs.shape)
-        formatted_imgs = np.reshape(imgs, (d, n)).T
+        formatted_imgs = np.reshape(imgs, (n, d)).T
 
         print(formatted_imgs.shape)
 
