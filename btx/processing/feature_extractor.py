@@ -36,7 +36,7 @@ class FeatureExtractor:
 
         if self.downsample:
             self.sampling_window = np.floor(min(det_shape[1], det_shape[2]) * 0.01)
-            self.d = det_shape[0] * (det_shape[1] - self.sampling_window + 1) (det_shape[2] - self.sampling_window + 1)
+            self.d = det_shape[0] * (det_shape[1] - self.sampling_window + 1) * (det_shape[2] - self.sampling_window + 1)
         else:
             self.d = np.prod(det_shape)
 
