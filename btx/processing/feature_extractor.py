@@ -16,7 +16,7 @@ class FeatureExtractor:
     Class to manage feature extraction on image data subject to initialization parameters.
     """
 
-    def __init__(self, exp, run, det_type, num_components=50, block_size=10, num_images=100, init_with_pca=False, benchmark_mode=False, downsample=True, output_dir=''):
+    def __init__(self, exp, run, det_type, num_components=50, block_size=10, num_images=100, init_with_pca=False, benchmark_mode=False, downsample=False, output_dir=''):
 
         self.comm = MPI.COMM_WORLD
         self.rank = self.comm.Get_rank()
