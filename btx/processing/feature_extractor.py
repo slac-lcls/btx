@@ -29,7 +29,6 @@ class FeatureExtractor:
 
         self.init_with_pca = init_with_pca
         self.benchmark_mode = benchmark_mode
-        
         self.output_dir = output_dir
         self.downsample = downsample
 
@@ -173,7 +172,7 @@ class FeatureExtractor:
 
                 # run svd on centered image batch
                 print('\nGathering images for batch PCA...')
-                X = self.fetch_formatted_images(n, fetch_all_features=False)
+                X = self.fetch_formatted_images(n, fetch_all_features=True)
 
                 print('Performing batch PCA...')
                 mu_pca = np.reshape(np.mean(X, axis=1), (X.shape[0], 1))
@@ -327,6 +326,7 @@ def parse_input():
     parser.add_argument('-n', '--num_images', help='Number of images', required=False, type=int)
     parser.add_argument('-i', '--init_with_pca', help='Initialize with PCA', required=False, action='store_true')
     parser.add_argument('-b', '--benchmark_mode', help='Run algorithm in benchmark mode.', required=False, action='store_true')
+    parser.add_argument('-d', '--downsample', help='Downsample.', required=False, action='store_true')
 
     return parser.parse_args()
  
