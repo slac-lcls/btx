@@ -48,7 +48,7 @@ class FeatureExtractor:
         if self.benchmark_mode:
             self.num_images = min(120, self.num_images)
             self.q = num_components
-            self.m = 30
+            self.m = 20
         else:
             # ensure that requested dimension is valid
             self.q = num_components
@@ -212,11 +212,11 @@ class FeatureExtractor:
                 print('Basis Inner Product: \n')
                 print(np.diagonal(np.abs(U[:, :q_pca].T @ U_pca[:, :q_pca])))
 
-                b = plt.imshow(np.abs(np.hstack((mu / np.linalg.norm(mu), U[:, :q_pca])).T @ np.hstack((mu_pca / np.linalg.norm(mu_pca), U_pca[:, :q_pca]))))
-                plt.colorbar(b)
-                plt.savefig(f'fig_{q}_{self.size}.png')
-                plt.clf()
-                plt.show()
+                # b = plt.imshow(np.abs(np.hstack((mu / np.linalg.norm(mu), U[:, :q_pca])).T @ np.hstack((mu_pca / np.linalg.norm(mu_pca), U_pca[:, :q_pca]))))
+                # plt.colorbar(b)
+                # plt.savefig(f'fig_{q}_{self.size}.png')
+                # plt.clf()
+                # plt.show()
 
                 self.ipca.report_interval_data()
 
