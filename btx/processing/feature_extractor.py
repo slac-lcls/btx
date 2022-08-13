@@ -115,7 +115,9 @@ class FeatureExtractor:
             img = imgs[i]
 
             if self.downsample:
+                print('a')
                 img = downsample_image(img, self.sampling_window)
+                print('b')
                 formatted_img = np.reshape(img, (d, 1))
             else:
                 formatted_img = np.reshape(img, (d_detector, 1))
