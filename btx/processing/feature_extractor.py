@@ -319,7 +319,7 @@ def downsample_image(panels, window):
 
     for i in range(p):
         sampling_window = np.full((window, window), 1 / window**2)
-        downsampled_panels[i] = signal.convolve2d(panels, sampling_window, mode='valid')
+        downsampled_panels[i] = signal.convolve2d(panels[i], sampling_window, mode='valid')
 
     return downsampled_panels
 
