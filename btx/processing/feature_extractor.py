@@ -16,7 +16,7 @@ class FeatureExtractor:
     Class to manage feature extraction on image data subject to initialization parameters.
     """
 
-    def __init__(self, exp, run, det_type, num_components=50, block_size=10, num_images=100, init_with_pca=False, benchmark_mode=False, downsample=False, output_dir=''):
+    def __init__(self, exp, run, det_type, num_components=10, block_size=10, num_images=10, init_with_pca=False, benchmark_mode=False, downsample=False, output_dir=''):
 
         self.comm = MPI.COMM_WORLD
         self.rank = self.comm.Get_rank()
@@ -79,7 +79,7 @@ class FeatureExtractor:
 
         self.split_indices = split_indices
 
-    def fetch_formatted_images(self, n, fetch_all_features=False, downsample=0):
+    def fetch_formatted_images(self, n, fetch_all_features=False):
         """
         Retrieve and format n images from run.
 
@@ -185,7 +185,7 @@ class FeatureExtractor:
 
                 # run svd on centered image batch
                 print('\nGathering images for batch PCA...')
-                X = self.fetch_formatted_images(n, rank_reduced=False)
+                X = self.fetch_formatted_images(n, fetch_all_features=False)
 
                 print('Performing batch PCA...')
                 mu_pca = np.reshape(np.mean(X, axis=1), (X.shape[0], 1))
