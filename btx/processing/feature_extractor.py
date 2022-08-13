@@ -324,9 +324,9 @@ def parse_input():
     parser.add_argument('-c', '--num_components', help='Number of principal components to compute', required=False, type=int)
     parser.add_argument('-m', '--block_size', help='Desired block size', required=False, type=int)
     parser.add_argument('-n', '--num_images', help='Number of images', required=False, type=int)
-    parser.add_argument('-i', '--init_with_pca', help='Initialize with PCA', required=False, action='store_true')
-    parser.add_argument('-b', '--benchmark_mode', help='Run algorithm in benchmark mode.', required=False, action='store_true')
-    parser.add_argument('-d', '--downsample', help='Downsample.', required=False, action='store_true')
+    parser.add_argument('--init_with_pca', help='Initialize with PCA', required=False, action='store_true')
+    parser.add_argument('--benchmark_mode', help='Run algorithm in benchmark mode.', required=False, action='store_true')
+    parser.add_argument('--downsample', help='Downsample.', required=False, action='store_true')
 
     return parser.parse_args()
  
