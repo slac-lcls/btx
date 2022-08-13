@@ -1,6 +1,8 @@
 import argparse
-from inspect import formatargspec
+from random import sample
+from turtle import down
 import numpy as np
+from scipy import signal
 
 from btx.interfaces.psana_interface import *
 from btx.processing.ipca import *
@@ -14,7 +16,7 @@ class FeatureExtractor:
     Class to manage feature extraction on image data subject to initialization parameters.
     """
 
-    def __init__(self, exp, run, det_type, num_components=50, block_size=10, num_images=100, init_with_pca=False, benchmark_mode=False, output_dir=''):
+    def __init__(self, exp, run, det_type, num_components=50, block_size=10, num_images=100, init_with_pca=False, benchmark_mode=False, downsample=True, output_dir=''):
 
         self.comm = MPI.COMM_WORLD
         self.rank = self.comm.Get_rank()
@@ -22,13 +24,21 @@ class FeatureExtractor:
 
         self.psi = PsanaInterface(exp=exp, run=run, det_type=det_type)
 
-        self.d = np.prod(self.psi.det.shape())
         self.reduced_indices = np.array([])
 
         self.init_with_pca = init_with_pca
         self.benchmark_mode = benchmark_mode
         
         self.output_dir = output_dir
+        self.downsample = downsample
+
+        det_shape = self.psi.det.shape()
+
+        if self.downsample:
+            self.sampling_window = np.floor(min(det_shape[1], det_shape[2]) * 0.01)
+            self.d = det_shape[0] * (det_shape[1] - self.sampling_window + 1) (det_shape[2] - self.sampling_window + 1)
+        else:
+            self.d = np.prod(det_shape)
 
         # ensure that requested number of images is valid
         self.num_images = num_images
@@ -69,7 +79,7 @@ class FeatureExtractor:
 
         self.split_indices = split_indices
 
-    def fetch_formatted_images(self, n, rank_reduced=True):
+    def fetch_formatted_images(self, n, fetch_all_features=False, downsample=0):
         """
         Retrieve and format n images from run.
 
@@ -89,57 +99,33 @@ class FeatureExtractor:
         to get_images, ensuring that images are retrieved sequentially using this method.
         """
         d = self.d
-        d_original = np.prod(self.psi.det.shape())
+        d_detector = np.prod(self.psi.det.shape())
 
         # get ranks start index, end index, and number of features to parse
         start_index = self.split_indices[self.rank]
         end_index = self.split_indices[self.rank+1]
-        num_features =  (end_index - start_index) if rank_reduced else d
+        num_features =  d if fetch_all_features else (end_index - start_index)
 
         # may have to rewrite eventually when number of images becomes large, i.e. streamed setting
         imgs = self.psi.get_images(n, assemble=False)
-        rank_imgs = np.empty((num_features, n))
+        formatted_imgs = np.empty((num_features, n))
 
         for i in range(n):
+
+            img = imgs[i]
+
+            if self.downsample:
+                img = downsample_image(img, self.sampling_window)
+                formatted_img = np.reshape(img, (d, 1))
+            else:
+                formatted_img = np.reshape(img, (d_detector, 1))
+
+            if not fetch_all_features:
+                formatted_img = formatted_img[start_index:end_index]
             
-            formatted_imgs = np.reshape(imgs[i], (d_original, 1))
+            formatted_imgs[:, i:i+1] = formatted_img
 
-            if self.reduced_indices.size:
-                formatted_imgs = formatted_imgs[self.reduced_indices]
-
-            if rank_reduced:
-                formatted_imgs = formatted_imgs[start_index:end_index]
-            
-            rank_imgs[:, i:i+1] = formatted_imgs
-
-        return rank_imgs
-
-    def generate_reduced_indices(self, new_dim):
-        """
-        Sample, without replacement, and store new_dim indices from unassembed image dimension.
-
-        Parameters
-        ----------
-        new_dim : int
-            number of sampled indices to be drawn
-        """
-        det_pixels = np.prod(self.psi.det.shape())
-
-        if det_pixels < new_dim:
-            print('Detector dimension must be greater than or equal to reduced dimension.')
-            return
-
-        self.reduced_indices = np.random.choice(det_pixels, new_dim, replace=False)
-        self.d = new_dim
-
-    def remove_reduced_indices(self):
-        """
-        Remove stored reduced indices.
-        """
-        det_pixels = np.prod(self.psi.det.shape())
-
-        self.reduced_indices = np.array([])
-        self.d = det_pixels
+        return formatted_imgs
 
     def run_ipca(self):
         """
@@ -303,6 +289,39 @@ def compression_loss(X, U, normalized=False):
         Ln /= np.linalg.norm(X, 'fro')**2
 
     return Ln 
+
+def downsample_image(panels, window):
+    """_summary_
+
+    Parameters
+    ----------
+    X : _type_
+        _description_
+    window_len : _type_
+        _description_
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
+    p, d, n = panels.shape
+    min_dim = min(n, d)
+
+    if min_dim < window:
+        print('Invalid downsampling window, returning original data.')
+        return panels
+
+    new_d = d - window + 1
+    new_n = n - window + 1
+
+    downsampled_panels = np.array(p, new_d, new_n)
+
+    for i in range(p):
+        sampling_window = np.full((window, window), 1 / window**2)
+        downsampled_panels[i] = signal.convolve2d(panels, sampling_window, mode='valid')
+
+    return downsampled_panels
 
 #### For command line use ####
             
