@@ -38,7 +38,7 @@ class FeatureExtractor:
 
         if self.downsample:
             self.bin_factor = 16 # need a better way to do this, rounded closest cf?
-            self.d /= self.bin_factor**2
+            self.d = int(self.d / self.bin_factor**2)
 
         # ensure that requested number of images is valid
         self.num_images = num_images
