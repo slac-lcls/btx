@@ -312,8 +312,8 @@ def downsample_image(panels, window):
         print('Invalid downsampling window, returning original data.')
         return panels
 
-    new_d = d - window + 1
-    new_n = n - window + 1
+    new_d = int(d - window + 1)
+    new_n = int(n - window + 1)
 
     downsampled_panels = np.empty((p, new_d, new_n))
 
