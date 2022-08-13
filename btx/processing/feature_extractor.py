@@ -35,7 +35,7 @@ class FeatureExtractor:
         det_shape = self.psi.det.shape()
 
         if self.downsample:
-            self.sampling_window = np.floor(min(det_shape[1], det_shape[2]) * 0.01)
+            self.sampling_window = np.floor(min(det_shape[1], det_shape[2]) * 0.01).astype(int)
             self.d = det_shape[0] * (det_shape[1] - self.sampling_window + 1) * (det_shape[2] - self.sampling_window + 1)
         else:
             self.d = np.prod(det_shape)
@@ -297,7 +297,7 @@ def downsample_image(panels, window):
     ----------
     X : _type_
         _description_
-    window_len : _type_
+    window_len : int
         _description_
 
     Returns
@@ -312,8 +312,8 @@ def downsample_image(panels, window):
         print('Invalid downsampling window, returning original data.')
         return panels
 
-    new_d = int(d - window + 1)
-    new_n = int(n - window + 1)
+    new_d = d - window + 1
+    new_n = n - window + 1
 
     downsampled_panels = np.empty((p, new_d, new_n))
 
