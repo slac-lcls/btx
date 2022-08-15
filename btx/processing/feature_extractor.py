@@ -210,30 +210,35 @@ class FeatureExtractor:
 
                 q_pca = min(q, n)
 
+                def x(n):
+                    return "f" if n > 0 else "g"
+
                 # calculate compression loss, normalized if given flag
                 norm = True
                 print(
-                    "iPCA {norm}Compression Loss: {loss:.6g}".format(
+                    "iPCA {norm}Compression Loss: {loss:.4{x(loss)}}".format(
                         norm="Normalized " if norm else "",
                         loss=compression_loss(X, U[:, :q_pca], normalized=norm),
                     )
                 )
                 print(
-                    "PCA {norm}Compression Loss: {loss:.6g}".format(
+                    "PCA {norm}Compression Loss: {loss:.4{x(loss)}}".format(
                         norm="Normalized " if norm else "",
                         loss=compression_loss(X, U_pca[:, :q_pca], normalized=norm),
                     )
                 )
                 print("\n")
+                ipca_tot_var = np.sum(var)
+                pca_tot_var = np.sum(var_pca)
 
-                print(f"iPCA Total Variance: {np.sum(var):.6g}")
-                print(f"PCA Total Variance: {np.sum(var_pca):.6g}")
+                print(f"iPCA Total Variance: {ipca_tot_var:.4{x(ipca_tot_var)}}")
+                print(f"PCA Total Variance: {pca_tot_var:.4{x(pca_tot_var)}}")
                 print("\n")
 
                 ipca_exp_var = (np.sum(S[:q_pca] ** 2) / (n - 1)) / np.sum(var)
-                print(f"iPCA Explained Variance: {ipca_exp_var:.6g}")
+                print(f"iPCA Explained Variance: {ipca_exp_var:.4{x(ipca_exp_var)}}")
                 pca_exp_var = (np.sum(S_pca[:q_pca] ** 2) / (n - 1)) / np.sum(var_pca)
-                print(f"PCA Explained Variance: {pca_exp_var:.6g}")
+                print(f"PCA Explained Variance: {pca_exp_var:.4{x(pca_exp_var)}}")
                 print("\n")
 
                 print("iPCA Singular Values: \n")
@@ -248,7 +253,10 @@ class FeatureExtractor:
                     np.linalg.norm(mu) * np.linalg.norm(mu_pca)
                 )
 
-                print(f"Normalized Mean Inner Product: {mean_inner_prod:6g}")
+                print(
+                    "Normalized Mean Inner Product: "
+                    + f"{mean_inner_prod:.4{x(mean_inner_prod)}}"
+                )
                 print("\n")
 
                 print("Basis Inner Product: \n")
