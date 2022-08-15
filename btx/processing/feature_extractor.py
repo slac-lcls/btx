@@ -216,7 +216,7 @@ class FeatureExtractor:
                 # calculate compression loss, normalized if given flag
                 norm = True
 
-                ipca_loss = compression_loss(X, U[:, :q_pca])
+                ipca_loss = compression_loss(X, U[:, :q_pca], normalized=norm)
                 print(
                     "iPCA {norm}Compression Loss: {loss:.4{s}}".format(
                         norm="Normalized " if norm else "",
@@ -225,7 +225,7 @@ class FeatureExtractor:
                     )
                 )
 
-                pca_loss = compression_loss(X, U_pca[:, :q_pca])
+                pca_loss = compression_loss(X, U_pca[:, :q_pca], normalized=norm)
                 print(
                     "PCA {norm}Compression Loss: {loss:.4{s}}".format(
                         norm="Normalized " if norm else "", loss=pca_loss, s=x(pca_loss)
@@ -241,6 +241,7 @@ class FeatureExtractor:
 
                 ipca_exp_var = (np.sum(S[:q_pca] ** 2) / (n - 1)) / np.sum(var)
                 print(f"iPCA Explained Variance: {ipca_exp_var:.4{x(ipca_exp_var)}}")
+
                 pca_exp_var = (np.sum(S_pca[:q_pca] ** 2) / (n - 1)) / np.sum(var_pca)
                 print(f"PCA Explained Variance: {pca_exp_var:.4{x(pca_exp_var)}}")
                 print("\n")
