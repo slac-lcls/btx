@@ -211,7 +211,7 @@ class FeatureExtractor:
                 q_pca = min(q, n)
 
                 def x(n):
-                    s = "f" if n > 0 else "g"
+                    s = "f" if n > 1 else "g"
                     return s
 
                 # calculate compression loss, normalized if given flag
@@ -219,8 +219,6 @@ class FeatureExtractor:
                 norm_str = "Normalized " if norm else ""
 
                 ipca_loss = compression_loss(X, U[:, :q_pca], normalized=norm)
-                print(ipca_loss)
-                print(x(ipca_loss))
                 print(f"iPCA {norm_str}Compression Loss: {ipca_loss:.4{x(ipca_loss)}}")
 
                 pca_loss = compression_loss(X, U_pca[:, :q_pca], normalized=norm)
