@@ -6,6 +6,7 @@ from mpi4py import MPI
 
 from time import perf_counter
 
+
 class TaskTimer:
     """
     A context manager to record the duration of managed tasks.
@@ -19,7 +20,7 @@ class TaskTimer:
     task_description : str
         description of current task
     """
-    
+
     def __init__(self, task_durations, task_description):
         """
         Construct all necessary attributes for the TaskTimer context manager.
@@ -31,16 +32,16 @@ class TaskTimer:
         task_description : str
             description of current task
         """
-        self.start_time = 0.
+        self.start_time = 0.0
         self.task_durations = task_durations
         self.task_description = task_description
-    
+
     def __enter__(self):
         """
         Set reference start time.
         """
         self.start_time = perf_counter()
-    
+
     def __exit__(self, *args, **kwargs):
         """
         Mutate duration dict with time interval of current task.
@@ -52,8 +53,8 @@ class TaskTimer:
 
         self.task_durations[self.task_description].append(time_interval)
 
-class IPCA:
 
+class IPCA:
     def __init__(self, d, q, m, split_indices):
 
         self.comm = MPI.COMM_WORLD
@@ -76,7 +77,6 @@ class IPCA:
         self.mu = np.zeros((self.split_counts[self.rank], 1))
         self.total_variance = np.zeros((self.split_counts[self.rank], 1))
 
-
     def distribute_indices(self, split_indices):
         size = self.size
 
@@ -84,58 +84,57 @@ class IPCA:
         split_counts = np.empty(size, dtype=int)
 
         for i in range(len(split_indices) - 1):
-            split_counts[i] = split_indices[i+1] - split_indices[i]
-        
+            split_counts[i] = split_indices[i + 1] - split_indices[i]
+
         return split_counts, start_indices
 
-    
     def parallel_qr(self, A):
         _, x = A.shape
 
         q = self.q
-        m = x-q-1
+        m = x - q - 1
 
-        with TaskTimer(self.task_durations, 'qr - local qr'):
-            q_loc, r_loc = np.linalg.qr(A, mode='reduced')
-        
+        with TaskTimer(self.task_durations, "qr - local qr"):
+            q_loc, r_loc = np.linalg.qr(A, mode="reduced")
+
         self.comm.Barrier()
 
-        with TaskTimer(self.task_durations, 'qr - r_tot gather'):
+        with TaskTimer(self.task_durations, "qr - r_tot gather"):
             if self.rank == 0:
-                r_tot = np.empty((self.size*(q+m+1), q+m+1))
-            else: 
+                r_tot = np.empty((self.size * (q + m + 1), q + m + 1))
+            else:
                 r_tot = None
 
             self.comm.Gather(r_loc, r_tot, root=0)
 
         if self.rank == 0:
-            with TaskTimer(self.task_durations, 'qr - global qr'):
-                q_tot, r_tilde = np.linalg.qr(r_tot, mode='reduced')
-                
-            with TaskTimer(self.task_durations, 'qr - global svd'):
+            with TaskTimer(self.task_durations, "qr - global qr"):
+                q_tot, r_tilde = np.linalg.qr(r_tot, mode="reduced")
+
+            with TaskTimer(self.task_durations, "qr - global svd"):
                 U_tilde, S_tilde, _ = np.linalg.svd(r_tilde)
         else:
-            U_tilde = np.empty((q+m+1, q+m+1))
-            S_tilde = np.empty(q+m+1)
+            U_tilde = np.empty((q + m + 1, q + m + 1))
+            S_tilde = np.empty(q + m + 1)
             q_tot = None
-        
-        self.comm.Barrier()
-    
-        with TaskTimer(self.task_durations, 'qr - scatter q_tot'):
-            q_tot_loc = np.empty((q+m+1, q+m+1))
-            self.comm.Scatter(q_tot, q_tot_loc, root=0)
-        
-        with TaskTimer(self.task_durations, 'qr - local matrix build'):
-            q_fin = q_loc @ q_tot_loc
-        
-        self.comm.Barrier()
-        
-        with TaskTimer(self.task_durations, 'qr - bcast S_tilde'):
-            self.comm.Bcast(S_tilde, root=0)
-        
+
         self.comm.Barrier()
 
-        with TaskTimer(self.task_durations, 'qr - bcast U_tilde'):
+        with TaskTimer(self.task_durations, "qr - scatter q_tot"):
+            q_tot_loc = np.empty((q + m + 1, q + m + 1))
+            self.comm.Scatter(q_tot, q_tot_loc, root=0)
+
+        with TaskTimer(self.task_durations, "qr - local matrix build"):
+            q_fin = q_loc @ q_tot_loc
+
+        self.comm.Barrier()
+
+        with TaskTimer(self.task_durations, "qr - bcast S_tilde"):
+            self.comm.Bcast(S_tilde, root=0)
+
+        self.comm.Barrier()
+
+        with TaskTimer(self.task_durations, "qr - bcast U_tilde"):
             self.comm.Bcast(U_tilde, root=0)
 
         return q_fin, U_tilde, S_tilde
@@ -153,19 +152,45 @@ class IPCA:
             S_tot = self.S
         else:
             U_tot, mu_tot, var_tot, S_tot = None, None, None, None
-        
-        self.comm.Gatherv(self.U.flatten(), [U_tot, self.split_counts*self.q, self.start_indices*self.q, MPI.DOUBLE], root=0)
+
+        self.comm.Gatherv(
+            self.U.flatten(),
+            [
+                U_tot,
+                self.split_counts * self.q,
+                self.start_indices * self.q,
+                MPI.DOUBLE,
+            ],
+            root=0,
+        )
 
         if self.rank == 0:
             U_tot = np.reshape(U_tot, (self.d, self.q))
 
-        self.comm.Gatherv(self.mu, [mu_tot, self.split_counts*self.q, self.start_indices, MPI.DOUBLE], root=0)
-        self.comm.Gatherv(self.total_variance, [var_tot, self.split_counts*self.q, self.start_indices, MPI.DOUBLE], root=0)
+        self.comm.Gatherv(
+            self.mu,
+            [
+                mu_tot,
+                self.split_counts * self.q,
+                self.start_indices,
+                MPI.DOUBLE,
+            ],
+            root=0,
+        )
+        self.comm.Gatherv(
+            self.total_variance,
+            [
+                var_tot,
+                self.split_counts * self.q,
+                self.start_indices,
+                MPI.DOUBLE,
+            ],
+            root=0,
+        )
 
         S_tot = self.S
 
         return U_tot, S_tot, mu_tot, var_tot
-    
 
     def update_model(self, X):
         """
@@ -174,47 +199,55 @@ class IPCA:
         Parameters
         ----------
         X : ndarray, shape (d x m)
-            block of m (d x 1) observations 
+            block of m (d x 1) observations
         """
         _, m = X.shape
         n = self.n
         q = self.q
 
-        print('Rank {r}, factoring {m} sample{s} into {n} sample model...'.format(r=self.rank, m=m, s='s' if m > 1 else '', n=n))
+        print(
+            "Rank {r}, factoring {m} sample{s} into {n} sample model...".format(
+                r=self.rank, m=m, s="s" if m > 1 else "", n=n
+            )
+        )
 
-        with TaskTimer(self.task_durations, 'total update'):
+        with TaskTimer(self.task_durations, "total update"):
 
-            with TaskTimer(self.task_durations, 'update mean and variance'):
+            with TaskTimer(self.task_durations, "update mean and variance"):
                 mu_n = self.mu
                 mu_m, s_m = calculate_sample_mean_and_variance(X)
 
-                self.total_variance = update_sample_variance(self.total_variance, s_m, mu_n, mu_m, n, m)
+                self.total_variance = update_sample_variance(
+                    self.total_variance, s_m, mu_n, mu_m, n, m
+                )
                 self.mu = update_sample_mean(mu_n, mu_m, n, m)
 
-            with TaskTimer(self.task_durations, 'center data and compute augment vector'):
+            with TaskTimer(
+                self.task_durations, "center data and compute augment vector"
+            ):
                 X_centered = X - np.tile(mu_m, m)
                 v_augment = np.sqrt(n * m / (n + m)) * (mu_m - mu_n)
 
                 X_aug = np.hstack((X_centered, v_augment))
 
-            with TaskTimer(self.task_durations, 'first matrix product U@S'):
+            with TaskTimer(self.task_durations, "first matrix product U@S"):
                 us = self.U @ np.diag(self.S)
 
-            with TaskTimer(self.task_durations, 'QR concatenate'):
+            with TaskTimer(self.task_durations, "QR concatenate"):
                 qr_input = np.hstack((us, X_aug))
-            
-            with TaskTimer(self.task_durations, 'parallel QR'):
+
+            with TaskTimer(self.task_durations, "parallel QR"):
                 UB_tilde, U_tilde, S_tilde = self.parallel_qr(qr_input)
 
-            # concatenating first preserves the memory contiguity of U_prime and thus self.U
-            with TaskTimer(self.task_durations, 'compute local U_prime'):
+            # concatenating first preserves the memory contiguity
+            # of U_prime and thus self.U
+            with TaskTimer(self.task_durations, "compute local U_prime"):
                 U_prime = UB_tilde @ U_tilde[:, :q]
 
             self.U = U_prime
             self.S = S_tilde[:q]
 
             self.n += m
-
 
     def initialize_model(self, X):
         """
@@ -225,7 +258,7 @@ class IPCA:
         X : ndarray, shape (d x m)
             set of m (d x 1) observations
         """
-        print(f'Rank {self.rank}, initializing model with {self.q} samples...')
+        print(f"Rank {self.rank}, initializing model with {self.q} samples...")
 
         self.mu, self.total_variance = calculate_sample_mean_and_variance(X)
 
@@ -243,8 +276,10 @@ class IPCA:
                 for key in list(self.task_durations.keys()):
                     interval_mean = np.mean(self.task_durations[key])
 
-                    print(f'Mean per-block compute time of step \'{key}\': {interval_mean:.4g}s')
-
+                    print(
+                        f"Mean per-block compute time of step '{key}': \
+                        {interval_mean:.4g}s"
+                    )
 
     def save_interval_data(self, dir_path=None):
         """
@@ -256,23 +291,35 @@ class IPCA:
             Path to output directory.
         """
         if self.rank == 0:
-            
+
             if dir_path is None:
-                print('Failed to specify output directory.')
+                print("Failed to specify output directory.")
                 return
 
-            file_name = 'task_' + str(self.q) + str(self.d) + str(self.n) + str(self.size) + '.csv'
+            file_name = (
+                "task_"
+                + str(self.q)
+                + str(self.d)
+                + str(self.n)
+                + str(self.size)
+                + ".csv"
+            )
 
-            with open(os.path.join(dir_path, file_name), 'x', newline='', encoding='utf-8') as f:
+            with open(
+                os.path.join(dir_path, file_name),
+                "x",
+                newline="",
+                encoding="utf-8",
+            ) as f:
 
                 if len(self.task_durations):
                     writer = csv.writer(f)
 
-                    writer.writerow(['q', self.q])
-                    writer.writerow(['d', self.d])
-                    writer.writerow(['n', self.n])
-                    writer.writerow(['ranks', self.size])
-                    writer.writerow(['m', self.m])
+                    writer.writerow(["q", self.q])
+                    writer.writerow(["d", self.d])
+                    writer.writerow(["n", self.n])
+                    writer.writerow(["ranks", self.size])
+                    writer.writerow(["m", self.m])
 
                     keys = list(self.task_durations.keys())
                     values = list(self.task_durations.values())
@@ -289,7 +336,7 @@ def calculate_sample_mean_and_variance(imgs):
     Parameters
     ----------
     imgs : ndarray, shape (d x n)
-        horizonally stacked batch of flattened images 
+        horizonally stacked batch of flattened images
 
     Returns
     -------
@@ -301,12 +348,13 @@ def calculate_sample_mean_and_variance(imgs):
     d, m = imgs.shape
 
     mu_m = np.reshape(np.mean(imgs, axis=1), (d, 1))
-    s_m  = np.zeros((d, 1))
+    s_m = np.zeros((d, 1))
 
     if m > 1:
         s_m = np.reshape(np.var(imgs, axis=1, ddof=1), (d, 1))
-    
+
     return mu_m, s_m
+
 
 def update_sample_mean(mu_n, mu_m, n, m):
     """
@@ -335,9 +383,11 @@ def update_sample_mean(mu_n, mu_m, n, m):
 
     return mu_nm
 
+
 def update_sample_variance(s_n, s_m, mu_n, mu_m, n, m):
     """
-    Compute combined sample variance of two blocks of data described by input parameters.
+    Compute combined sample variance of two blocks
+    of data described by input parameters.
 
     Parameters
     ----------
@@ -362,6 +412,8 @@ def update_sample_variance(s_n, s_m, mu_n, mu_m, n, m):
     s_nm = s_m
 
     if n != 0:
-        s_nm = (((n - 1) * s_n + (m - 1) * s_m) + (n*m*(mu_n - mu_m)**2) / (n + m)) / (n + m - 1) 
+        s_nm = (
+            ((n - 1) * s_n + (m - 1) * s_m) + (n * m * (mu_n - mu_m) ** 2) / (n + m)
+        ) / (n + m - 1)
 
     return s_nm
