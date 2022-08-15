@@ -211,8 +211,7 @@ class FeatureExtractor:
                 q_pca = min(q, n)
 
                 def x(n):
-                    s = "f" if n > 1 else "g"
-                    return s
+                    return "f" if np.abs(n) > 1 else "g"
 
                 # calculate compression loss, normalized if given flag
                 norm = True
