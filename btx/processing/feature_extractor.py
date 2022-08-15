@@ -215,22 +215,14 @@ class FeatureExtractor:
 
                 # calculate compression loss, normalized if given flag
                 norm = True
+                norm_str = "Normalized " if norm else ""
 
                 ipca_loss = compression_loss(X, U[:, :q_pca], normalized=norm)
-                print(
-                    "iPCA {norm}Compression Loss: {loss:.4{s}}".format(
-                        norm="Normalized " if norm else "",
-                        loss=ipca_loss,
-                        s=x(ipca_loss),
-                    )
-                )
+                print(f"iPCA {norm_str}Compression Loss: {ipca_loss:.4{x(ipca_loss)}}")
 
                 pca_loss = compression_loss(X, U_pca[:, :q_pca], normalized=norm)
-                print(
-                    "PCA {norm}Compression Loss: {loss:.4{s}}".format(
-                        norm="Normalized " if norm else "", loss=pca_loss, s=x(pca_loss)
-                    )
-                )
+                print(f"PCA {norm}Compression Loss: {pca_loss:.4{x(pca_loss)}}")
+
                 print("\n")
                 ipca_tot_var = np.sum(var)
                 pca_tot_var = np.sum(var_pca)
