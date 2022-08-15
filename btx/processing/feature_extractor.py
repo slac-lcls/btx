@@ -213,27 +213,27 @@ class FeatureExtractor:
                 # calculate compression loss, normalized if given flag
                 norm = True
                 print(
-                    "iPCA {norm}Compression Loss: {loss:.4g}".format(
+                    "iPCA {norm}Compression Loss: {loss:.6g}".format(
                         norm="Normalized " if norm else "",
                         loss=compression_loss(X, U[:, :q_pca], normalized=norm),
                     )
                 )
                 print(
-                    "PCA {norm}Compression Loss: {loss:.4g}".format(
+                    "PCA {norm}Compression Loss: {loss:.6g}".format(
                         norm="Normalized " if norm else "",
                         loss=compression_loss(X, U_pca[:, :q_pca], normalized=norm),
                     )
                 )
                 print("\n")
 
-                print(f"iPCA Total Variance: {np.sum(var):.4g}")
-                print(f"PCA Total Variance: {np.sum(var_pca):.4g}")
+                print(f"iPCA Total Variance: {np.sum(var):.6g}")
+                print(f"PCA Total Variance: {np.sum(var_pca):.6g}")
                 print("\n")
 
                 ipca_exp_var = (np.sum(S[:q_pca] ** 2) / (n - 1)) / np.sum(var)
-                print(f"iPCA Explained Variance: {ipca_exp_var:.4g}")
+                print(f"iPCA Explained Variance: {ipca_exp_var:.6g}")
                 pca_exp_var = (np.sum(S_pca[:q_pca] ** 2) / (n - 1)) / np.sum(var_pca)
-                print(f"PCA Explained Variance: {pca_exp_var:.4g}")
+                print(f"PCA Explained Variance: {pca_exp_var:.6g}")
                 print("\n")
 
                 print("iPCA Singular Values: \n")
@@ -248,7 +248,7 @@ class FeatureExtractor:
                     np.linalg.norm(mu) * np.linalg.norm(mu_pca)
                 )
 
-                print(f"Normalized Mean Inner Product: {mean_inner_prod:.4g}")
+                print(f"Normalized Mean Inner Product: {mean_inner_prod:6g}")
                 print("\n")
 
                 print("Basis Inner Product: \n")
