@@ -92,8 +92,8 @@ class FeatureExtractor:
                 num_per_rank += 1
             split_indices[r] = num_per_rank
 
-        final_indices = np.cumsum(split_indices)
-        split_indices = np.append(np.array([0]), final_indices)
+        trailing_indices = np.cumsum(split_indices)
+        split_indices = np.append(np.array([0]), trailing_indices).astype(int)
 
         self.split_indices = split_indices
 
@@ -125,8 +125,7 @@ class FeatureExtractor:
         end_index = d if fetch_all_features else self.split_indices[rank + 1]
 
         # may have to rewrite eventually when number of images becomes large,
-        # i.e. streamed setting
-        # either that or downsample aggressively
+        # i.e. streamed setting, either that or downsample aggressively
         imgs = self.psi.get_images(n, assemble=False)
 
         if self.downsample:
