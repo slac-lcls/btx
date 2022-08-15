@@ -218,6 +218,8 @@ class FeatureExtractor:
                 norm_str = "Normalized " if norm else ""
 
                 ipca_loss = compression_loss(X, U[:, :q_pca], normalized=norm)
+                print(ipca_loss)
+                print(x(ipca_loss))
                 print(f"iPCA {norm_str}Compression Loss: {ipca_loss:.4{x(ipca_loss)}}")
 
                 pca_loss = compression_loss(X, U_pca[:, :q_pca], normalized=norm)
