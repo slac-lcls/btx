@@ -231,6 +231,9 @@ class FeatureExtractor:
                 ipca_tot_var = np.sum(var)
                 pca_tot_var = np.sum(var_pca)
 
+                print(ipca_tot_var)
+                print(pca_tot_var)
+
                 print(f"iPCA Total Variance: {ipca_tot_var:.4{x(ipca_tot_var)}}")
                 print(f"PCA Total Variance: {pca_tot_var:.4{x(pca_tot_var)}}")
                 print("\n")
