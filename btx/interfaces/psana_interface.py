@@ -272,6 +272,33 @@ class PsanaInterface:
 
 #### Miscellaneous functions ####
 
+# def retrieve_pixel_index_map(geom):
+#     """
+#     Retrieve a pixel index map that specifies the relative arrangement of
+#     pixels on an LCLS detector.
+    
+#     Parameters
+#     ----------
+#     geom : string or GeometryAccess Object
+#         if str, full path to a psana *-end.data file
+#         else, a PSCalib.GeometryAccess.GeometryAccess object
+    
+#     Returns
+#     -------
+#     pixel_index_map : numpy.ndarray, 4d
+#         pixel coordinates, shape (n_panels, fs_panel_shape, ss_panel_shape, 2)
+#     """
+#     if type(geom) == str:
+#         geom = GeometryAccess(geom)
+
+#     temp_index = [np.asarray(t) for t in geom.get_pixel_coord_indexes()]
+#     pixel_index_map = np.zeros((np.array(temp_index).shape[2:]) + (2,))
+#     pixel_index_map[:,:,:,0] = temp_index[0][0]
+#     pixel_index_map[:,:,:,1] = temp_index[1][0]
+    
+#     return pixel_index_map.astype(np.int64)
+
+
 def retrieve_pixel_index_map(geom):
     """
     Retrieve a pixel index map that specifies the relative arrangement of
@@ -292,9 +319,11 @@ def retrieve_pixel_index_map(geom):
         geom = GeometryAccess(geom)
 
     temp_index = [np.asarray(t) for t in geom.get_pixel_coord_indexes()]
-    pixel_index_map = np.zeros((np.array(temp_index).shape[2:]) + (2,))
-    pixel_index_map[:,:,:,0] = temp_index[0][0]
-    pixel_index_map[:,:,:,1] = temp_index[1][0]
+    panel_num = np.prod(temp_index[0].shape[:-2])
+    shape = (panel_num, temp_index[0].shape[-2], temp_index[0].shape[-1])
+    pixel_index_map = np.zeros(shape + (2,))
+    for n in range(2):
+        pixel_index_map[..., n] = temp_index[n].reshape(shape)
     
     return pixel_index_map.astype(np.int64)
 
