@@ -371,6 +371,24 @@ def bin_data(arr, bin_factor, det_shape=None):
     return binned_arr
 
 
+def bin_pixel_index_map(arr, bin_factor):
+    """
+    Bin pixel_index_map by bin factor.
+    Retrieved from
+    https://github.com/apeck12/cmtip/blob/main/cmtip/prep_data.py
+    
+    :param arr: pixel_index_map of shape (n_panels, panel_shape_x, panel_shape_y, 2)
+    :param bin_factor: how may fold to bin arr by
+    :return binned_arr: binned pixel_index_map of same dimensions as arr
+    """
+    arr = np.moveaxis(arr, -1, 0)
+    arr = np.minimum(arr[..., ::bin_factor, :], arr[..., 1::bin_factor, :])
+    arr = np.minimum(arr[..., ::bin_factor], arr[..., 1::bin_factor])
+    arr = arr // bin_factor
+    
+    return np.moveaxis(arr, 0, -1)
+
+
 # For command line use #
 
 
