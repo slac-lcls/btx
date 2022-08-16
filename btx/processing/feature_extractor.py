@@ -27,6 +27,7 @@ class FeatureExtractor:
         init_with_pca=False,
         benchmark_mode=False,
         downsample=False,
+        bin_factor=16,
         output_dir="",
     ):
 
@@ -47,9 +48,14 @@ class FeatureExtractor:
         self.d = np.prod(det_shape)
 
         if self.downsample:
-            # need a better way to do this, rounded closest cf?
-            self.bin_factor = 16
-            self.d = int(self.d / self.bin_factor**2)
+
+            self.bin_factor = bin_factor
+
+            if det_shape[-1] % self.bin_factor or det_shape[-2] % self.bin_factor:
+                print("Invalid bin factor, toggled off downsampling.")
+                self.downsample = False
+            else:
+                self.d = int(self.d / self.bin_factor**2)
 
         # ensure that requested number of images is valid
         self.num_images = num_images
@@ -445,6 +451,12 @@ def parse_input():
     )
     parser.add_argument(
         "--downsample", help="Downsample.", required=False, action="store_true"
+    )
+    parser.add_argument(
+        "--bin_factor",
+        help="Bin factor if using downsizing.",
+        required=False,
+        type=int,
     )
 
     return parser.parse_args()
