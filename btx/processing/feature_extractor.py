@@ -48,6 +48,9 @@ class FeatureExtractor:
         self.d = np.prod(det_shape)
 
         self.pc_data = []
+        self.sum_data = []
+        self.avg_data = []
+        self.max_data = []
 
         if self.downsample:
 
@@ -179,9 +182,27 @@ class FeatureExtractor:
             self.ipca.update_model(img_block)
 
             # temporary method for pc retrieval, will improve later
-            cl = self.ipca.U.T @ (img_block - np.tile(self.ipca.mu, (1, block_size)))
+
+            cb = img_block - np.tile(self.ipca.mu, (1, block_size))
+            cl = self.ipca.U.T @ cb
             self.pc_data = (
                 np.concatenate((self.pc_data, cl), axis=1) if len(self.pc_data) else cl
+            )
+
+            self.sum_data = (
+                np.concatenate((self.sum_data, np.sum(cb, axis=1)))
+                if len(self.sum_data)
+                else np.sum(cb, axis=1)
+            )
+            self.max_data = (
+                np.concatenate((self.max_data, np.max(cb, axis=1)))
+                if len(self.max_data)
+                else np.max(cb, axis=1)
+            )
+            self.avg_data = (
+                np.concatenate((self.avg_data, np.average(cb, axis=1)))
+                if len(self.avg_data)
+                else np.average(cb, axis=1)
             )
 
         if self.benchmark_mode:
