@@ -141,12 +141,6 @@ class FeatureExtractor:
 
         formatted_imgs = np.reshape(imgs, (n, d)).T
 
-        # temporary method for pc retrieval, will improve later
-        cl = self.ipca.U.T @ (formatted_imgs - np.tile(self.ipca.mu, (1, n)))
-        self.pc_data = (
-            np.concatenate((self.pc_data, cl), axis=1) if len(self.pc_data) else cl
-        )
-
         return formatted_imgs[start_index:end_index, :]
 
     def run_ipca(self):
@@ -183,6 +177,12 @@ class FeatureExtractor:
         for block_size in block_sizes:
             img_block = self.fetch_formatted_images(block_size)
             self.ipca.update_model(img_block)
+
+            # temporary method for pc retrieval, will improve later
+            cl = self.ipca.U.T @ (img_block - np.tile(self.ipca.mu, (1, block_size)))
+            self.pc_data = (
+                np.concatenate((self.pc_data, cl), axis=1) if len(self.pc_data) else cl
+            )
 
         if self.benchmark_mode:
             self.ipca.save_interval_data(self.output_dir)
