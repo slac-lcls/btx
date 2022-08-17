@@ -141,8 +141,10 @@ class FeatureExtractor:
 
         formatted_imgs = np.reshape(imgs, (n, d)).T
 
-        cl = self.ipca.U[:, : self.q].T @ formatted_imgs
-        self.pc_data = np.concatenate((self.pc_data, cl), axis=1) if len(self.pc_data) else cl
+        cl = self.ipca.U.T @ (formatted_imgs - np.tile(self.ipca.mu, (n, 1)))
+        self.pc_data = (
+            np.concatenate((self.pc_data, cl), axis=1) if len(self.pc_data) else cl
+        )
 
         return formatted_imgs[start_index:end_index, :]
 
