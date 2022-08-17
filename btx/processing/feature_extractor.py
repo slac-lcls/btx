@@ -141,7 +141,8 @@ class FeatureExtractor:
 
         formatted_imgs = np.reshape(imgs, (n, d)).T
 
-        cl = self.ipca.U.T @ (formatted_imgs - np.tile(self.ipca.mu, (n, 1)))
+        # temporary method for pc retrieval, will improve later
+        cl = self.ipca.U.T @ (formatted_imgs - np.tile(self.ipca.mu, (1, n)))
         self.pc_data = (
             np.concatenate((self.pc_data, cl), axis=1) if len(self.pc_data) else cl
         )
