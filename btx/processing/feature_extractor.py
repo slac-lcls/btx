@@ -190,17 +190,17 @@ class FeatureExtractor:
             )
 
             self.sum_data = (
-                np.concatenate((self.sum_data, np.sum(cb, axis=0)), axis=1)
+                np.concatenate((self.sum_data, np.sum(cb, axis=0)))
                 if len(self.sum_data)
                 else np.sum(cb, axis=0)
             )
             self.max_data = (
-                np.concatenate((self.max_data, np.max(cb, axis=0)), axis=1)
+                np.concatenate((self.max_data, np.max(cb, axis=0)))
                 if len(self.max_data)
                 else np.max(cb, axis=0)
             )
             self.avg_data = (
-                np.concatenate((self.avg_data, np.average(cb, axis=0)), axis=1)
+                np.concatenate((self.avg_data, np.average(cb, axis=0)))
                 if len(self.avg_data)
                 else np.average(cb, axis=0)
             )
