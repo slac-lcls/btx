@@ -1,4 +1,5 @@
 import argparse
+from bz2 import compress
 
 import numpy as np
 from mpi4py import MPI
@@ -30,7 +31,6 @@ class FeatureExtractor:
         bin_factor=16,
         output_dir="",
     ):
-
         self.comm = MPI.COMM_WORLD
         self.rank = self.comm.Get_rank()
         self.size = self.comm.Get_size()
@@ -46,6 +46,8 @@ class FeatureExtractor:
 
         det_shape = self.psi.det.shape()
         self.d = np.prod(det_shape)
+
+        self.pc_data = []
 
         if self.downsample:
 
@@ -139,6 +141,9 @@ class FeatureExtractor:
 
         formatted_imgs = np.reshape(imgs, (n, d)).T
 
+        cl = self.ipca.U[:, : self.q].T @ formatted_imgs
+        self.pc_data = np.hstack(self.pc_data, cl) if self.pc_data.size else cl
+
         return formatted_imgs[start_index:end_index, :]
 
     def run_ipca(self):
@@ -164,6 +169,7 @@ class FeatureExtractor:
             parsed_images = q
 
         # divide remaning number of images into blocks
+        # will become redundant in a streaming setting, need to change
         rem_imgs = num_images - parsed_images
         block_sizes = np.array(
             [m] * np.floor(rem_imgs / m).astype(int)
