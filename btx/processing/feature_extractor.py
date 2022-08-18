@@ -61,18 +61,25 @@ class FeatureExtractor:
             else:
                 self.d = int(self.d / self.bin_factor**2)
 
-        self.n, self.q, self.m = self.set_ipca_params(num_images, num_components, block_size)
+        self.n, self.q, self.m = self.set_ipca_params(
+            num_images, num_components, block_size
+        )
 
     def set_ipca_params(self, num_images, num_components, block_size):
         """_summary_
 
         Parameters
         ----------
-        n : _type_
+        num_images : _type_
             _description_
-        q : _type_
+        num_components : _type_
             _description_
-        m : _type_
+        block_size : _type_
+            _description_
+
+        Returns
+        -------
+        _type_
             _description_
         """
         max_events = self.psi.max_events
@@ -82,29 +89,14 @@ class FeatureExtractor:
         q = num_components
         m = block_size
 
-        # ensure that requested number of images is valid
-        if n > max_events:
-            n = max_events
-            print(
-                f"Requested number of images too large,\
-                    reduced to {n}"
-            )
         if benchmark:
-            self.num_images = min(120, max_events)
-            self.m = 20
+            n = min(120, max_events)
+            m = 20
+            return n, q, m
 
-        else:
-            # ensure that requested dimension is valid
-            if q > n:
-                q = n
-                print(
-                    f"Requested number of components too large,\
-                        reduced to {q}"
-                )
-            # ensure block size is valid
-            if m > n:
-                m = n
-                print(f"Requested block size too large, reduced to {m}")
+        n = min(n, max_events)
+        q = min(q, n)
+        m = min(m, n)
 
         return n, q, m
 
