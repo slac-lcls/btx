@@ -188,17 +188,17 @@ class FeatureExtractor:
         # update model with remaining blocks
         for block_size in block_sizes:
             img_block = self.fetch_formatted_images(block_size)
-            self.ipca.update_model(img_block)
 
-            self.gather_interim_data(img_block)
+            self.gather_interim_data(img_block, block_size)
+            self.ipca.update_model(img_block)
 
         if self.benchmark_mode:
             self.ipca.save_interval_data(self.output_dir)
 
-    def gather_interim_data(self, img_block):
+    def gather_interim_data(self, img_block, block_size):
         # temporary method for interim data retrieval, will improve later
 
-        cb = img_block - self.ipca.sample_means
+        cb = img_block - np.tile(self.ipca.mu, (1, block_size))
         cl = self.ipca.U.T @ cb
 
         resid = cb - self.ipca.U @ cl

@@ -79,8 +79,6 @@ class IPCA:
         self.mu = np.zeros((self.split_counts[self.rank], 1))
         self.total_variance = np.zeros((self.split_counts[self.rank], 1))
 
-        self.sample_means = np.array([])
-        self.sample_vars = np.array([])
 
     def distribute_indices(self, split_indices):
         size = self.size
@@ -214,43 +212,43 @@ class IPCA:
 
         return U_tot, S_tot, mu_tot, var_tot
 
-    def update_mean_and_variance(self, X):
-        d, m = X.shape
+    # def update_mean_and_variance(self, X):
+    #     d, m = X.shape
 
-        self.sample_means = np.array([])
-        self.sample_vars = np.array([])
+    #     self.sample_means = np.array([])
+    #     self.sample_vars = np.array([])
 
-        # total mean and variance of thus seen data
-        s_ni = self.total_variance
-        mu_ni = self.mu
+    #     # total mean and variance of thus seen data
+    #     s_ni = self.total_variance
+    #     mu_ni = self.mu
 
-        mu_m = np.zeros((d, 1))
+    #     mu_m = np.zeros((d, 1))
 
-        for i in range(m):
-            mu, s = calculate_sample_mean_and_variance(X[:, i : i + 1])
+    #     for i in range(m):
+    #         mu, s = calculate_sample_mean_and_variance(X[:, i : i + 1])
 
-            self.sample_means = (
-                np.concatenate((self.sample_means, mu_ni), axis=1)
-                if self.sample_means.size
-                else mu_ni
-            )
-            self.sample_vars = (
-                np.concatenate((self.sample_vars, s_ni), axis=1)
-                if self.sample_vars.size
-                else s_ni
-            )
+    #         self.sample_means = (
+    #             np.concatenate((self.sample_means, mu_ni), axis=1)
+    #             if self.sample_means.size
+    #             else mu_ni
+    #         )
+    #         self.sample_vars = (
+    #             np.concatenate((self.sample_vars, s_ni), axis=1)
+    #             if self.sample_vars.size
+    #             else s_ni
+    #         )
 
-            mu_m = update_sample_mean(mu_m, mu, i, 1)
+    #         mu_m = update_sample_mean(mu_m, mu, i, 1)
 
-            s_ni = update_sample_variance(s_ni, s, mu_ni, mu, self.n + i, 1)
-            mu_ni = update_sample_mean(mu_ni, mu, self.n + i, 1)
+    #         s_ni = update_sample_variance(s_ni, s, mu_ni, mu, self.n + i, 1)
+    #         mu_ni = update_sample_mean(mu_ni, mu, self.n + i, 1)
 
-        mu_n = self.mu
+    #     mu_n = self.mu
 
-        self.mu = mu_ni
-        self.total_variance = s_ni
+    #     self.mu = mu_ni
+    #     self.total_variance = s_ni
 
-        return mu_n, mu_m
+    #     return mu_n, mu_m
 
     def update_model(self, X):
         """
@@ -279,15 +277,15 @@ class IPCA:
         with TaskTimer(self.task_durations, "total update"):
 
             with TaskTimer(self.task_durations, "update mean and variance"):
-                # mu_n = self.mu
-                # mu_m, s_m = calculate_sample_mean_and_variance(X)
+                mu_n = self.mu
+                mu_m, s_m = calculate_sample_mean_and_variance(X)
 
-                # self.total_variance = update_sample_variance(
-                #     self.total_variance, s_m, mu_n, mu_m, n, m
-                # )
-                # self.mu = update_sample_mean(mu_n, mu_m, n, m)
+                self.total_variance = update_sample_variance(
+                    self.total_variance, s_m, mu_n, mu_m, n, m
+                )
+                self.mu = update_sample_mean(mu_n, mu_m, n, m)
 
-                mu_n, mu_m = self.update_mean_and_variance(X)
+                # mu_n, mu_m = self.update_mean_and_variance(X)
 
             with TaskTimer(
                 self.task_durations, "center data and compute augment vector"
