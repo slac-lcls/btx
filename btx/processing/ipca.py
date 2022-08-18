@@ -233,6 +233,9 @@ class IPCA:
             self.sample_means.append(mu_n)
             self.sample_vars.append(s_n)
 
+        self.mu = mu_n
+        self.total_variance = s_n
+
         return mu_n, mu_m
 
     def update_model(self, X):

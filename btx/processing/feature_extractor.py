@@ -195,8 +195,11 @@ class FeatureExtractor:
         if self.benchmark_mode:
             self.ipca.save_interval_data(self.output_dir)
 
+    def demean_data(self):
+        return
+
     def gather_interim_data(self, img_block, block_size):
-        # temporary method for pc retrieval, will improve later
+        # temporary method for interim data retrieval, will improve later
 
         cb = img_block - np.tile(self.ipca.mu, (1, block_size))
         cl = self.ipca.U.T @ cb
@@ -273,7 +276,7 @@ class FeatureExtractor:
                 print(f"iPCA {norm_str}Compression Loss: {ipca_loss}")
 
                 pca_loss = compression_loss(X, U_pca[:, :q_pca], normalized=norm)
-                print(f"PCA {norm}Compression Loss: {pca_loss}")
+                print(f"PCA {norm_str}Compression Loss: {pca_loss}")
 
                 print("\n")
                 ipca_tot_var = np.sum(var)
