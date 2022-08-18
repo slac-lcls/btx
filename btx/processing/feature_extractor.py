@@ -199,12 +199,17 @@ class FeatureExtractor:
         # temporary method for interim data retrieval, will improve later
 
         cb = img_block - np.tile(self.ipca.mu, (1, block_size))
-        cl = self.ipca.U.T @ cb
 
-        resid = cb - self.ipca.U @ cl
+        pcs = self.ipca.U.T @ cb
+        cl = np.linalg.norm(cb - self.ipca.U @ pcs, axis=1) ** 2
+
+        print(cl.shape)
+
         self.pc_data = (
-            np.concatenate((self.pc_data, cl), axis=1) if len(self.pc_data) else cl
+            np.concatenate((self.pc_data, pcs), axis=1) if len(self.pc_data) else pcs
         )
+
+        self.cl_data = {np.concatenate((self.cl_data, cl)) if len(self.cl_data) else cl}
 
         self.sum_data = (
             np.concatenate((self.sum_data, np.sum(cb, axis=0)))
@@ -220,11 +225,6 @@ class FeatureExtractor:
             np.concatenate((self.avg_data, np.average(cb, axis=0)))
             if len(self.avg_data)
             else np.average(cb, axis=0)
-        )
-        self.stdev_data = (
-            np.concatenate((self.stdev_data, np.std(resid, axis=0)))
-            if len(self.stdev_data)
-            else np.std(resid, axis=0)
         )
 
     def verify_model_accuracy(self):

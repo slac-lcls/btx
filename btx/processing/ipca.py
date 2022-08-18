@@ -79,7 +79,6 @@ class IPCA:
         self.mu = np.zeros((self.split_counts[self.rank], 1))
         self.total_variance = np.zeros((self.split_counts[self.rank], 1))
 
-
     def distribute_indices(self, split_indices):
         size = self.size
 
