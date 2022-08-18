@@ -242,7 +242,7 @@ class FeatureExtractor:
         if self.rank == 0:
             # store current event index from self.psi and reset
             event_index = self.psi.counter
-            self.psi.counter = 0
+            self.psi.counter = event_index - n
 
             try:
                 print("Verifying Model Accuracy\n------------------------\n")
