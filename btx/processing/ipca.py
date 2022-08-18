@@ -217,24 +217,27 @@ class IPCA:
     def update_mean_and_variance(self, X):
         d, m = X.shape
 
-        s_n = self.total_variance
+        # total mean and variance of thus seen data
+        s_ni = self.total_variance
+        mu_ni = self.mu
 
-        mu_n = self.mu
         mu_m = np.zeros((d, 1))
 
         for i in range(m):
             mu, s = calculate_sample_mean_and_variance(X[:, i : i + 1])
 
             mu_m = update_sample_mean(mu_m, mu, i, 1)
-            mu_n = update_sample_mean(mu_n, mu, self.n + i, 1)
+            mu_ni = update_sample_mean(mu_ni, mu, self.n + i, 1)
 
-            s_n = update_sample_variance(s_n, s, self.mu, mu, self.n + i, 1)
+            s_ni = update_sample_variance(s_ni, s, self.mu, mu, self.n + i, 1)
 
-            self.sample_means.append(mu_n)
-            self.sample_vars.append(s_n)
+            self.sample_means.append(mu_ni)
+            self.sample_vars.append(s_ni)
 
-        self.mu = mu_n
-        self.total_variance = s_n
+        mu_n = self.mu
+
+        self.mu = mu_ni
+        self.total_variance = s_ni
 
         return mu_n, mu_m
 
