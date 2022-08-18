@@ -210,7 +210,7 @@ class FeatureExtractor:
             np.concatenate((self.pc_data, pcs), axis=1) if len(self.pc_data) else pcs
         )
 
-        self.cl_data = {np.concatenate((self.cl_data, cl)) if len(self.cl_data) else cl}
+        self.cl_data = np.concatenate((self.cl_data, cl)) if len(self.cl_data) else cl
 
         self.sum_data = (
             np.concatenate((self.sum_data, np.sum(cb, axis=0)))
