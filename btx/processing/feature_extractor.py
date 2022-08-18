@@ -190,18 +190,16 @@ class FeatureExtractor:
             img_block = self.fetch_formatted_images(block_size)
             self.ipca.update_model(img_block)
 
-            self.gather_interim_data(img_block, block_size)
+            self.gather_interim_data(img_block)
 
         if self.benchmark_mode:
             self.ipca.save_interval_data(self.output_dir)
 
-    def demean_data(self):
-        return
 
-    def gather_interim_data(self, img_block, block_size):
+    def gather_interim_data(self, img_block):
         # temporary method for interim data retrieval, will improve later
 
-        cb = img_block - np.tile(self.ipca.mu, (1, block_size))
+        cb = img_block - self.ipca.sample_means
         cl = self.ipca.U.T @ cb
 
         resid = cb - self.ipca.U @ cl

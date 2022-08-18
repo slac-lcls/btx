@@ -79,8 +79,8 @@ class IPCA:
         self.mu = np.zeros((self.split_counts[self.rank], 1))
         self.total_variance = np.zeros((self.split_counts[self.rank], 1))
 
-        self.sample_means = []
-        self.sample_vars = []
+        self.sample_means = np.array([])
+        self.sample_vars = np.array([])
 
     def distribute_indices(self, split_indices):
         size = self.size
@@ -217,6 +217,9 @@ class IPCA:
     def update_mean_and_variance(self, X):
         d, m = X.shape
 
+        self.sample_means = np.array([])
+        self.sample_vars = np.array([])
+
         # total mean and variance of thus seen data
         s_ni = self.total_variance
         mu_ni = self.mu
@@ -226,8 +229,8 @@ class IPCA:
         for i in range(m):
             mu, s = calculate_sample_mean_and_variance(X[:, i : i + 1])
 
-            self.sample_means.append(mu_ni)
-            self.sample_vars.append(s_ni)
+            self.sample_means = np.concatenate((self.sample_means, mu), axis=1) if self.sample_means.size else mu
+            self.sample_vars = np.concatenate((self.sample_vars, mu), axis=1) if self.sample_vars.size else s
 
             mu_m = update_sample_mean(mu_m, mu, i, 1)
 
@@ -235,9 +238,6 @@ class IPCA:
             mu_ni = update_sample_mean(mu_ni, mu, self.n + i, 1)
 
         mu_n = self.mu
-
-        print(np.allclose(mu_m, calculate_sample_mean_and_variance(X)[0]))
-        print(np.allclose(s_ni, calculate_sample_mean_and_variance(X)[1]))
 
         self.mu = mu_ni
         self.total_variance = s_ni
