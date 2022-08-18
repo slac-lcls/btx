@@ -230,14 +230,14 @@ class IPCA:
             mu, s = calculate_sample_mean_and_variance(X[:, i : i + 1])
 
             self.sample_means = (
-                np.concatenate((self.sample_means, mu), axis=1)
+                np.concatenate((self.sample_means, mu_ni), axis=1)
                 if self.sample_means.size
-                else mu
+                else mu_ni
             )
             self.sample_vars = (
-                np.concatenate((self.sample_vars, s), axis=1)
+                np.concatenate((self.sample_vars, s_ni), axis=1)
                 if self.sample_vars.size
-                else s
+                else s_ni
             )
 
             mu_m = update_sample_mean(mu_m, mu, i, 1)
