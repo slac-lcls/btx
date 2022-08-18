@@ -195,11 +195,12 @@ class FeatureExtractor:
         if self.benchmark_mode:
             self.ipca.save_interval_data(self.output_dir)
 
-
     def gather_interim_data(self, img_block):
         # temporary method for interim data retrieval, will improve later
 
         cb = img_block - self.ipca.sample_means
+        print(cb)
+        print(cb.shape)
         cl = self.ipca.U.T @ cb
 
         resid = cb - self.ipca.U @ cl
