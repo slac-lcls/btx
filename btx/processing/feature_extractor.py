@@ -202,7 +202,7 @@ class FeatureExtractor:
         cb = img_block - np.tile(self.ipca.mu, (1, block_size))
 
         pcs = self.ipca.U.T @ cb
-        cl = np.linalg.norm(cb - self.ipca.U @ pcs, axis=1) ** 2
+        cl = np.linalg.norm(cb - self.ipca.U @ pcs, axis=0) ** 2
 
         print(cl.shape)
 
