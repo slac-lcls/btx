@@ -55,6 +55,7 @@ class FeatureExtractor:
                 self.d = int(self.d / self.bin_factor**2)
 
         self.pc_data = []
+        self.cl_data = []
         self.sum_data = []
         self.avg_data = []
         self.max_data = []
