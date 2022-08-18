@@ -53,7 +53,6 @@ class FeatureExtractor:
         self.max_data = []
 
         if self.downsample:
-
             self.bin_factor = bin_factor
 
             if det_shape[-1] % self.bin_factor or det_shape[-2] % self.bin_factor:
@@ -62,34 +61,52 @@ class FeatureExtractor:
             else:
                 self.d = int(self.d / self.bin_factor**2)
 
+        self.n, self.q, self.m = self.set_ipca_params(num_images, num_components, block_size)
+
+    def set_ipca_params(self, num_images, num_components, block_size):
+        """_summary_
+
+        Parameters
+        ----------
+        n : _type_
+            _description_
+        q : _type_
+            _description_
+        m : _type_
+            _description_
+        """
+        max_events = self.psi.max_events
+        benchmark = self.benchmark_mode
+
+        n = num_images
+        q = num_components
+        m = block_size
+
         # ensure that requested number of images is valid
-        self.num_images = num_images
-        if self.num_images > self.psi.max_events:
-            self.num_images = self.psi.max_events
+        if n > max_events:
+            n = max_events
             print(
                 f"Requested number of images too large,\
-                    reduced to {self.num_images}"
+                    reduced to {n}"
             )
-
-        if self.benchmark_mode:
-            self.num_images = min(120, self.psi.max_events)
-            self.q = num_components
+        if benchmark:
+            self.num_images = min(120, max_events)
             self.m = 20
+
         else:
             # ensure that requested dimension is valid
-            self.q = num_components
-            if self.q > self.num_images:
-                self.q = self.num_images
+            if q > n:
+                q = n
                 print(
                     f"Requested number of components too large,\
-                        reduced to {self.q}"
+                        reduced to {q}"
                 )
-
             # ensure block size is valid
-            self.m = block_size
-            if self.m > self.num_images:
-                self.m = self.num_images
-                print(f"Requested block size too large, reduced to {self.m}")
+            if m > n:
+                m = n
+                print(f"Requested block size too large, reduced to {m}")
+
+        return n, q, m
 
     def distribute_indices(self):
         d = self.d
