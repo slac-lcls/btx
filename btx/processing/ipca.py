@@ -226,18 +226,18 @@ class IPCA:
         for i in range(m):
             mu, s = calculate_sample_mean_and_variance(X[:, i : i + 1])
 
-            print(mu - X[:, i : i + 1])
-            print(s)
-
             self.sample_means.append(mu_ni)
             self.sample_vars.append(s_ni)
 
             mu_m = update_sample_mean(mu_m, mu, i, 1)
             mu_ni = update_sample_mean(mu_ni, mu, self.n + i, 1)
 
-            s_ni = update_sample_variance(s_ni, s, self.mu, mu, self.n + i, 1)
+            s_ni = update_sample_variance(s_ni, s, mu_ni, mu, self.n + i, 1)
 
         mu_n = self.mu
+
+        print(np.allclose(mu_m, calculate_sample_mean_and_variance(X)[0]))
+        print(np.allclose(s_ni, calculate_sample_mean_and_variance(X)[1]))
 
         self.mu = mu_ni
         self.total_variance = s_ni
