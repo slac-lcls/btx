@@ -199,12 +199,12 @@ class FeatureExtractor:
     def gather_interim_data(self, img_block, block_size):
         # temporary method for interim data retrieval, will improve later
 
+        q = 7
+
         cb = img_block - np.tile(self.ipca.mu, (1, block_size))
 
-        pcs = self.ipca.U.T @ cb
-        cl = np.linalg.norm(cb - self.ipca.U @ pcs, axis=0) ** 2
-
-        print(cl.shape)
+        pcs = self.ipca.U[:, :q].T @ cb
+        cl = np.linalg.norm(cb - self.ipca.U[:, :q] @ pcs, axis=0) ** 2
 
         self.pc_data = (
             np.concatenate((self.pc_data, pcs), axis=1) if len(self.pc_data) else pcs
