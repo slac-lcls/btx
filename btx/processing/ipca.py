@@ -226,13 +226,13 @@ class IPCA:
         for i in range(m):
             mu, s = calculate_sample_mean_and_variance(X[:, i : i + 1])
 
+            self.sample_means.append(mu_ni)
+            self.sample_vars.append(s_ni)
+
             mu_m = update_sample_mean(mu_m, mu, i, 1)
             mu_ni = update_sample_mean(mu_ni, mu, self.n + i, 1)
 
             s_ni = update_sample_variance(s_ni, s, self.mu, mu, self.n + i, 1)
-
-            self.sample_means.append(mu_ni)
-            self.sample_vars.append(s_ni)
 
         mu_n = self.mu
 
