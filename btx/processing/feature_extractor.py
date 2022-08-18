@@ -37,8 +37,6 @@ class FeatureExtractor:
 
         self.psi = PsanaInterface(exp=exp, run=run, det_type=det_type)
 
-        self.reduced_indices = np.array([])
-
         self.init_with_pca = init_with_pca
         self.benchmark_mode = benchmark_mode
         self.output_dir = output_dir
@@ -46,11 +44,6 @@ class FeatureExtractor:
 
         det_shape = self.psi.det.shape()
         self.d = np.prod(det_shape)
-
-        self.pc_data = []
-        self.sum_data = []
-        self.avg_data = []
-        self.max_data = []
 
         if self.downsample:
             self.bin_factor = bin_factor
@@ -60,6 +53,12 @@ class FeatureExtractor:
                 self.downsample = False
             else:
                 self.d = int(self.d / self.bin_factor**2)
+
+        self.pc_data = []
+        self.sum_data = []
+        self.avg_data = []
+        self.max_data = []
+        self.stdev_data = []
 
         self.num_images, self.q, self.m = self.set_ipca_params(
             num_images, num_components, block_size
@@ -195,6 +194,8 @@ class FeatureExtractor:
 
             cb = img_block - np.tile(self.ipca.mu, (1, block_size))
             cl = self.ipca.U.T @ cb
+
+            resid = cb - self.ipca.U @ cl
             self.pc_data = (
                 np.concatenate((self.pc_data, cl), axis=1) if len(self.pc_data) else cl
             )
@@ -213,6 +214,11 @@ class FeatureExtractor:
                 np.concatenate((self.avg_data, np.average(cb, axis=0)))
                 if len(self.avg_data)
                 else np.average(cb, axis=0)
+            )
+            self.stdev_data = (
+                np.concatenate((self.stdev_data, np.std(resid, axis=0)))
+                if len(self.stdev_data)
+                else np.std(resid, axis=0)
             )
 
         if self.benchmark_mode:
