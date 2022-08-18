@@ -56,6 +56,7 @@ class FeatureExtractor:
 
         self.pc_data = []
         self.cl_data = []
+        self.cl_norm_data = []
         self.sum_data = []
         self.avg_data = []
         self.max_data = []
@@ -204,13 +205,19 @@ class FeatureExtractor:
         cb = img_block - np.tile(self.ipca.mu, (1, block_size))
 
         pcs = self.ipca.U[:, :q].T @ cb
-        cl = np.linalg.norm(cb - self.ipca.U[:, :q] @ pcs, axis=0) ** 2
+        cl = np.linalg.norm(cb - self.ipca.U[:, :q] @ pcs, axis=0)
+        cl_norm = cl / np.linalg.norm(cb, axis=0)
 
         self.pc_data = (
             np.concatenate((self.pc_data, pcs), axis=1) if len(self.pc_data) else pcs
         )
 
         self.cl_data = np.concatenate((self.cl_data, cl)) if len(self.cl_data) else cl
+        self.cl_norm_data = (
+            np.concatenate((self.cl_norm_data, cl_norm))
+            if len(self.cl_norm_data)
+            else cl_norm
+        )
 
         self.sum_data = (
             np.concatenate((self.sum_data, np.sum(cb, axis=0)))
