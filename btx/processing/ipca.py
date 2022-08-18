@@ -226,6 +226,9 @@ class IPCA:
         for i in range(m):
             mu, s = calculate_sample_mean_and_variance(X[:, i : i + 1])
 
+            print(mu - X[:, i : i + 1])
+            print(s)
+
             self.sample_means.append(mu_ni)
             self.sample_vars.append(s_ni)
 
