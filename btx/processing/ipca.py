@@ -230,9 +230,9 @@ class IPCA:
             self.sample_vars.append(s_ni)
 
             mu_m = update_sample_mean(mu_m, mu, i, 1)
-            mu_ni = update_sample_mean(mu_ni, mu, self.n + i, 1)
 
             s_ni = update_sample_variance(s_ni, s, mu_ni, mu, self.n + i, 1)
+            mu_ni = update_sample_mean(mu_ni, mu, self.n + i, 1)
 
         mu_n = self.mu
 
