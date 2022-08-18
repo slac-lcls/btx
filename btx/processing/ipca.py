@@ -1,5 +1,7 @@
+from logging import NOTSET
 import os
 import csv
+from turtle import update
 
 import numpy as np
 from mpi4py import MPI
@@ -77,6 +79,9 @@ class IPCA:
         self.mu = np.zeros((self.split_counts[self.rank], 1))
         self.total_variance = np.zeros((self.split_counts[self.rank], 1))
 
+        self.sample_means = []
+        self.sample_vars = []
+
     def distribute_indices(self, split_indices):
         size = self.size
 
@@ -89,6 +94,23 @@ class IPCA:
         return split_counts, start_indices
 
     def parallel_qr(self, A):
+        """_summary_
+
+        Parameters
+        ----------
+        A : _type_
+            _description_
+
+        Returns
+        -------
+        _type_
+            _description_
+
+        Notes
+        -----
+        Method acquired from
+        https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=6691583&tag=1
+        """
         _, x = A.shape
 
         q = self.q
@@ -192,6 +214,27 @@ class IPCA:
 
         return U_tot, S_tot, mu_tot, var_tot
 
+    def update_mean_and_variance(self, X):
+        d, m = X.shape
+
+        s_n = self.total_variance
+
+        mu_n = self.mu
+        mu_m = np.zeros((d, 1))
+
+        for i in range(m):
+            mu, s = calculate_sample_mean_and_variance(X[:, i : i + 1])
+
+            mu_m = update_sample_mean(mu_m, mu, i, 1)
+            mu_n = update_sample_mean(mu_n, mu, self.n + i, 1)
+
+            s_n = update_sample_variance(s_n, s, self.mu, mu, self.n + i, 1)
+
+            self.sample_means.append(mu_n)
+            self.sample_vars.append(s_n)
+
+        return mu_n, mu_m
+
     def update_model(self, X):
         """
         Update model with new block of observations using iPCA.
@@ -200,6 +243,11 @@ class IPCA:
         ----------
         X : ndarray, shape (d x m)
             block of m (d x 1) observations
+
+        Notes
+        -----
+        Method retrieved from
+        https://link.springer.com/content/pdf/10.1007/s11263-007-0075-7.pdf
         """
         _, m = X.shape
         n = self.n
@@ -214,13 +262,15 @@ class IPCA:
         with TaskTimer(self.task_durations, "total update"):
 
             with TaskTimer(self.task_durations, "update mean and variance"):
-                mu_n = self.mu
-                mu_m, s_m = calculate_sample_mean_and_variance(X)
+                # mu_n = self.mu
+                # mu_m, s_m = calculate_sample_mean_and_variance(X)
 
-                self.total_variance = update_sample_variance(
-                    self.total_variance, s_m, mu_n, mu_m, n, m
-                )
-                self.mu = update_sample_mean(mu_n, mu_m, n, m)
+                # self.total_variance = update_sample_variance(
+                #     self.total_variance, s_m, mu_n, mu_m, n, m
+                # )
+                # self.mu = update_sample_mean(mu_n, mu_m, n, m)
+
+                mu_n, mu_m = self.update_mean_and_variance(X)
 
             with TaskTimer(
                 self.task_durations, "center data and compute augment vector"
@@ -260,7 +310,7 @@ class IPCA:
         """
         print(f"Rank {self.rank}, initializing model with {self.q} samples...")
 
-        self.mu, self.total_variance = calculate_sample_mean_and_variance(X)
+        self.mu, self.total_variance = self.calculate_sample_mean_and_variance(X)
 
         centered_data = X - np.tile(self.mu, self.q)
         self.U, self.S, _ = np.linalg.svd(centered_data, full_matrices=False)

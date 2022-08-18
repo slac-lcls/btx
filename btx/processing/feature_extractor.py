@@ -190,39 +190,42 @@ class FeatureExtractor:
             img_block = self.fetch_formatted_images(block_size)
             self.ipca.update_model(img_block)
 
-            # temporary method for pc retrieval, will improve later
-
-            cb = img_block - np.tile(self.ipca.mu, (1, block_size))
-            cl = self.ipca.U.T @ cb
-
-            resid = cb - self.ipca.U @ cl
-            self.pc_data = (
-                np.concatenate((self.pc_data, cl), axis=1) if len(self.pc_data) else cl
-            )
-
-            self.sum_data = (
-                np.concatenate((self.sum_data, np.sum(cb, axis=0)))
-                if len(self.sum_data)
-                else np.sum(cb, axis=0)
-            )
-            self.max_data = (
-                np.concatenate((self.max_data, np.max(cb, axis=0)))
-                if len(self.max_data)
-                else np.max(cb, axis=0)
-            )
-            self.avg_data = (
-                np.concatenate((self.avg_data, np.average(cb, axis=0)))
-                if len(self.avg_data)
-                else np.average(cb, axis=0)
-            )
-            self.stdev_data = (
-                np.concatenate((self.stdev_data, np.std(resid, axis=0)))
-                if len(self.stdev_data)
-                else np.std(resid, axis=0)
-            )
+            self.gather_interim_data(img_block, block_size)
 
         if self.benchmark_mode:
             self.ipca.save_interval_data(self.output_dir)
+
+    def gather_interim_data(self, img_block, block_size):
+        # temporary method for pc retrieval, will improve later
+
+        cb = img_block - np.tile(self.ipca.mu, (1, block_size))
+        cl = self.ipca.U.T @ cb
+
+        resid = cb - self.ipca.U @ cl
+        self.pc_data = (
+            np.concatenate((self.pc_data, cl), axis=1) if len(self.pc_data) else cl
+        )
+
+        self.sum_data = (
+            np.concatenate((self.sum_data, np.sum(cb, axis=0)))
+            if len(self.sum_data)
+            else np.sum(cb, axis=0)
+        )
+        self.max_data = (
+            np.concatenate((self.max_data, np.max(cb, axis=0)))
+            if len(self.max_data)
+            else np.max(cb, axis=0)
+        )
+        self.avg_data = (
+            np.concatenate((self.avg_data, np.average(cb, axis=0)))
+            if len(self.avg_data)
+            else np.average(cb, axis=0)
+        )
+        self.stdev_data = (
+            np.concatenate((self.stdev_data, np.std(resid, axis=0)))
+            if len(self.stdev_data)
+            else np.std(resid, axis=0)
+        )
 
     def verify_model_accuracy(self):
         d = self.d
