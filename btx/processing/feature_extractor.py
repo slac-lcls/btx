@@ -61,7 +61,7 @@ class FeatureExtractor:
             else:
                 self.d = int(self.d / self.bin_factor**2)
 
-        self.n, self.q, self.m = self.set_ipca_params(
+        self.num_images, self.q, self.m = self.set_ipca_params(
             num_images, num_components, block_size
         )
 
@@ -92,6 +92,7 @@ class FeatureExtractor:
         if benchmark:
             n = min(120, max_events)
             m = 20
+
             return n, q, m
 
         n = min(n, max_events)
