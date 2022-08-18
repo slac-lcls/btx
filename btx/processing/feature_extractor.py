@@ -199,8 +199,6 @@ class FeatureExtractor:
         # temporary method for interim data retrieval, will improve later
 
         cb = img_block - self.ipca.sample_means
-        print(img_block)
-        print(img_block.shape)
         cl = self.ipca.U.T @ cb
 
         resid = cb - self.ipca.U @ cl
