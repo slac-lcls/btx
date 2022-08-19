@@ -192,8 +192,8 @@ class FeatureExtractor:
         for block_size in block_sizes:
             img_block = self.fetch_formatted_images(block_size)
 
-            self.ipca.update_model(img_block)
             self.gather_interim_data(img_block)
+            self.ipca.update_model(img_block)
 
         if self.benchmark_mode:
             self.ipca.save_interval_data(self.output_dir)
@@ -203,20 +203,12 @@ class FeatureExtractor:
         _, m = img_block.shape
         n = self.ipca.n
 
-        mu_n = self.loss_mean
-        s_n = self.loss_var
-
         q = np.ceil(self.q / 2).astype(int)
-        q = self.q
 
         cb = img_block - np.tile(self.ipca.mu, (1, m))
         pcs = self.ipca.U[:, :q].T @ cb
 
         comp_loss = np.linalg.norm(cb - self.ipca.U[:, :q] @ pcs, axis=0)
-
-        print(mu_n)
-        print(np.sqrt(s_n))
-        print(comp_loss)
 
         self.cl_data = (
             np.concatenate((self.cl_data, comp_loss))
@@ -224,8 +216,15 @@ class FeatureExtractor:
             else comp_loss
         )
 
+        mu_n = self.loss_mean
+        s_n = self.loss_var
+
+        print(mu_n)
+        print(np.sqrt(s_n))
+        print(comp_loss)
+
         if n != 0:
-            block_hits = np.where(comp_loss > mu_n + 2 * np.sqrt(s_n))[0] + n
+            block_hits = np.where(comp_loss < mu_n - 2 * np.sqrt(s_n))[0] + n
             self.hit_indices = (
                 np.concatenate((self.hit_indices, block_hits))
                 if len(self.hit_indices)
@@ -234,9 +233,6 @@ class FeatureExtractor:
 
         mu_m = np.mean(comp_loss, axis=0)
         s_m = np.var(comp_loss, axis=0)
-
-        print(mu_m)
-        print(np.sqrt(s_m))
         self.loss_var = update_sample_variance(s_n, s_m, mu_m, mu_n, n - m, m)
         self.loss_mean = update_sample_mean(mu_n, mu_m, n - m, m)
 
