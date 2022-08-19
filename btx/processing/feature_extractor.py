@@ -220,15 +220,15 @@ class FeatureExtractor:
                 else block_hits
             )
 
+            self.cl_data = (
+                np.concatenate((self.cl_data, comp_loss))
+                if len(self.cl_data)
+                else comp_loss
+            )
+
         mu_m, s_m = calculate_sample_mean_and_variance(img_block)
         self.loss_std = np.sqrt(update_sample_variance(s_n, s_m, mu_m, mu_n, n, m))
         self.loss_mean = update_sample_mean(mu_n, mu_m, n, m)
-
-        self.cl_data = (
-            np.concatenate((self.cl_data, comp_loss))
-            if len(self.cl_data)
-            else comp_loss
-        )
 
         # self.sum_data = (
         #     np.concatenate((self.sum_data, np.sum(cb, axis=0)))
