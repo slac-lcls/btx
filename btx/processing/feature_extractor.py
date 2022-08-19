@@ -1,5 +1,4 @@
 import argparse
-from bz2 import compress
 
 import numpy as np
 from mpi4py import MPI
@@ -28,7 +27,9 @@ class FeatureExtractor:
         init_with_pca=False,
         benchmark_mode=False,
         downsample=False,
-        bin_factor=16,
+        bin_factor=4,
+        crop=False,
+        crop_factor=1,
         output_dir="",
     ):
         self.comm = MPI.COMM_WORLD
@@ -41,6 +42,7 @@ class FeatureExtractor:
         self.benchmark_mode = benchmark_mode
         self.output_dir = output_dir
         self.downsample = downsample
+        self.crop = crop
 
         det_shape = self.psi.det.shape()
         self.d = np.prod(det_shape)
@@ -54,6 +56,9 @@ class FeatureExtractor:
             else:
                 self.d = int(self.d / self.bin_factor**2)
 
+        if self.crop:
+            self.crop_factor = crop_factor
+
         self.pc_data = []
         self.cl_data = []
         self.cl_norm_data = []
@@ -61,6 +66,7 @@ class FeatureExtractor:
         self.avg_data = []
         self.max_data = []
         self.stdev_data = []
+        self.uux_data = []
 
         self.num_images, self.q, self.m = self.set_ipca_params(
             num_images, num_components, block_size
@@ -205,7 +211,17 @@ class FeatureExtractor:
         cb = img_block - np.tile(self.ipca.mu, (1, block_size))
 
         pcs = self.ipca.U[:, :q].T @ cb
-        cl = np.linalg.norm(cb - self.ipca.U[:, :q] @ pcs, axis=0)
+        UUX = self.ipca.U[:, :q] @ pcs
+
+        uux_norm = np.linalg.norm(UUX, axis=0)
+
+        self.uux_data = (
+            np.concatenate((self.uux_data, uux_norm), axis=1)
+            if len(self.uux_data)
+            else uux_norm
+        )
+
+        cl = np.linalg.norm(cb - UUX, axis=0)
         cl_norm = cl / np.linalg.norm(cb, axis=0)
 
         self.pc_data = (
