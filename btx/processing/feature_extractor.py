@@ -214,7 +214,7 @@ class FeatureExtractor:
         comp_loss = np.linalg.norm(cb - self.ipca.U[:, :q] @ pcs, axis=0)
 
         print(mu_n)
-        print(s_n)
+        print(np.sqrt(s_n))
         print(comp_loss)
 
         self.cl_data = (
@@ -235,9 +235,9 @@ class FeatureExtractor:
         s_m = np.var(comp_loss, axis=0)
 
         print(mu_m)
-        print(s_m)
-        self.loss_var = update_sample_variance(s_n, s_m, mu_m, mu_n, n, m)
-        self.loss_mean = update_sample_mean(mu_n, mu_m, n, m)
+        print(np.sqrt(s_m))
+        self.loss_var = update_sample_variance(s_n, s_m, mu_m, mu_n, n - m, m)
+        self.loss_mean = update_sample_mean(mu_n, mu_m, n - m, m)
 
         # self.sum_data = (
         #     np.concatenate((self.sum_data, np.sum(cb, axis=0)))
