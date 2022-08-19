@@ -59,8 +59,8 @@ class FeatureExtractor:
                 self.d = int(self.d / self.bin_factor**2)
 
         self.cl_data = []
-        self.loss_mean = []
-        self.loss_std = []
+        self.loss_mean = 0
+        self.loss_std = 0
 
         self.num_images, self.q, self.m = self.set_ipca_params(
             num_images, num_components, block_size
@@ -202,11 +202,11 @@ class FeatureExtractor:
         _, m = img_block.shape
         n = self.ipca.n
 
+        mu_n = self.loss_mean
+        s_n = self.loss_std
+
         if n > 0:
             q = np.ceil(self.q / 2)
-
-            mu_n = self.loss_mean
-            s_n = self.loss_std
 
             cb = img_block - np.tile(self.ipca.mu, (1, m))
             pcs = self.ipca.U[:, :q].T @ cb

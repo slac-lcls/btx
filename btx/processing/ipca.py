@@ -420,7 +420,7 @@ def calculate_sample_mean_and_variance(imgs):
 
 def update_sample_mean(mu_n, mu_m, n, m):
     """
-    Combine combined mean of two blocks of data.
+    Compute combined mean of two blocks of data.
 
     Parameters
     ----------
