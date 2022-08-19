@@ -207,6 +207,7 @@ class FeatureExtractor:
         s_n = self.loss_var
 
         q = np.ceil(self.q / 2).astype(int)
+        q = self.q
 
         cb = img_block - np.tile(self.ipca.mu, (1, m))
         pcs = self.ipca.U[:, :q].T @ cb
