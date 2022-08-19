@@ -1,6 +1,5 @@
 import os
 import csv
-from turtle import update
 
 import numpy as np
 from mpi4py import MPI

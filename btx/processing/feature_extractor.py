@@ -200,7 +200,7 @@ class FeatureExtractor:
     def gather_interim_data(self, img_block):
 
         _, m = img_block.shape
-        n = fe.ipca.n
+        n = self.ipca.n
 
         if n > 0:
             q = np.ceil(self.q / 2)
