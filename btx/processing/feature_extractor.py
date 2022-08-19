@@ -4,12 +4,7 @@ import numpy as np
 from mpi4py import MPI
 
 from btx.interfaces.psana_interface import PsanaInterface
-from btx.processing.ipca import (
-    IPCA,
-    update_sample_mean,
-    update_sample_variance,
-    calculate_sample_mean_and_variance,
-)
+from btx.processing.ipca import IPCA, update_sample_mean, update_sample_variance
 
 from matplotlib import pyplot as plt
 
@@ -192,8 +187,8 @@ class FeatureExtractor:
         for block_size in block_sizes:
             img_block = self.fetch_formatted_images(block_size)
 
-            self.gather_interim_data(img_block)
             self.ipca.update_model(img_block)
+            self.gather_interim_data(img_block)
 
         if self.benchmark_mode:
             self.ipca.save_interval_data(self.output_dir)
