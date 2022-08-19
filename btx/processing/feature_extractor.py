@@ -216,7 +216,7 @@ class FeatureExtractor:
         uux_norm = np.linalg.norm(UUX, axis=0)
 
         self.uux_data = (
-            np.concatenate((self.uux_data, uux_norm), axis=1)
+            np.concatenate((self.uux_data, uux_norm))
             if len(self.uux_data)
             else uux_norm
         )
