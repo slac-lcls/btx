@@ -200,7 +200,7 @@ class FeatureExtractor:
     def gather_interim_data(self, img_block, block_size):
         # temporary method for interim data retrieval, will improve later
 
-        q = 7
+        q = self.q
 
         cb = img_block - np.tile(self.ipca.mu, (1, block_size))
 
