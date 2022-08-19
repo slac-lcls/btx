@@ -61,7 +61,7 @@ class FeatureExtractor:
         self.cl_data = []
         self.hit_indices = []
         self.loss_mean = 0
-        self.loss_std = 0
+        self.loss_var = 0
 
         self.num_images, self.q, self.m = self.set_ipca_params(
             num_images, num_components, block_size
@@ -192,8 +192,8 @@ class FeatureExtractor:
         for block_size in block_sizes:
             img_block = self.fetch_formatted_images(block_size)
 
-            self.gather_interim_data(img_block)
             self.ipca.update_model(img_block)
+            self.gather_interim_data(img_block)
 
         if self.benchmark_mode:
             self.ipca.save_interval_data(self.output_dir)
@@ -204,16 +204,22 @@ class FeatureExtractor:
         n = self.ipca.n
 
         mu_n = self.loss_mean
-        s_n = self.loss_std
+        s_n = self.loss_var
 
-        if n > 0:
-            q = np.ceil(self.q / 2).astype(int)
+        q = np.ceil(self.q / 2).astype(int)
 
-            cb = img_block - np.tile(self.ipca.mu, (1, m))
-            pcs = self.ipca.U[:, :q].T @ cb
+        cb = img_block - np.tile(self.ipca.mu, (1, m))
+        pcs = self.ipca.U[:, :q].T @ cb
 
-            comp_loss = np.linalg.norm(cb - self.ipca.U[:, :q] @ pcs, axis=0)
+        comp_loss = np.linalg.norm(cb - self.ipca.U[:, :q] @ pcs, axis=0)
 
+        self.cl_data = (
+            np.concatenate((self.cl_data, comp_loss))
+            if len(self.cl_data)
+            else comp_loss
+        )
+
+        if n != 0:
             block_hits = np.where(comp_loss > mu_n + 2 * s_n)[0] + n
             self.hit_indices = (
                 np.concatenate((self.hit_indices, block_hits))
@@ -221,14 +227,9 @@ class FeatureExtractor:
                 else block_hits
             )
 
-            self.cl_data = (
-                np.concatenate((self.cl_data, comp_loss))
-                if len(self.cl_data)
-                else comp_loss
-            )
-
-        mu_m, s_m = calculate_sample_mean_and_variance(img_block)
-        self.loss_std = np.sqrt(update_sample_variance(s_n, s_m, mu_m, mu_n, n, m))
+        mu_m = np.mean(comp_loss, axis=0)
+        s_m = np.var(comp_loss, axis=0)
+        self.loss_var = np.sqrt(update_sample_variance(s_n, s_m, mu_m, mu_n, n, m))
         self.loss_mean = update_sample_mean(mu_n, mu_m, n, m)
 
         # self.sum_data = (
