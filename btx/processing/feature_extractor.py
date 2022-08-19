@@ -1,10 +1,16 @@
 import argparse
+from turtle import update
 
 import numpy as np
 from mpi4py import MPI
 
 from btx.interfaces.psana_interface import PsanaInterface
-from btx.processing.ipca import IPCA
+from btx.processing.ipca import (
+    IPCA,
+    update_sample_mean,
+    update_sample_variance,
+    calculate_sample_mean_and_variance,
+)
 
 from matplotlib import pyplot as plt
 
@@ -28,8 +34,6 @@ class FeatureExtractor:
         benchmark_mode=False,
         downsample=False,
         bin_factor=4,
-        crop=False,
-        crop_factor=1,
         output_dir="",
     ):
         self.comm = MPI.COMM_WORLD
@@ -42,7 +46,6 @@ class FeatureExtractor:
         self.benchmark_mode = benchmark_mode
         self.output_dir = output_dir
         self.downsample = downsample
-        self.crop = crop
 
         det_shape = self.psi.det.shape()
         self.d = np.prod(det_shape)
@@ -56,17 +59,9 @@ class FeatureExtractor:
             else:
                 self.d = int(self.d / self.bin_factor**2)
 
-        if self.crop:
-            self.crop_factor = crop_factor
-
-        self.pc_data = []
         self.cl_data = []
-        self.cl_norm_data = []
-        self.sum_data = []
-        self.avg_data = []
-        self.max_data = []
-        self.stdev_data = []
-        self.uux_data = []
+        self.loss_mean = []
+        self.loss_std = []
 
         self.num_images, self.q, self.m = self.set_ipca_params(
             num_images, num_components, block_size
@@ -197,59 +192,60 @@ class FeatureExtractor:
         for block_size in block_sizes:
             img_block = self.fetch_formatted_images(block_size)
 
-            self.gather_interim_data(img_block, block_size)
+            self.gather_interim_data(img_block)
             self.ipca.update_model(img_block)
 
         if self.benchmark_mode:
             self.ipca.save_interval_data(self.output_dir)
 
-    def gather_interim_data(self, img_block, block_size):
-        # temporary method for interim data retrieval, will improve later
+    def gather_interim_data(self, img_block):
 
-        q = self.q
+        _, m = img_block.shape
+        n = fe.ipca.n
 
-        cb = img_block - np.tile(self.ipca.mu, (1, block_size))
+        if n > 0:
+            q = np.ceil(self.q / 2)
 
-        pcs = self.ipca.U[:, :q].T @ cb
-        UUX = self.ipca.U[:, :q] @ pcs
+            mu_n = self.loss_mean
+            s_n = self.loss_std
 
-        uux_norm = np.linalg.norm(UUX, axis=0)
+            cb = img_block - np.tile(self.ipca.mu, (1, m))
+            pcs = self.ipca.U[:, :q].T @ cb
 
-        self.uux_data = (
-            np.concatenate((self.uux_data, uux_norm))
-            if len(self.uux_data)
-            else uux_norm
+            comp_loss = np.linalg.norm(cb - self.ipca.U[:, :q] @ pcs, axis=0)
+
+            block_hits = np.where(comp_loss > mu_n + 2 * s_n)[0] + n
+            self.hit_indices = (
+                np.concatenate((self.hit_indices, block_hits))
+                if len(self.hit_indices)
+                else block_hits
+            )
+
+        mu_m, s_m = calculate_sample_mean_and_variance(img_block)
+        self.loss_std = np.sqrt(update_sample_variance(s_n, s_m, mu_m, mu_n, n, m))
+        self.loss_mean = update_sample_mean(mu_n, mu_m, n, m)
+
+        self.cl_data = (
+            np.concatenate((self.cl_data, comp_loss))
+            if len(self.cl_data)
+            else comp_loss
         )
 
-        cl = np.linalg.norm(cb - UUX, axis=0)
-        cl_norm = cl / np.linalg.norm(cb, axis=0)
-
-        self.pc_data = (
-            np.concatenate((self.pc_data, pcs), axis=1) if len(self.pc_data) else pcs
-        )
-
-        self.cl_data = np.concatenate((self.cl_data, cl)) if len(self.cl_data) else cl
-        self.cl_norm_data = (
-            np.concatenate((self.cl_norm_data, cl_norm))
-            if len(self.cl_norm_data)
-            else cl_norm
-        )
-
-        self.sum_data = (
-            np.concatenate((self.sum_data, np.sum(cb, axis=0)))
-            if len(self.sum_data)
-            else np.sum(cb, axis=0)
-        )
-        self.max_data = (
-            np.concatenate((self.max_data, np.max(cb, axis=0)))
-            if len(self.max_data)
-            else np.max(cb, axis=0)
-        )
-        self.avg_data = (
-            np.concatenate((self.avg_data, np.average(cb, axis=0)))
-            if len(self.avg_data)
-            else np.average(cb, axis=0)
-        )
+        # self.sum_data = (
+        #     np.concatenate((self.sum_data, np.sum(cb, axis=0)))
+        #     if len(self.sum_data)
+        #     else np.sum(cb, axis=0)
+        # )
+        # self.max_data = (
+        #     np.concatenate((self.max_data, np.max(cb, axis=0)))
+        #     if len(self.max_data)
+        #     else np.max(cb, axis=0)
+        # )
+        # self.avg_data = (
+        #     np.concatenate((self.avg_data, np.average(cb, axis=0)))
+        #     if len(self.avg_data)
+        #     else np.average(cb, axis=0)
+        # )
 
     def verify_model_accuracy(self):
         d = self.d
