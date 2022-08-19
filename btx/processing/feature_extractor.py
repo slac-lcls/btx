@@ -213,6 +213,10 @@ class FeatureExtractor:
 
         comp_loss = np.linalg.norm(cb - self.ipca.U[:, :q] @ pcs, axis=0)
 
+        print(mu_n)
+        print(s_n)
+        print(comp_loss)
+
         self.cl_data = (
             np.concatenate((self.cl_data, comp_loss))
             if len(self.cl_data)
