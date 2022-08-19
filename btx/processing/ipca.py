@@ -1,4 +1,3 @@
-from logging import NOTSET
 import os
 import csv
 from turtle import update
