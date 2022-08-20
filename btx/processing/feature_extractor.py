@@ -226,7 +226,7 @@ class FeatureExtractor:
         print(comp_loss)
 
         block_hits = (
-            np.where(np.abs(comp_loss - self.loss_mean) > 2 * np.sqrt(self.loss_var))[0]
+            np.where(np.abs(comp_loss - self.loss_mean) > np.sqrt(self.loss_var))[0]
             + n
             - m
         )
