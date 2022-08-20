@@ -229,20 +229,14 @@ class FeatureExtractor:
         print(np.sqrt(s_n))
         print(comp_loss)
 
-        if n != 0:
-            block_hits = (
-                np.where(np.abs(comp_loss - mu_n) > 3 * np.sqrt(s_n))[0] + n - m
-            )
-            self.hit_indices = (
-                np.concatenate((self.hit_indices, block_hits))
-                if len(self.hit_indices)
-                else block_hits
-            )
-
-        mu_m = np.mean(comp_loss, axis=0)
-        s_m = np.var(comp_loss, axis=0)
-        self.loss_var = update_sample_variance(s_n, s_m, mu_m, mu_n, n - m, m)
-        self.loss_mean = update_sample_mean(mu_n, mu_m, n - m, m)
+        block_hits = (
+            np.where(np.abs(comp_loss - mu_n) > 3 * np.sqrt(s_n))[0] + n - m
+        )
+        self.hit_indices = (
+            np.concatenate((self.hit_indices, block_hits))
+            if len(self.hit_indices)
+            else block_hits
+        )
 
         # self.sum_data = (
         #     np.concatenate((self.sum_data, np.sum(cb, axis=0)))
