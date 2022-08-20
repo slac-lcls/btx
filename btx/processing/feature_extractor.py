@@ -216,6 +216,17 @@ class FeatureExtractor:
 
         print(mu_n)
         print(np.sqrt(s_n))
+
+        mu_m = np.mean(comp_loss, axis=0)
+        s_m = np.var(comp_loss, axis=0)
+        self.loss_var = update_sample_variance(s_n, s_m, mu_m, mu_n, n - m, m)
+        self.loss_mean = update_sample_mean(mu_n, mu_m, n - m, m)
+
+        mu_n = self.loss_mean
+        s_n = self.loss_var
+
+        print(mu_n)
+        print(np.sqrt(s_n))
         print(comp_loss)
 
         if n != 0:
