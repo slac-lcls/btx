@@ -230,7 +230,7 @@ class FeatureExtractor:
             + n
             - m
         )
-        
+
         self.hit_indices = (
             np.concatenate((self.hit_indices, block_hits))
             if len(self.hit_indices)
