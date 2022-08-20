@@ -219,7 +219,7 @@ class FeatureExtractor:
         print(comp_loss)
 
         if n != 0:
-            block_hits = np.where(comp_loss < mu_n - 2 * np.sqrt(s_n))[0] + n
+            block_hits = np.where(comp_loss < mu_n - 2 * np.sqrt(s_n))[0] + n - m
             self.hit_indices = (
                 np.concatenate((self.hit_indices, block_hits))
                 if len(self.hit_indices)
