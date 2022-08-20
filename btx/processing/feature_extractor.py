@@ -203,7 +203,9 @@ class FeatureExtractor:
         cb = img_block - np.tile(self.ipca.mu, (1, m))
         pcs = self.ipca.U[:, :q].T @ cb
 
-        comp_loss = np.linalg.norm(cb - self.ipca.U[:, :q] @ pcs, axis=0)
+        comp_loss = np.linalg.norm(
+            np.log10(np.abs(cb - self.ipca.U[:, :q] @ pcs)), axis=0
+        )
 
         self.cl_data = (
             np.concatenate((self.cl_data, comp_loss))
@@ -229,9 +231,7 @@ class FeatureExtractor:
         print(np.sqrt(s_n))
         print(comp_loss)
 
-        block_hits = (
-            np.where(np.abs(comp_loss - mu_n) > 3 * np.sqrt(s_n))[0] + n - m
-        )
+        block_hits = np.where(np.abs(comp_loss - mu_n) > 3 * np.sqrt(s_n))[0] + n - m
         self.hit_indices = (
             np.concatenate((self.hit_indices, block_hits))
             if len(self.hit_indices)
