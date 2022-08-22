@@ -4,7 +4,7 @@ import numpy as np
 from mpi4py import MPI
 
 from btx.interfaces.psana_interface import PsanaInterface
-from btx.processing.ipca import IPCA, update_sample_mean, update_sample_variance
+from btx.processing.ipca import IPCA
 
 from matplotlib import pyplot as plt
 
@@ -55,8 +55,6 @@ class FeatureExtractor:
 
         self.cl_data = []
         self.hit_indices = []
-        self.loss_mean = 0
-        self.loss_var = 0
 
         self.num_images, self.q, self.m = self.set_ipca_params(
             num_images, num_components, block_size
@@ -211,23 +209,14 @@ class FeatureExtractor:
             else comp_loss
         )
 
-        mu_n = self.loss_mean
-        s_n = self.loss_var
+        mu = np.mean(comp_loss, axis=0)
+        s = np.var(comp_loss, axis=0)
 
-        mu_m = np.mean(comp_loss, axis=0)
-        s_m = np.var(comp_loss, axis=0)
-        self.loss_var = update_sample_variance(s_n, s_m, mu_m, mu_n, n - m, m)
-        self.loss_mean = update_sample_mean(mu_n, mu_m, n - m, m)
-
-        print(mu_n)
-        print(np.sqrt(s_n))
+        print(mu)
+        print(np.sqrt(s))
         print(comp_loss)
 
-        block_hits = (
-            np.where(np.abs(comp_loss - self.loss_mean) > np.sqrt(self.loss_var))[0]
-            + n
-            - m
-        )
+        block_hits = np.where(np.abs(comp_loss - mu) > np.sqrt(s))[0] + n - m
 
         self.hit_indices = (
             np.concatenate((self.hit_indices, block_hits))
