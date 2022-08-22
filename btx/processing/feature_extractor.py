@@ -203,9 +203,7 @@ class FeatureExtractor:
         cb = img_block - np.tile(self.ipca.mu, (1, m))
         pcs = self.ipca.U[:, :q].T @ cb
 
-        comp_loss = np.linalg.norm(
-            np.log10(np.abs(cb - self.ipca.U[:, :q] @ pcs)), axis=0
-        )
+        comp_loss = np.linalg.norm(np.abs(cb - self.ipca.U[:, :q] @ pcs), axis=0)
 
         self.cl_data = (
             np.concatenate((self.cl_data, comp_loss))
