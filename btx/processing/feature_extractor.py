@@ -212,11 +212,7 @@ class FeatureExtractor:
         mu = np.mean(comp_loss, axis=0)
         s = np.var(comp_loss, axis=0)
 
-        print(mu)
-        print(np.sqrt(s))
-        print(comp_loss)
-
-        block_hits = np.where(np.abs(comp_loss - mu) > np.sqrt(s))[0] + n - m
+        block_hits = np.where(np.abs(comp_loss - mu) > 2 * np.sqrt(s))[0] + n - m
 
         self.hit_indices = (
             np.concatenate((self.hit_indices, block_hits))
