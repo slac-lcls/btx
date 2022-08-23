@@ -67,7 +67,8 @@ class IPCA:
         self.n = 0
 
         # compute number of counts in and start indices over ranks
-        self.split_counts, self.start_indices = self.distribute_indices(split_indices)
+        self.start_indices = split_indices[:-1]
+        self.split_counts = self.extract_index_counts(split_indices)
 
         # attribute for storing interval data
         self.task_durations = dict({})
@@ -77,16 +78,14 @@ class IPCA:
         self.mu = np.zeros((self.split_counts[self.rank], 1))
         self.total_variance = np.zeros((self.split_counts[self.rank], 1))
 
-    def distribute_indices(self, split_indices):
+    def extract_index_counts(self, split_indices):
         size = self.size
-
-        start_indices = split_indices[:-1]
         split_counts = np.empty(size, dtype=int)
 
         for i in range(len(split_indices) - 1):
             split_counts[i] = split_indices[i + 1] - split_indices[i]
 
-        return split_counts, start_indices
+        return split_counts
 
     def parallel_qr(self, A):
         """_summary_
@@ -282,8 +281,6 @@ class IPCA:
                 )
                 self.mu = update_sample_mean(mu_n, mu_m, n, m)
 
-                # mu_n, mu_m = self.update_mean_and_variance(X)
-
             with TaskTimer(
                 self.task_durations, "center data and compute augment vector"
             ):
@@ -333,15 +330,14 @@ class IPCA:
         """
         Report time interval data gathered during iPCA.
         """
-        if self.rank == 0:
-            if len(self.task_durations):
-                for key in list(self.task_durations.keys()):
-                    interval_mean = np.mean(self.task_durations[key])
+        if self.rank == 0 and len(self.task_durations):
+            for key in list(self.task_durations.keys()):
+                interval_mean = np.mean(self.task_durations[key])
 
-                    print(
-                        "Mean per-block compute time of step"
-                        + f"'{key}': {interval_mean:.4g}s"
-                    )
+                print(
+                    "Mean per-block compute time of step"
+                    + f"'{key}': {interval_mean:.4g}s"
+                )
 
     def save_interval_data(self, dir_path=None):
         """
