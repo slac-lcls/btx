@@ -150,6 +150,8 @@ class FeatureExtractor:
             if np.isnan(imgs[:, i : i + 1]).any():
                 valid_img_indices.append(i)
 
+        print(valid_img_indices)
+
         imgs = imgs[:, valid_img_indices]
 
         if self.downsample:
