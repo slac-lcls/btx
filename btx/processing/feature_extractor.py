@@ -191,55 +191,9 @@ class FeatureExtractor:
             img_block = self.fetch_formatted_images(block_size)
 
             self.ipca.update_model(img_block)
-            # self.gather_interim_data(img_block)
 
         if self.benchmark_mode:
             self.ipca.save_interval_data(self.output_dir)
-
-    # def gather_interim_data(self, img_block):
-
-    #     _, m = img_block.shape
-    #     n = self.ipca.n
-
-    #     q = np.ceil(self.q / 2).astype(int)
-
-    #     cb = img_block - np.tile(self.ipca.mu, (1, m))
-    #     pcs = self.ipca.U[:, :q].T @ cb
-
-    #     comp_loss = np.linalg.norm(np.abs(cb - self.ipca.U[:, :q] @ pcs), axis=0)
-
-    #     self.cl_data = (
-    #         np.concatenate((self.cl_data, comp_loss))
-    #         if len(self.cl_data)
-    #         else comp_loss
-    #     )
-
-    #     mu = np.mean(comp_loss, axis=0)
-    #     s = np.var(comp_loss, axis=0)
-
-    #     block_hits = np.where(np.abs(comp_loss - mu) > 4 * np.sqrt(s))[0] + n - m
-
-    #     self.hit_indices = (
-    #         np.concatenate((self.hit_indices, block_hits))
-    #         if len(self.hit_indices)
-    #         else block_hits
-    #     )
-
-    # self.sum_data = (
-    #     np.concatenate((self.sum_data, np.sum(cb, axis=0)))
-    #     if len(self.sum_data)
-    #     else np.sum(cb, axis=0)
-    # )
-    # self.max_data = (
-    #     np.concatenate((self.max_data, np.max(cb, axis=0)))
-    #     if len(self.max_data)
-    #     else np.max(cb, axis=0)
-    # )
-    # self.avg_data = (
-    #     np.concatenate((self.avg_data, np.average(cb, axis=0)))
-    #     if len(self.avg_data)
-    #     else np.average(cb, axis=0)
-    # )
 
     def verify_model_accuracy(self):
         d = self.d
