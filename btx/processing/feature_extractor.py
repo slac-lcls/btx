@@ -149,11 +149,13 @@ class FeatureExtractor:
 
         valid_img_indices = []
 
-        for i in range(n):
-            if not np.isnan(imgs[i : i + 1]).any():
-                valid_img_indices.append(i)
+        # for i in range(n):
+        #     if not np.isnan(imgs[i : i + 1]).any():
+        #         valid_img_indices.append(i)
 
-        imgs = imgs[valid_img_indices]
+        # imgs = imgs[valid_img_indices]
+
+        imgs = imgs[[i for i, img in enumerate(imgs) if not np.isnan(img)]]
 
         num_valid_imgs, _, _, _ = imgs.shape
         formatted_imgs = np.reshape(imgs, (num_valid_imgs, d)).T
