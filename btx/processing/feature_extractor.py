@@ -147,13 +147,15 @@ class FeatureExtractor:
         if self.downsample:
             imgs = bin_data(imgs, self.bin_factor)
 
-        valid_img_indices = []
+        # valid_img_indices = []
 
-        for i in range(n):
-            if not np.isnan(imgs[:, i : i + 1]).any():
-                valid_img_indices.append(i)
+        # for i in range(n):
+        #     if not np.isnan(imgs[:, i : i + 1]).any():
+        #         valid_img_indices.append(i)
 
-        imgs = imgs[valid_img_indices]
+        # imgs = imgs[valid_img_indices]
+
+        imgs = imgs[np.where(not np.isnan(imgs))]
 
         num_valid_imgs, _, _, _ = imgs.shape
         formatted_imgs = np.reshape(imgs, (num_valid_imgs, d)).T
