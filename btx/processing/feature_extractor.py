@@ -155,7 +155,7 @@ class FeatureExtractor:
 
         # imgs = imgs[valid_img_indices]
 
-        print(np.where(not np.isnan(imgs).any()[0]))
+        print(np.where(not np.isnan(imgs).any())[0])
         print((np.where(not np.isnan(imgs).any())[0]).shape)
 
         imgs = imgs[np.where(not np.isnan(imgs).any())]
