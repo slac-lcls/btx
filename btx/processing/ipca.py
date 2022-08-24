@@ -107,6 +107,8 @@ class IPCA:
         """
         _, x = A.shape
 
+        print(A)
+
         q = self.q
         m = x - q - 1
 
@@ -128,8 +130,6 @@ class IPCA:
                 q_tot, r_tilde = np.linalg.qr(r_tot, mode="reduced")
 
             with TaskTimer(self.task_durations, "qr - global svd"):
-                print(r_tilde)
-                print(r_tilde.shape)
                 U_tilde, S_tilde, _ = np.linalg.svd(r_tilde)
         else:
             U_tilde = np.empty((q + m + 1, q + m + 1))
