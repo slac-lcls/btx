@@ -294,7 +294,7 @@ class IPCA:
         U, _, mu, _ = self.get_model()
 
         if self.rank == 0:
-            X_tot = np.empty(d, m)
+            X_tot = np.empty((d, m))
         else:
             X_tot = None
 
