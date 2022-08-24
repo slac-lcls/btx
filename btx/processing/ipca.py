@@ -288,14 +288,33 @@ class IPCA:
         X : _type_
             _description_
         """
+        _, m = X.shape
+        n, q, d = self.n, self.q, self.d
 
         U, _, mu, _ = self.get_model()
 
         if self.rank == 0:
-            _, m = X.shape
-            n, q = self.n, self.q
+            X_tot = np.empty(d, m)
+        else:
+            X_tot = None
 
-            cb = X - np.tile(mu, (1, m))
+        self.comm.Gatherv(
+            X.flatten(),
+            [
+                X_tot,
+                self.split_counts * m,
+                self.start_indices * m,
+                MPI.DOUBLE,
+            ],
+            root=0,
+        )
+
+        if self.rank == 0:
+            X_tot = np.reshape(X_tot, (d, m))
+
+        if self.rank == 0:
+
+            cb = X_tot - np.tile(mu, (1, m))
             pcs = U[:, :q].T @ cb
 
             comp_loss = np.linalg.norm(np.abs(cb - U[:, :q] @ pcs), axis=0)
