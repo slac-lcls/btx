@@ -513,7 +513,7 @@ def parse_input():
         action="store_true",
     )
     parser.add_argument(
-        "--downsample", help="Downsample.", required=False, action="store_true"
+        "--downsample", help="Enable downsampling.", required=False, action="store_true"
     )
     parser.add_argument(
         "--bin_factor",
@@ -532,4 +532,6 @@ if __name__ == "__main__":
 
     fe = FeatureExtractor(**kwargs)
     fe.run_ipca()
-    fe.verify_model_accuracy()
+    # fe.verify_model_accuracy()
+    outliers, loss_data = fe.ipca.get_loss_stats()
+    print(outliers)
