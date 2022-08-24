@@ -160,7 +160,7 @@ class IPCA:
     def get_loss_stats(self):
 
         if self.rank == 0:
-            return self.outliers, self.loss_data
+            print(self.outliers)
 
     def get_model(self):
         """
@@ -310,10 +310,8 @@ class IPCA:
         )
 
         if self.rank == 0:
+
             X_tot = np.reshape(X_tot, (d, m))
-
-        if self.rank == 0:
-
             cb = X_tot - np.tile(mu, (1, m))
             pcs = U[:, :q].T @ cb
 

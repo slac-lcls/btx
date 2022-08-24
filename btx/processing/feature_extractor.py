@@ -533,5 +533,4 @@ if __name__ == "__main__":
     fe = FeatureExtractor(**kwargs)
     fe.run_ipca()
     # fe.verify_model_accuracy()
-    outliers, loss_data = fe.ipca.get_loss_stats()
-    print(outliers)
+    fe.ipca.get_loss_stats()
