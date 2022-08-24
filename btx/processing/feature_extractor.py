@@ -147,7 +147,7 @@ class FeatureExtractor:
         valid_img_indices = []
 
         for i in range(n):
-            if np.isnan(imgs[:, i : i + 1]).any():
+            if not np.isnan(imgs[:, i : i + 1]).any():
                 valid_img_indices.append(i)
 
         print(valid_img_indices)
