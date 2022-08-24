@@ -239,6 +239,9 @@ class IPCA:
             )
         )
 
+        if n > 0:
+            self.gather_interim_data(X)
+
         with TaskTimer(self.task_durations, "total update"):
 
             with TaskTimer(self.task_durations, "update mean and variance"):
@@ -276,8 +279,6 @@ class IPCA:
             self.S = S_tilde[:q]
 
             self.n += m
-
-            self.gather_interim_data(X)
 
     def gather_interim_data(self, X):
         """_summary_
