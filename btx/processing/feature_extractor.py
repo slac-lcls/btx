@@ -155,7 +155,7 @@ class FeatureExtractor:
 
         # imgs = imgs[valid_img_indices]
 
-        imgs = imgs[np.where(not np.isnan(imgs))]
+        imgs = imgs[np.where(not np.isnan(imgs).any())]
 
         num_valid_imgs, _, _, _ = imgs.shape
         formatted_imgs = np.reshape(imgs, (num_valid_imgs, d)).T
