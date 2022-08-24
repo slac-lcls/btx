@@ -143,7 +143,14 @@ class FeatureExtractor:
         # may have to rewrite eventually when number of images becomes large,
         # i.e. streamed setting, either that or downsample aggressively
         imgs = self.psi.get_images(n, assemble=False)
-        imgs = imgs[:, np.where(not np.isnan(imgs.T)[0])]
+
+        valid_img_indices = []
+
+        for i in range(n):
+            if np.isnan(imgs[:, i : i + 1]):
+                valid_img_indices.append(i)
+
+        imgs = imgs[:, valid_img_indices]
 
         if self.downsample:
             imgs = bin_data(imgs, self.bin_factor)
