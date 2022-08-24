@@ -288,11 +288,11 @@ class IPCA:
             _description_
         """
 
+        U, _, mu, _ = self.get_model()
+
         if self.rank == 0:
             _, m = X.shape
             n, q = self.n, self.q
-
-            U, _, mu, _ = self.get_model()
 
             cb = X - np.tile(mu, (1, m))
             pcs = U[:, :q].T @ cb
