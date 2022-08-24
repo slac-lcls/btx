@@ -154,7 +154,7 @@ class FeatureExtractor:
                 valid_img_indices.append(i)
 
         print(valid_img_indices)
-        print(imgs[imgs[valid_img_indices]])
+        print(imgs[valid_img_indices])
 
         imgs = imgs[valid_img_indices]
 
