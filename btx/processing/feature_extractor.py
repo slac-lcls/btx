@@ -90,7 +90,7 @@ class FeatureExtractor:
 
             return n, q, m
 
-        n = min(n, max_events)
+        n = min(n, max_events) if n != -1 else max_events
         q = min(q, n)
         m = min(m, n)
 
