@@ -157,7 +157,8 @@ class FeatureExtractor:
         if self.downsample:
             imgs = bin_data(imgs, self.bin_factor)
 
-        formatted_imgs = np.reshape(imgs, (n, d)).T
+        num_valid_imgs, _, _, _ = imgs.shape
+        formatted_imgs = np.reshape(imgs, (num_valid_imgs, d)).T
 
         return formatted_imgs[start_index:end_index, :]
 
