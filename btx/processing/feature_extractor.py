@@ -153,6 +153,9 @@ class FeatureExtractor:
             if not np.isnan(imgs[:, i : i + 1]).any():
                 valid_img_indices.append(i)
 
+        print(valid_img_indices)
+        print(imgs[imgs[valid_img_indices]])
+
         imgs = imgs[valid_img_indices]
 
         num_valid_imgs, _, _, _ = imgs.shape

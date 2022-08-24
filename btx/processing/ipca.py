@@ -106,9 +106,6 @@ class IPCA:
         https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=6691583&tag=1
         """
         _, x = A.shape
-
-        print(A)
-
         q = self.q
         m = x - q - 1
 
