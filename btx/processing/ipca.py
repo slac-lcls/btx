@@ -78,6 +78,9 @@ class IPCA:
         self.mu = np.zeros((self.split_counts[self.rank], 1))
         self.total_variance = np.zeros((self.split_counts[self.rank], 1))
 
+        self.outliers = []
+        self.loss_data = []
+
     def extract_index_counts(self, split_indices):
         size = self.size
         split_counts = np.empty(size, dtype=int)
@@ -154,6 +157,11 @@ class IPCA:
 
         return q_fin, U_tilde, S_tilde
 
+    def get_loss_stats(self):
+
+        if self.rank == 0:
+            return self.outliers, self.loss_data
+
     def get_model(self):
         """
         Notes
@@ -207,44 +215,6 @@ class IPCA:
 
         return U_tot, S_tot, mu_tot, var_tot
 
-    # def update_mean_and_variance(self, X):
-    #     d, m = X.shape
-
-    #     self.sample_means = np.array([])
-    #     self.sample_vars = np.array([])
-
-    #     # total mean and variance of thus seen data
-    #     s_ni = self.total_variance
-    #     mu_ni = self.mu
-
-    #     mu_m = np.zeros((d, 1))
-
-    #     for i in range(m):
-    #         mu, s = calculate_sample_mean_and_variance(X[:, i : i + 1])
-
-    #         self.sample_means = (
-    #             np.concatenate((self.sample_means, mu_ni), axis=1)
-    #             if self.sample_means.size
-    #             else mu_ni
-    #         )
-    #         self.sample_vars = (
-    #             np.concatenate((self.sample_vars, s_ni), axis=1)
-    #             if self.sample_vars.size
-    #             else s_ni
-    #         )
-
-    #         mu_m = update_sample_mean(mu_m, mu, i, 1)
-
-    #         s_ni = update_sample_variance(s_ni, s, mu_ni, mu, self.n + i, 1)
-    #         mu_ni = update_sample_mean(mu_ni, mu, self.n + i, 1)
-
-    #     mu_n = self.mu
-
-    #     self.mu = mu_ni
-    #     self.total_variance = s_ni
-
-    #     return mu_n, mu_m
-
     def update_model(self, X):
         """
         Update model with new block of observations using iPCA.
@@ -268,6 +238,9 @@ class IPCA:
                 r=self.rank, m=m, s="s" if m > 1 else "", n=n
             )
         )
+
+        if n > 0:
+            self.gather_interim_data(X)
 
         with TaskTimer(self.task_durations, "total update"):
 
@@ -306,6 +279,38 @@ class IPCA:
             self.S = S_tilde[:q]
 
             self.n += m
+
+    def gather_interim_data(self, X):
+
+        if self.rank == 0:
+            _, m = X.shape
+            n, q = self.n, self.q
+
+            U, _, mu, _ = self.get_model()
+
+            cb = X - np.tile(mu, (1, m))
+            pcs = U[:, :q].T @ cb
+
+            comp_loss = np.linalg.norm(np.abs(cb - U[:, :q] @ pcs), axis=0)
+
+            self.loss_data = (
+                np.concatenate((self.loss_data, comp_loss))
+                if len(self.loss_data)
+                else comp_loss
+            )
+
+            mu_cl = np.mean(comp_loss, axis=0)
+            s_cl = np.var(comp_loss, axis=0)
+
+            block_outliers = (
+                np.where(np.abs(comp_loss - mu_cl) > 4 * np.sqrt(s_cl))[0] + n - m
+            )
+
+            self.outliers = (
+                np.concatenate((self.outliers, block_outliers))
+                if len(self.outliers)
+                else block_outliers
+            )
 
     def initialize_model(self, X):
         """
