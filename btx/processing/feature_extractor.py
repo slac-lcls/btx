@@ -152,7 +152,7 @@ class FeatureExtractor:
 
         print(imgs.shape)
 
-        imgs = imgs[:, valid_img_indices]
+        imgs = imgs[valid_img_indices]
 
         if self.downsample:
             imgs = bin_data(imgs, self.bin_factor)
