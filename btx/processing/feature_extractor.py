@@ -88,7 +88,7 @@ class FeatureExtractor:
         if benchmark:
             min_n = max(4 * q, 40)
             n = min(min_n, max_events)
-            
+            m = min(q, np.floor(d / self.size) - q - 1)
 
             return n, q, m
 
@@ -98,7 +98,7 @@ class FeatureExtractor:
 
         m_min = np.floor(d / self.size) - q - 1
         if m < m_min:
-            print(f'Block size too small, resized from {m} to {m_min}.')
+            print(f"Block size too small, resized from {m} to {m_min}.")
             m = m_min
 
         return n, q, m
