@@ -87,6 +87,7 @@ class FeatureExtractor:
         if benchmark:
             min_n = max(int(4 * q), 40)
             n = min(min_n, max_events)
+            m = q
 
             return n, q, m
 
