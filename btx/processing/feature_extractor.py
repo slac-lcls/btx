@@ -96,6 +96,8 @@ class FeatureExtractor:
         q = min(q, n)
         m = min(m, n)
 
+        # parallelization requires that the per-rank number of data
+        # features be at least as big as m + q + 1
         m_min = np.floor(d / self.size) - q - 1
         if m < m_min:
             print(f"Block size too small, resized from {m} to {m_min}.")
