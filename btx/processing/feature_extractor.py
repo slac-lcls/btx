@@ -85,7 +85,7 @@ class FeatureExtractor:
         m = block_size
 
         if benchmark:
-            min_n = max(4 * q, 120)
+            min_n = max(4 * q, 40)
             n = min(min_n, max_events)
             m = q
 
