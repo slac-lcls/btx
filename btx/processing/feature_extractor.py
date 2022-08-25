@@ -57,10 +57,10 @@ class FeatureExtractor:
         self.hit_indices = []
 
         self.num_images, self.q, self.m = self.set_ipca_params(
-            num_images, num_components, block_size
+            num_images, num_components, block_size, self.d
         )
 
-    def set_ipca_params(self, num_images, num_components, block_size):
+    def set_ipca_params(self, num_images, num_components, block_size, num_features):
         """_summary_
 
         Parameters
@@ -83,17 +83,23 @@ class FeatureExtractor:
         n = num_images
         q = num_components
         m = block_size
+        d = num_features
 
         if benchmark:
             min_n = max(4 * q, 40)
             n = min(min_n, max_events)
-            m = q
+            
 
             return n, q, m
 
         n = min(n, max_events) if n != -1 else max_events
         q = min(q, n)
         m = min(m, n)
+
+        m_min = np.floor(d / self.size) - q - 1
+        if m < m_min:
+            print(f'Block size too small, resized from {m} to {m_min}.')
+            m = m_min
 
         return n, q, m
 

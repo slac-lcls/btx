@@ -233,11 +233,11 @@ class IPCA:
         n = self.n
         q = self.q
 
-        print(
-            "Rank {r}, factoring {m} sample{s} into {n} sample model...".format(
-                r=self.rank, m=m, s="s" if m > 1 else "", n=n
+        if self.rank == 0:
+            print(
+                "Factoring {m} sample{s} into {n} sample, {q} component model...".format(m=m, s="s" if m > 1 else "", n=n, q=q
+                )
             )
-        )
 
         if n > 0:
             self.gather_interim_data(X)
