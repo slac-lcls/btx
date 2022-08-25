@@ -233,16 +233,18 @@ class IPCA:
         n = self.n
         q = self.q
 
-        if self.rank == 0:
-            print(
-                "Factoring {m} sample{s} into {n} sample, {q} component model...".format(m=m, s="s" if m > 1 else "", n=n, q=q
-                )
-            )
-
-        if n > 0:
-            self.gather_interim_data(X)
-
         with TaskTimer(self.task_durations, "total update"):
+
+            if self.rank == 0:
+                print(
+                    "Factoring {m} sample{s} into {n} sample, {q} component model...".format(
+                        m=m, s="s" if m > 1 else "", n=n, q=q
+                    )
+                )
+
+            with TaskTimer(self.task_durations, "record compression loss data"):
+                if n > 0:
+                    self.gather_interim_data(X)
 
             with TaskTimer(self.task_durations, "update mean and variance"):
                 mu_n = self.mu
