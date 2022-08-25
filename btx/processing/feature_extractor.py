@@ -27,7 +27,7 @@ class FeatureExtractor:
         init_with_pca=False,
         benchmark_mode=False,
         downsample=False,
-        bin_factor=4,
+        bin_factor=2,
         output_dir="",
     ):
         self.comm = MPI.COMM_WORLD
@@ -44,6 +44,10 @@ class FeatureExtractor:
         det_shape = self.psi.det.shape()
         self.d = np.prod(det_shape)
 
+        self.num_images, self.q, self.m = self.set_ipca_params(
+            num_images, num_components, block_size
+        )
+
         if self.downsample:
             self.bin_factor = bin_factor
 
@@ -56,11 +60,7 @@ class FeatureExtractor:
         self.cl_data = []
         self.hit_indices = []
 
-        self.num_images, self.q, self.m = self.set_ipca_params(
-            num_images, num_components, block_size, self.d
-        )
-
-    def set_ipca_params(self, num_images, num_components, block_size, num_features):
+    def set_ipca_params(self, num_images, num_components, block_size):
         """_summary_
 
         Parameters
@@ -83,25 +83,16 @@ class FeatureExtractor:
         n = num_images
         q = num_components
         m = block_size
-        d = num_features
 
         if benchmark:
-            min_n = max(4 * q, 40)
+            min_n = max(int(4 * q), 40)
             n = min(min_n, max_events)
-            m = min(q, np.floor(d / self.size) - q - 1)
 
             return n, q, m
 
         n = min(n, max_events) if n != -1 else max_events
         q = min(q, n)
         m = min(m, n)
-
-        # parallelization requires that the per-rank number of data
-        # features be at least as big as m + q + 1
-        m_min = np.floor(d / self.size) - q - 1
-        if m < m_min:
-            print(f"Block size too small, resized from {m} to {m_min}.")
-            m = m_min
 
         return n, q, m
 

@@ -5,7 +5,7 @@ FUNCTION_PATH="/cds/home/h/hepworth/btx-callum/btx/processing/feature_extractor.
 # RANKS=(4 6 8 12 16 32 64 96 128 256 384)
 
 COMPS=(1 5 10 25 40 65 80 95 110 125 140 155 170 185 200 215 230 245 260)
-RANKS=(1 64 128 256)
+RANKS=(1 64 128)
 
 for r in ${RANKS[@]}
 do
@@ -26,7 +26,7 @@ do
 source /reg/g/psdm/etc/psconda.sh -py3  
 export PYTHONPATH="${PYTHONPATH}:/cds/home/h/hepworth/btx-callum" 
 
-mpirun -n ${r} python ${FUNCTION_PATH} -e amo06516 -r 90 -d pnccdFront -c ${q} --benchmark_mode --downsample --bin_factor 4 --output_dir ${OUTPUT_DIR}
+mpirun -n ${r} python ${FUNCTION_PATH} -e amo06516 -r 90 -d pnccdFront -c ${q} --benchmark_mode --downsample --bin_factor 2 --output_dir ${OUTPUT_DIR}
 echo "Benchmark with q = ${q}, r = ${r} complete."
 EOF
     done
