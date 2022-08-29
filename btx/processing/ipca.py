@@ -315,21 +315,29 @@ class IPCA:
 
             X_tot = np.reshape(X_tot, (d, m))
             cb = X_tot - np.tile(mu, (1, m))
-            pcs = U[:, :q].T @ cb
+            pcs = U[:, :2].T @ cb
 
-            comp_loss = np.linalg.norm(np.abs(cb - U[:, :q] @ pcs), axis=0)
+            pc_dist = np.sqrt(pcs[0]**2 + pcs[1]**2)
 
-            self.loss_data = (
-                np.concatenate((self.loss_data, comp_loss))
-                if len(self.loss_data)
-                else comp_loss
-            )
+            # removing comp loss as detection metric, shifting to PC distance
 
-            mu_cl = np.mean(comp_loss, axis=0)
-            s_cl = np.var(comp_loss, axis=0)
+            # comp_loss = np.linalg.norm(np.abs(cb - U[:, :q] @ pcs), axis=0)
+
+            # self.loss_data = (
+            #     np.concatenate((self.loss_data, comp_loss))
+            #     if len(self.loss_data)
+            #     else comp_loss
+            # )
+
+            # mu_cl = np.mean(comp_loss, axis=0)
+            # s_cl = np.var(comp_loss, axis=0)
+
+            # block_outliers = (
+            #     np.where(np.abs(comp_loss - mu_cl) > 4 * np.sqrt(s_cl))[0] + n - m
+            # )
 
             block_outliers = (
-                np.where(np.abs(comp_loss - mu_cl) > 4 * np.sqrt(s_cl))[0] + n - m
+                np.where(pc_dist > np.std(pc_dist))[0] + n - m
             )
 
             self.outliers = (
