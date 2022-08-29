@@ -38,12 +38,14 @@ class FeatureExtractor:
 
         self.init_with_pca = init_with_pca
         self.benchmark_mode = benchmark_mode
-        self.output_dir = output_dir
         self.downsample = downsample
+        self.output_dir = output_dir
 
         self.num_images, self.q, self.m, self.d = self.set_ipca_params(
             num_images, num_components, block_size, bin_factor
         )
+
+        self.distribute_indices()
 
         self.cl_data = []
         self.hit_indices = []
@@ -58,6 +60,8 @@ class FeatureExtractor:
         num_components : _type_
             _description_
         block_size : _type_
+            _description_
+        bin_factor : _type_
             _description_
 
         Returns
@@ -165,10 +169,7 @@ class FeatureExtractor:
         m = self.m
         q = self.q
 
-        self.distribute_indices()
-        split_indices = self.split_indices
-
-        self.ipca = IPCA(d, q, m, split_indices)
+        self.ipca = IPCA(d, q, m, self.split_indices)
 
         parsed_images = 0
         num_images = self.num_images
@@ -190,7 +191,6 @@ class FeatureExtractor:
         # update model with remaining blocks
         for block_size in block_sizes:
             img_block = self.fetch_formatted_images(block_size)
-
             self.ipca.update_model(img_block)
 
         if self.benchmark_mode:
