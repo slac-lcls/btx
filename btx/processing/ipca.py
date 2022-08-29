@@ -317,7 +317,7 @@ class IPCA:
             cb = X_tot - np.tile(mu, (1, m))
             pcs = U.T @ cb
 
-            pc_dist = pcs[1][0]
+            pc_dist = np.reshape(pcs[1], m)
             self.loss_data = (
                 np.concatenate((self.loss_data, pcs), axis=1)
                 if len(self.loss_data)
