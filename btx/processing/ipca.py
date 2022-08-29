@@ -342,7 +342,7 @@ class IPCA:
             # )
 
             block_outliers = (
-                np.where(pc_dist - np.mu(pc_dist) > np.std(pc_dist))[0] + n - m
+                np.where(pc_dist - np.mean(pc_dist) > np.std(pc_dist))[0] + n - m
             )
 
             self.outliers = (
