@@ -284,8 +284,7 @@ class FeatureExtractor:
 
                 b = plt.imshow(np.abs(ipca_mu_u.T @ pca_mu_u))
                 plt.colorbar(b)
-                # plt.savefig(f"fig_{q}_{self.size}.png")
-                plt.clf()
+                plt.savefig(f"fig_{q}_{self.size}.png")
                 plt.show()
 
                 self.ipca.report_interval_data()
