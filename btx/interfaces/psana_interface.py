@@ -4,27 +4,35 @@ from psana import DataSource
 from psana import EventId
 from PSCalib.GeometryAccess import GeometryAccess
 
-class PsanaInterface:
 
-    def __init__(self, exp, run, det_type,
-                 event_receiver=None, event_code=None, event_logic=True,
-                 ffb_mode=False, track_timestamps=False):
-        self.exp = exp # experiment name, str
-        self.run = run # run number, int
-        self.det_type = det_type # detector name, str
-        self.track_timestamps = track_timestamps # bool, keep event info
+class PsanaInterface:
+    def __init__(
+        self,
+        exp,
+        run,
+        det_type,
+        event_receiver=None,
+        event_code=None,
+        event_logic=True,
+        ffb_mode=False,
+        track_timestamps=False,
+    ):
+        self.exp = exp  # experiment name, str
+        self.run = run  # run number, int
+        self.det_type = det_type  # detector name, str
+        self.track_timestamps = track_timestamps  # bool, keep event info
         self.seconds, self.nanoseconds, self.fiducials = [], [], []
-        self.event_receiver = event_receiver # 'evr0' or 'evr1', str
-        self.event_code = event_code # event code, int
-        self.event_logic = event_logic # bool, if True, retain events with event_code; if False, keep all other events
+        self.event_receiver = event_receiver  # 'evr0' or 'evr1', str
+        self.event_code = event_code  # event code, int
+        self.event_logic = event_logic  # bool, if True, retain events with event_code; if False, keep all other events
         self.set_up(det_type, ffb_mode)
         self.counter = 0
 
     def set_up(self, det_type, ffb_mode):
         """
-        Instantiate DataSource and Detector objects; use the run 
+        Instantiate DataSource and Detector objects; use the run
         functionality to retrieve all psana.EventTimes.
-        
+
         Parameters
         ----------
         det_type : str
@@ -32,11 +40,11 @@ class PsanaInterface:
         ffb_mode : bool
             if True, set up in an FFB-compatible style
         """
-        ds_args=f'exp={self.exp}:run={self.run}:idx'
+        ds_args = f"exp={self.exp}:run={self.run}:idx"
         if ffb_mode:
-            ds_args += f':dir=/cds/data/drpsrcf/{self.exp[:3]}/{self.exp}/xtc'
-        
-        self.ds = psana.DataSource(ds_args)   
+            ds_args += f":dir=/cds/data/drpsrcf/{self.exp[:3]}/{self.exp}/xtc"
+
+        self.ds = psana.DataSource(ds_args)
         self.det = psana.Detector(det_type, self.ds.env())
         if self.event_receiver is not None:
             self.evr_det = psana.Detector(self.event_receiver)
@@ -54,41 +62,41 @@ class PsanaInterface:
         if (self.det.pedestals(evt) is None) or (self.det.gain(evt) is None):
             print("Warning: calibration data unavailable, returning uncalibrated data")
             self.calibrate = False
-            
+
     def turn_calibration_off(self):
         """
         Do not apply calibration to images.
         """
         self.calibrate = False
-        
+
     def get_pixel_size(self):
         """
         Retrieve the detector's pixel size in millimeters.
-        
+
         Returns
         -------
         pixel_size : float
             detector pixel size in mm
         """
-        if self.det_type == 'Rayonix':
+        if self.det_type == "Rayonix":
             env = self.ds.env()
             cfg = env.configStore()
             pixel_size_um = cfg.get(psana.Rayonix.ConfigV2).pixelWidth()
         else:
             pixel_size_um = self.det.pixel_size(self.ds.env())
         return pixel_size_um / 1.0e3
-    
+
     def get_wavelength(self):
         """
         Retrieve the detector's wavelength in Angstrom.
-        
+
         Returns
         -------
         wavelength : float
             wavelength in Angstrom
         """
-        return self.ds.env().epicsStore().value('SIOC:SYS0:ML00:AO192') * 10.
-    
+        return self.ds.env().epicsStore().value("SIOC:SYS0:ML00:AO192") * 10.0
+
     def get_wavelength_evt(self, evt):
         """
         Retrieve the detector's wavelength for a specfic event.
@@ -97,27 +105,29 @@ class PsanaInterface:
         ----------
         evt : psana.Event object
             individual psana event
-        
+
         Returns
         -------
         wavelength : float
             wavelength in Angstrom
         """
-        ebeam = psana.Detector('EBeam')
+        ebeam = psana.Detector("EBeam")
         photon_energy = ebeam.get(evt).ebeamPhotonEnergy()
-        lambda_m =  1.23984197386209e-06 / photon_energy # convert to meters using e=hc/lambda
+        lambda_m = (
+            1.23984197386209e-06 / photon_energy
+        )  # convert to meters using e=hc/lambda
         return lambda_m * 1e10
 
     def estimate_distance(self):
         """
         Retrieve an estimate of the detector distance in mm.
-        
+
         Returns
         -------
         distance : float
             estimated detector distance
         """
-        return -1*np.mean(self.det.coords_z(self.run))/1e3
+        return -1 * np.mean(self.det.coords_z(self.run)) / 1e3
 
     def get_camera_length(self, pv=None):
         """
@@ -134,22 +144,22 @@ class PsanaInterface:
             clen, where clen = distance - coffset
         """
         if pv is None:
-            if self.det_type == 'jungfrau4M':
-                pv = 'CXI:DS1:MMS:06.RBV'
-            if self.det_type == 'Rayonix':
-                pv = 'MFX:DET:MMS:04.RBV'
-            if self.det_type == 'epix10k2M':
-                pv = 'MFX:ROB:CONT:POS:Z'
+            if self.det_type == "jungfrau4M":
+                pv = "CXI:DS1:MMS:06.RBV"
+            if self.det_type == "Rayonix":
+                pv = "MFX:DET:MMS:04.RBV"
+            if self.det_type == "epix10k2M":
+                pv = "MFX:ROB:CONT:POS:Z"
             print(f"PV used to retrieve clen parameter: {pv}")
 
         return self.ds.env().epicsStore().value(pv)
 
     def get_timestamp(self, evtId):
         """
-        Retrieve the timestamp (seconds, nanoseconds, fiducials) associated with the input 
+        Retrieve the timestamp (seconds, nanoseconds, fiducials) associated with the input
         event and store in self variables. For further details, see the example here:
         https://confluence.slac.stanford.edu/display/PSDM/Jump+Quickly+to+Events+Using+Timestamps
-        
+
         Parameters
         ----------
         evtId : psana.EventId
@@ -182,16 +192,16 @@ class PsanaInterface:
             found_event = False
             if self.event_code in event_codes:
                 found_event = True
-            if ( found_event != self.event_logic ):
+            if found_event != self.event_logic:
                 skip = True
         return skip
 
     def distribute_events(self, rank, total_ranks, max_events=-1):
         """
         For parallel processing. Update self.counter and self.max_events such that
-        events will be distributed evenly across total_ranks, and each rank will 
+        events will be distributed evenly across total_ranks, and each rank will
         only process its assigned events. Hack to avoid explicitly using MPI here.
-        
+
         Parameters
         ----------
         rank : int
@@ -199,11 +209,11 @@ class PsanaInterface:
         total_ranks : int
             total number of ranks
         max_events : int, optional
-            total number of images desired, option to override self.max_events 
+            total number of images desired, option to override self.max_events
         """
         if max_events == -1:
             max_events = self.max_events
-            
+
         # determine boundary indices between ranks
         split_indices = np.zeros(total_ranks)
         for r in range(total_ranks):
@@ -211,25 +221,25 @@ class PsanaInterface:
             if r < (max_events % total_ranks):
                 num_per_rank += 1
             split_indices[r] = num_per_rank
-        split_indices = np.append(np.array([0]), np.cumsum(split_indices)).astype(int)   
-        
+        split_indices = np.append(np.array([0]), np.cumsum(split_indices)).astype(int)
+
         # update self variables that determine start and end of this rank's batch
         self.counter = split_indices[rank]
-        self.max_events = split_indices[rank+1]
-        
+        self.max_events = split_indices[rank + 1]
+
     def get_images(self, num_images, assemble=True):
         """
-        Retrieve a fixed number of images from the run. If the pedestal or gain 
+        Retrieve a fixed number of images from the run. If the pedestal or gain
         information is unavailable and unassembled images are requested, return
-        uncalibrated images. 
-        
+        uncalibrated images.
+
         Parameters
         ---------
         num_images : int
             number of images to retrieve (per rank)
         assemble : bool, default=True
             whether to assemble panels into image
-            
+
         Returns
         -------
         images : numpy.ndarray, shape ((num_images,) + det_shape)
@@ -237,19 +247,23 @@ class PsanaInterface:
         """
         # set up storage array
         if assemble:
-            images = np.zeros((num_images, 
-                               self.det.image_xaxis(self.run).shape[0], 
-                               self.det.image_yaxis(self.run).shape[0]))
+            images = np.zeros(
+                (
+                    num_images,
+                    self.det.image_xaxis(self.run).shape[0],
+                    self.det.image_yaxis(self.run).shape[0],
+                )
+            )
         else:
             images = np.zeros((num_images,) + self.det.shape())
-            
+
         # retrieve next batch of images
         for counter_batch in range(num_images):
             if self.counter >= self.max_events:
                 images = images[:counter_batch]
                 print("No more events to retrieve")
                 break
-                
+
             else:
                 evt = self.runner.event(self.times[self.counter])
                 if assemble:
@@ -262,27 +276,67 @@ class PsanaInterface:
                         images[counter_batch] = self.det.calib(evt=evt)
                     else:
                         images[counter_batch] = self.det.raw(evt=evt)
-                        
+
                 if self.track_timestamps:
                     self.get_timestamp(evt.get(EventId))
-                    
+
                 self.counter += 1
-             
+
         return images
 
+    def fetch_formatted_images(
+        self, n, d, start_index, end_index, downsample=False, bin_factor=1
+    ):
+        """_summary_
+
+        Parameters
+        ----------
+        n : _type_
+            _description_
+        d : _type_
+            _description_
+        index_bounds : _type_
+            _description_
+        downsample : _type_
+            _description_
+
+        Returns
+        -------
+        _type_
+            _description_
+        """
+
+        # may have to rewrite eventually when number of images becomes large,
+        # i.e. streamed setting, either that or downsample aggressively
+        imgs = self.get_images(n, assemble=False)
+
+        if downsample:
+            imgs = bin_data(imgs, bin_factor)
+
+        imgs = imgs[
+            [i for i in range(imgs.shape[0]) if not np.isnan(imgs[i : i + 1]).any()]
+        ]
+
+        num_valid_imgs, _, _, _ = imgs.shape
+        formatted_imgs = np.reshape(imgs, (num_valid_imgs, d)).T
+
+        return formatted_imgs[start_index:end_index, :]
+
+
 #### Miscellaneous functions ####
+
 
 def retrieve_pixel_index_map(geom):
     """
     Retrieve a pixel index map that specifies the relative arrangement of
     pixels on an LCLS detector.
-    
+
     Parameters
     ----------
     geom : string or GeometryAccess Object
         if str, full path to a psana *-end.data file
         else, a PSCalib.GeometryAccess.GeometryAccess object
-    
+
     Returns
     -------
     pixel_index_map : numpy.ndarray, 4d
@@ -297,22 +351,23 @@ def retrieve_pixel_index_map(geom):
     pixel_index_map = np.zeros(shape + (2,))
     for n in range(2):
         pixel_index_map[..., n] = temp_index[n].reshape(shape)
-    
+
     return pixel_index_map.astype(np.int64)
+
 
 def assemble_image_stack_batch(image_stack, pixel_index_map):
     """
     Assemble the image stack to obtain a 2D pattern according to the index map.
     Either a batch or a single image can be provided. Modified from skopi.
-    
+
     Parameters
     ----------
-    image_stack : numpy.ndarray, 3d or 4d 
+    image_stack : numpy.ndarray, 3d or 4d
         stack of images, shape (n_images, n_panels, fs_panel_shape, ss_panel_shape)
         or (n_panels, fs_panel_shape, ss_panel_shape)
     pixel_index_map : numpy.ndarray, 4d
         pixel coordinates, shape (n_panels, fs_panel_shape, ss_panel_shape, 2)
-    
+
     Returns
     -------
     images : numpy.ndarray, 3d
@@ -321,7 +376,7 @@ def assemble_image_stack_batch(image_stack, pixel_index_map):
     """
     if len(image_stack.shape) == 3:
         image_stack = np.expand_dims(image_stack, 0)
-    
+
     # get boundary
     index_max_x = np.max(pixel_index_map[:, :, :, 0]) + 1
     index_max_y = np.max(pixel_index_map[:, :, :, 1]) + 1
@@ -334,18 +389,21 @@ def assemble_image_stack_batch(image_stack, pixel_index_map):
 
     # loop through the panels
     for l in range(panel_num):
-        images[:, pixel_index_map[l, :, :, 0], pixel_index_map[l, :, :, 1]] = image_stack[:, l, :, :]
-        
+        images[
+            :, pixel_index_map[l, :, :, 0], pixel_index_map[l, :, :, 1]
+        ] = image_stack[:, l, :, :]
+
     if images.shape[0] == 1:
         images = images[0]
 
     return images
 
+
 def disassemble_image_stack_batch(images, pixel_index_map):
     """
-    Diassemble a series of 2D diffraction patterns into their consituent panels. 
+    Diassemble a series of 2D diffraction patterns into their consituent panels.
     Function modified from skopi.
-        
+
     Parameters
     ----------
     images : numpy.ndarray, 3d
@@ -356,7 +414,7 @@ def disassemble_image_stack_batch(images, pixel_index_map):
 
     Returns
     -------
-    image_stack_batch : numpy.ndarray, 3d or 4d 
+    image_stack_batch : numpy.ndarray, 3d or 4d
         stack of images, shape (n_images, n_panels, fs_panel_shape, ss_panel_shape)
         or (n_panels, fs_panel_shape, ss_panel_shape)
     """
@@ -367,9 +425,73 @@ def disassemble_image_stack_batch(images, pixel_index_map):
     for panel in range(pixel_index_map.shape[0]):
         idx_map_1 = pixel_index_map[panel, :, :, 0]
         idx_map_2 = pixel_index_map[panel, :, :, 1]
-        image_stack_batch[:,panel] = images[:,idx_map_1,idx_map_2]
-        
+        image_stack_batch[:, panel] = images[:, idx_map_1, idx_map_2]
+
     if image_stack_batch.shape[0] == 1:
         image_stack_batch = image_stack_batch[0]
-        
+
     return image_stack_batch
+
+
+#### Binning methods ###
+
+
+def bin_data(arr, bin_factor, det_shape=None):
+    """
+    Bin detector data by bin_factor through averaging.
+    Retrieved from
+    https://github.com/apeck12/cmtip/blob/main/cmtip/prep_data.py
+
+    :param arr: array shape (n_images, n_panels, panel_shape_x, panel_shape_y)
+      or if det_shape is given of shape (n_images, 1, n_pixels_per_image)
+    :param bin_factor: how may fold to bin arr by
+    :param det_shape: tuple of detector shape, optional
+    :return arr_binned: binned data of same dimensions as arr
+    """
+    # reshape as needed
+    if det_shape is not None:
+        arr = np.array([arr[i].reshape(det_shape) for i in range(arr.shape[0])])
+
+    n, p, y, x = arr.shape
+
+    # ensure that original shape is divisible by bin factor
+    assert y % bin_factor == 0
+    assert x % bin_factor == 0
+
+    # bin each panel of each image
+    binned_arr = (
+        arr.reshape(
+            n,
+            p,
+            int(y / bin_factor),
+            bin_factor,
+            int(x / bin_factor),
+            bin_factor,
+        )
+        .mean(-1)
+        .mean(3)
+    )
+
+    # if input data were flattened, reflatten
+    if det_shape is not None:
+        flattened_size = np.prod(np.array(binned_arr.shape[1:]))
+        binned_arr = binned_arr.reshape((binned_arr.shape[0], 1) + (flattened_size,))
+    return binned_arr
+
+
+def bin_pixel_index_map(arr, bin_factor):
+    """
+    Bin pixel_index_map by bin factor.
+    Retrieved from
+    https://github.com/apeck12/cmtip/blob/main/cmtip/prep_data.py
+
+    :param arr: pixel_index_map of shape (n_panels, panel_shape_x, panel_shape_y, 2)
+    :param bin_factor: how may fold to bin arr by
+    :return binned_arr: binned pixel_index_map of same dimensions as arr
+    """
+    arr = np.moveaxis(arr, -1, 0)
+    arr = np.minimum(arr[..., ::bin_factor, :], arr[..., 1::bin_factor, :])
+    arr = np.minimum(arr[..., ::bin_factor], arr[..., 1::bin_factor])
+    arr = arr // bin_factor
+
+    return np.moveaxis(arr, 0, -1)
