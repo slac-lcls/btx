@@ -315,9 +315,9 @@ class IPCA:
 
             X_tot = np.reshape(X_tot, (d, m))
             cb = X_tot - np.tile(mu, (1, m))
-            pcs = U[:, :2].T @ cb
+            pcs = U.T @ cb
 
-            pc_dist = np.sqrt(pcs[0]**2 + pcs[1]**2)
+            pc_dist = pcs[2]
             self.loss_data = (
                 np.concatenate((self.loss_data, pc_dist))
                 if len(self.loss_data)
@@ -342,7 +342,7 @@ class IPCA:
             # )
 
             block_outliers = (
-                np.where(pc_dist > np.std(pc_dist))[0] + n - m
+                np.where(pc_dist - np.mu(pc_dist) > np.std(pc_dist))[0] + n - m
             )
 
             self.outliers = (
