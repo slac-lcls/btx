@@ -319,7 +319,7 @@ class IPCA:
 
             pc_dist = pcs[1]
             self.loss_data = (
-                np.concatenate((self.loss_data, pcs))
+                np.concatenate((self.loss_data, pcs), axis=1)
                 if len(self.loss_data)
                 else pcs
             )
@@ -346,7 +346,7 @@ class IPCA:
             )
 
             self.outliers = (
-                np.concatenate((self.outliers, block_outliers))
+                np.concatenate((self.outliers, block_outliers), axis=0)
                 if len(self.outliers)
                 else block_outliers
             )
