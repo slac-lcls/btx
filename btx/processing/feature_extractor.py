@@ -41,26 +41,14 @@ class FeatureExtractor:
         self.output_dir = output_dir
         self.downsample = downsample
 
-        det_shape = self.psi.det.shape()
-        self.d = np.prod(det_shape)
-
-        self.num_images, self.q, self.m = self.set_ipca_params(
-            num_images, num_components, block_size
+        self.num_images, self.q, self.m, self.d = self.set_ipca_params(
+            num_images, num_components, block_size, bin_factor
         )
-
-        if self.downsample:
-            self.bin_factor = bin_factor
-
-            if det_shape[-1] % self.bin_factor or det_shape[-2] % self.bin_factor:
-                print("Invalid bin factor, toggled off downsampling.")
-                self.downsample = False
-            else:
-                self.d = int(self.d / self.bin_factor**2)
 
         self.cl_data = []
         self.hit_indices = []
 
-    def set_ipca_params(self, num_images, num_components, block_size):
+    def set_ipca_params(self, num_images, num_components, block_size, bin_factor):
         """_summary_
 
         Parameters
@@ -79,7 +67,9 @@ class FeatureExtractor:
         """
         max_events = self.psi.max_events
         benchmark = self.benchmark_mode
+        downsample = self.downsample
 
+        # set n, q, and m
         n = num_images
         q = num_components
         m = block_size
@@ -88,14 +78,24 @@ class FeatureExtractor:
             min_n = max(int(4 * q), 40)
             n = min(min_n, max_events)
             m = q
+        else:
+            n = min(n, max_events) if n != -1 else max_events
+            q = min(q, n)
+            m = min(m, n)
 
-            return n, q, m
+        # set d
+        det_shape = self.psi.det.shape()
+        d = np.prod(det_shape).astype(int)
 
-        n = min(n, max_events) if n != -1 else max_events
-        q = min(q, n)
-        m = min(m, n)
+        if downsample:
+            if det_shape[-1] % bin_factor or det_shape[-2] % bin_factor:
+                print("Invalid bin factor, toggled off downsampling.")
+                self.downsample = False
+            else:
+                d = int(d / bin_factor**2)
+                self.bin_factor = bin_factor
 
-        return n, q, m
+        return n, q, m, d
 
     def distribute_indices(self):
         d = self.d
