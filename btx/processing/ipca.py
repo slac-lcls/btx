@@ -318,6 +318,11 @@ class IPCA:
             pcs = U[:, :2].T @ cb
 
             pc_dist = np.sqrt(pcs[0]**2 + pcs[1]**2)
+            self.loss_data = (
+                np.concatenate((self.loss_data, pc_dist))
+                if len(self.loss_data)
+                else pc_dist
+            )
 
             # removing comp loss as detection metric, shifting to PC distance
 
