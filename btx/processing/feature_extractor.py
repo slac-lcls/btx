@@ -118,7 +118,7 @@ class FeatureExtractor:
 
         self.split_indices = split_indices
 
-    def fetch_formatted_images(self, n, fetch_all_features=False):
+    def get_formatted_images(self, n, get_all_features=False):
         """
         Retrieve and format n images from run.
 
@@ -142,8 +142,8 @@ class FeatureExtractor:
         rank = self.rank
 
         # get start index, end index
-        start_index = 0 if fetch_all_features else self.split_indices[rank]
-        end_index = d if fetch_all_features else self.split_indices[rank + 1]
+        start_index = 0 if get_all_features else self.split_indices[rank]
+        end_index = d if get_all_features else self.split_indices[rank + 1]
 
         # may have to rewrite eventually when number of images becomes large,
         # i.e. streamed setting, either that or downsample aggressively
@@ -175,7 +175,7 @@ class FeatureExtractor:
         num_images = self.num_images
 
         if self.init_with_pca and not self.benchmark_mode:
-            img_block = self.fetch_formatted_images(q)
+            img_block = self.get_formatted_images(q)
             self.ipca.initialize_model(img_block)
 
             parsed_images = q
@@ -190,7 +190,7 @@ class FeatureExtractor:
 
         # update model with remaining blocks
         for block_size in block_sizes:
-            img_block = self.fetch_formatted_images(block_size)
+            img_block = self.get_formatted_images(block_size)
             self.ipca.update_model(img_block)
 
         if self.benchmark_mode:
@@ -220,7 +220,7 @@ class FeatureExtractor:
 
                 # run svd on centered image batch
                 print("\nGathering images for batch PCA...")
-                X = self.fetch_formatted_images(n, fetch_all_features=True)
+                X = self.get_formatted_images(n, get_all_features=True)
 
                 print("Performing batch PCA...")
                 mu_pca = np.reshape(np.mean(X, axis=1), (X.shape[0], 1))
