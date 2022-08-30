@@ -217,6 +217,7 @@ class IPCA:
         Method acquired from
         https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=6691583&tag=1
         """
+        print('here')
         _, x = A.shape
         q = self.q
         m = x - q - 1
