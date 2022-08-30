@@ -394,7 +394,9 @@ def disassemble_image_stack_batch(images, pixel_index_map):
 
     return image_stack_batch
 
+
 #### binning methods ####
+
 
 def bin_data(arr, bin_factor, det_shape=None):
     """
@@ -456,4 +458,3 @@ def bin_pixel_index_map(arr, bin_factor):
     arr = arr // bin_factor
 
     return np.moveaxis(arr, 0, -1)
-
