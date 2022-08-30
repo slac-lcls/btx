@@ -332,7 +332,7 @@ class IPCA:
             [
                 U_tot,
                 self.split_counts * self.q,
-                self.start_indices * self.q,
+                self.split_indices * self.q,
                 MPI.DOUBLE,
             ],
             root=0,
@@ -346,7 +346,7 @@ class IPCA:
             [
                 mu_tot,
                 self.split_counts * self.q,
-                self.start_indices,
+                self.split_indices,
                 MPI.DOUBLE,
             ],
             root=0,
@@ -356,7 +356,7 @@ class IPCA:
             [
                 var_tot,
                 self.split_counts * self.q,
-                self.start_indices,
+                self.split_indices,
                 MPI.DOUBLE,
             ],
             root=0,
@@ -394,7 +394,7 @@ class IPCA:
             [
                 X_tot,
                 self.split_counts * m,
-                self.start_indices * m,
+                self.split_indices * m,
                 MPI.DOUBLE,
             ],
             root=0,
@@ -519,7 +519,7 @@ class IPCA:
                 plt.show()
 
                 print("\n")
-                report_interval_data(self.task_durations)
+                self.report_interval_data()
 
             finally:
                 # reset counter
@@ -600,7 +600,6 @@ class IPCA:
             use images in initialization, by default False
         """
 
-        d = self.d
         rank = self.rank
         start_index, end_index = self.split_indices[rank], self.split_indices[rank + 1]
 
