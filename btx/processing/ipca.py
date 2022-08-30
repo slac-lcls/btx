@@ -217,7 +217,6 @@ class IPCA:
         Method acquired from
         https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=6691583&tag=1
         """
-        print('here')
         _, x = A.shape
         q = self.q
         m = x - q - 1
@@ -294,9 +293,13 @@ class IPCA:
                     )
                 )
 
+            print('here')
+
             with TaskTimer(self.task_durations, "record compression loss data"):
                 if n > 0:
                     self.gather_interim_data(X)
+
+            print('there')
 
             with TaskTimer(self.task_durations, "update mean and variance"):
                 mu_n = self.mu
