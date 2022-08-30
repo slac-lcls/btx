@@ -327,12 +327,14 @@ class IPCA:
         else:
             U_tot, mu_tot, var_tot, S_tot = None, None, None, None
 
+        start_indices = self.split_indices[-1]
+
         self.comm.Gatherv(
             self.U.flatten(),
             [
                 U_tot,
                 self.split_counts * self.q,
-                self.split_indices * self.q,
+                start_indices * self.q,
                 MPI.DOUBLE,
             ],
             root=0,
@@ -346,7 +348,7 @@ class IPCA:
             [
                 mu_tot,
                 self.split_counts * self.q,
-                self.split_indices,
+                start_indices * self.q,
                 MPI.DOUBLE,
             ],
             root=0,
@@ -356,7 +358,7 @@ class IPCA:
             [
                 var_tot,
                 self.split_counts * self.q,
-                self.split_indices,
+                start_indices * self.q,
                 MPI.DOUBLE,
             ],
             root=0,
@@ -382,6 +384,8 @@ class IPCA:
         _, m = X.shape
         n, d = self.incorporated_images, self.d
 
+        start_indices = self.split_indices[-1]
+
         U, _, mu, _ = self.get_model()
 
         if self.rank == 0:
@@ -394,7 +398,7 @@ class IPCA:
             [
                 X_tot,
                 self.split_counts * m,
-                self.split_indices * m,
+                start_indices * m,
                 MPI.DOUBLE,
             ],
             root=0,
