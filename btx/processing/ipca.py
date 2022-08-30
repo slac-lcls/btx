@@ -471,7 +471,7 @@ class IPCA:
             print("\nVerifying Model Accuracy\n------------------------\n")
             print(f"q = {q}")
             print(f"d = {d}")
-            print(f"n = {n}")
+            print(f"n = {num_images}")
             print(f"m = {m}")
             print("\n")
 
