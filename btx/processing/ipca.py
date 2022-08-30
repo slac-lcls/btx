@@ -451,7 +451,7 @@ class IPCA:
 
                 # run svd on centered image batch
                 print("\nGathering images for batch PCA...")
-                X = self.fetch_formatted_images(n, fetch_all_features=True)
+                X = self.fetch_formatted_images(n, 0, d)
 
                 print("Performing batch PCA...")
                 mu_pca = np.reshape(np.mean(X, axis=1), (X.shape[0], 1))
@@ -604,7 +604,7 @@ class IPCA:
         rank = self.rank
         start_index, end_index = self.split_indices[rank], self.split_indices[rank + 1]
 
-        img_block = self.fetch_formatted_images(n, d, start_index, end_index)
+        img_block = self.fetch_formatted_images(n, start_index, end_index)
 
         if initialize:
             self.initialize_model(img_block)
