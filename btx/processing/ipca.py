@@ -818,4 +818,4 @@ if __name__ == "__main__":
     ipca = IPCA(**kwargs)
     ipca.run_ipca()
     # fe.verify_model_accuracy()
-    ipca.ipca.get_loss_stats()
+    ipca.get_loss_stats()
