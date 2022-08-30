@@ -293,13 +293,9 @@ class IPCA:
                     )
                 )
 
-            print('here')
-
             with TaskTimer(self.task_durations, "record compression loss data"):
                 if n > 0:
                     self.gather_interim_data(X)
-
-            print('there')
 
             with TaskTimer(self.task_durations, "update mean and variance"):
                 mu_n = self.mu
@@ -351,7 +347,7 @@ class IPCA:
         else:
             U_tot, mu_tot, var_tot, S_tot = None, None, None, None
 
-        start_indices = self.split_indices[-1]
+        start_indices = self.split_indices[:-1]
 
         self.comm.Gatherv(
             self.U.flatten(),
@@ -408,7 +404,7 @@ class IPCA:
         _, m = X.shape
         n, d = self.n, self.d
 
-        start_indices = self.split_indices[-1]
+        start_indices = self.split_indices[:-1]
 
         U, _, mu, _ = self.get_model()
 
