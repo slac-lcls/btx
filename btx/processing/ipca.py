@@ -445,102 +445,102 @@ class IPCA:
         """
         Run benchmark to verify model accuracy.
         """
+        self.comm.Barrier()
+        U, S, mu, var = self.get_model()
+
+        if self.rank != 0:
+            return
+
         d = self.d
         m = self.m
         q = self.q
         n = self.num_images
 
-        self.comm.Barrier()
-        U, S, mu, var = self.get_model()
+        # store current event index from self.psi and reset
+        event_index = self.psi.counter
+        self.psi.counter = event_index - n
 
-        if self.rank == 0:
-            # store current event index from self.psi and reset
-            event_index = self.psi.counter
-            self.psi.counter = event_index - n
+        try:
+            print("\nVerifying Model Accuracy\n------------------------\n")
+            print(f"q = {q}")
+            print(f"d = {d}")
+            print(f"n = {n}")
+            print(f"m = {m}")
+            print("\n")
 
-            try:
-                print("\nVerifying Model Accuracy\n------------------------\n")
-                print(f"q = {q}")
-                print(f"d = {d}")
-                print(f"n = {n}")
-                print(f"m = {m}")
-                print("\n")
+            # run svd on centered image batch
+            print("Gathering images for batch PCA...")
+            X = self.fetch_formatted_images(n, 0, d)
 
-                # run svd on centered image batch
-                print("Gathering images for batch PCA...")
-                X = self.fetch_formatted_images(n, 0, d)
+            print("Performing batch PCA...")
+            mu_pca = np.reshape(np.mean(X, axis=1), (X.shape[0], 1))
+            var_pca = np.reshape(np.var(X, ddof=1, axis=1), (X.shape[0], 1))
 
-                print("Performing batch PCA...")
-                mu_pca = np.reshape(np.mean(X, axis=1), (X.shape[0], 1))
-                var_pca = np.reshape(np.var(X, ddof=1, axis=1), (X.shape[0], 1))
+            mu_n = np.tile(mu_pca, n)
+            X_centered = X - mu_n
 
-                mu_n = np.tile(mu_pca, n)
-                X_centered = X - mu_n
+            U_pca, S_pca, _ = np.linalg.svd(X_centered, full_matrices=False)
+            print("\n")
 
-                U_pca, S_pca, _ = np.linalg.svd(X_centered, full_matrices=False)
-                print("\n")
+            q_pca = min(q, n)
 
-                q_pca = min(q, n)
+            # calculate compression loss, normalized if given flag
+            norm = True
+            norm_str = "Normalized " if norm else ""
 
-                # calculate compression loss, normalized if given flag
-                norm = True
-                norm_str = "Normalized " if norm else ""
+            ipca_loss = compression_loss(X, U[:, :q_pca], normalized=norm)
+            print(f"iPCA {norm_str}Compression Loss: {ipca_loss}")
 
-                ipca_loss = compression_loss(X, U[:, :q_pca], normalized=norm)
-                print(f"iPCA {norm_str}Compression Loss: {ipca_loss}")
+            pca_loss = compression_loss(X, U_pca[:, :q_pca], normalized=norm)
+            print(f"PCA {norm_str}Compression Loss: {pca_loss}")
 
-                pca_loss = compression_loss(X, U_pca[:, :q_pca], normalized=norm)
-                print(f"PCA {norm_str}Compression Loss: {pca_loss}")
+            print("\n")
+            ipca_tot_var = np.sum(var)
+            pca_tot_var = np.sum(var_pca)
 
-                print("\n")
-                ipca_tot_var = np.sum(var)
-                pca_tot_var = np.sum(var_pca)
+            print(f"iPCA Total Variance: {ipca_tot_var}")
+            print(f"PCA Total Variance: {pca_tot_var}")
+            print("\n")
 
-                print(f"iPCA Total Variance: {ipca_tot_var}")
-                print(f"PCA Total Variance: {pca_tot_var}")
-                print("\n")
+            ipca_exp_var = (np.sum(S[:q_pca] ** 2) / (n - 1)) / np.sum(var)
+            print(f"iPCA Explained Variance: {ipca_exp_var}")
 
-                ipca_exp_var = (np.sum(S[:q_pca] ** 2) / (n - 1)) / np.sum(var)
-                print(f"iPCA Explained Variance: {ipca_exp_var}")
+            pca_exp_var = (np.sum(S_pca[:q_pca] ** 2) / (n - 1)) / np.sum(var_pca)
+            print(f"PCA Explained Variance: {pca_exp_var}")
+            print("\n")
 
-                pca_exp_var = (np.sum(S_pca[:q_pca] ** 2) / (n - 1)) / np.sum(var_pca)
-                print(f"PCA Explained Variance: {pca_exp_var}")
-                print("\n")
+            print("iPCA Singular Values: \n")
+            print(S)
+            print("\n")
 
-                print("iPCA Singular Values: \n")
-                print(S)
-                print("\n")
+            print("PCA Singular Values: \n")
+            print(S_pca[:q_pca])
+            print("\n")
 
-                print("PCA Singular Values: \n")
-                print(S_pca[:q_pca])
-                print("\n")
+            mean_inner_prod = np.inner(mu.flatten(), mu_pca.flatten()) / (
+                np.linalg.norm(mu) * np.linalg.norm(mu_pca)
+            )
 
-                mean_inner_prod = np.inner(mu.flatten(), mu_pca.flatten()) / (
-                    np.linalg.norm(mu) * np.linalg.norm(mu_pca)
-                )
+            print("Normalized Mean Inner Product: " + f"{mean_inner_prod}")
+            print("\n")
 
-                print("Normalized Mean Inner Product: " + f"{mean_inner_prod}")
-                print("\n")
+            print("Basis Inner Product: \n")
+            print(np.diagonal(np.abs(U[:, :q_pca].T @ U_pca[:, :q_pca])))
 
-                print("Basis Inner Product: \n")
-                print(np.diagonal(np.abs(U[:, :q_pca].T @ U_pca[:, :q_pca])))
+            ipca_mu_u = np.hstack((mu / np.linalg.norm(mu), U[:, :q_pca]))
+            pca_mu_u = np.hstack((mu_pca / np.linalg.norm(mu_pca), U_pca[:, :q_pca]))
 
-                ipca_mu_u = np.hstack((mu / np.linalg.norm(mu), U[:, :q_pca]))
-                pca_mu_u = np.hstack(
-                    (mu_pca / np.linalg.norm(mu_pca), U_pca[:, :q_pca])
-                )
+            b = plt.imshow(np.abs(ipca_mu_u.T @ pca_mu_u))
+            plt.colorbar(b)
+            plt.savefig(f"fig_{q}_{self.size}.png")
+            plt.show()
 
-                b = plt.imshow(np.abs(ipca_mu_u.T @ pca_mu_u))
-                plt.colorbar(b)
-                plt.savefig(f"fig_{q}_{self.size}.png")
-                plt.show()
+            print("\n")
+            self.report_interval_data()
 
-                print("\n")
-                self.report_interval_data()
-
-            finally:
-                # reset counter
-                self.psi.counter = event_index
+        finally:
+            # reset counter
+            self.psi.counter = event_index
 
     def run_ipca(self):
         """
