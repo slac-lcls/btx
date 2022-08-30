@@ -154,6 +154,8 @@ class IPCA:
             min_n = max(int(4 * q), 40)
             n = min(min_n, max_events)
             m = q
+
+            print(f"Benchmarking, setting q = {q}, n = {n}, m = {m}.")
         else:
             n = min(n, max_events) if n != -1 else max_events
             q = min(q, n)
