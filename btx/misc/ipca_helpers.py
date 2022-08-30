@@ -1,27 +1,6 @@
 import numpy as np
 
 
-
-def distribute_indices(d, size):
-
-    # determine boundary indices between ranks
-    split_indices = np.zeros(size)
-    for r in range(size):
-        num_per_rank = d // size
-        if r < (d % size):
-            num_per_rank += 1
-        split_indices[r] = num_per_rank
-
-    trailing_indices = np.cumsum(split_indices)
-    split_indices = np.append(np.array([0]), trailing_indices).astype(int)
-
-    # determine number of images per each rank
-    split_counts = np.empty(size, dtype=int)
-    for i in range(len(split_indices) - 1):
-        split_counts[i] = split_indices[i + 1] - split_indices[i]
-
-    return split_indices, split_counts
-
 def calculate_sample_mean_and_variance(imgs):
     """
     Compute the sample mean and variance of a flattened stack of n images.
@@ -110,6 +89,7 @@ def update_sample_variance(s_n, s_m, mu_n, mu_m, n, m):
         ) / (n + m - 1)
 
     return s_nm
+
 
 def compare_basis_vectors(U_1, U_2, q):
     """
@@ -208,6 +188,7 @@ def bin_data(arr, bin_factor, det_shape=None):
     if det_shape is not None:
         flattened_size = np.prod(np.array(binned_arr.shape[1:]))
         binned_arr = binned_arr.reshape((binned_arr.shape[0], 1) + (flattened_size,))
+
     return binned_arr
 
 
@@ -227,4 +208,3 @@ def bin_pixel_index_map(arr, bin_factor):
     arr = arr // bin_factor
 
     return np.moveaxis(arr, 0, -1)
-

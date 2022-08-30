@@ -6,11 +6,11 @@ from mpi4py import MPI
 
 from btx.interfaces.psana_interface import PsanaInterface
 from btx.misc.ipca_helpers import (
-    distribute_indices,
     calculate_sample_mean_and_variance,
     update_sample_variance,
     update_sample_mean,
     compression_loss,
+    bin_data,
 )
 
 from time import perf_counter
@@ -89,14 +89,12 @@ class IPCA:
         self.init_with_pca = init_with_pca
         self.benchmark_mode = benchmark_mode
         self.downsample = downsample
+        self.bin_factor = bin_factor
         self.output_dir = output_dir
 
         self.num_images, self.q, self.m, self.d = self.set_ipca_params(
             num_images, num_components, block_size, bin_factor
         )
-
-        self.bin_factor = bin_factor
-        self.incorporated_images = 0
 
         # compute number of counts in and start indices over ranks
         self.split_indices, self.split_counts = distribute_indices(self.d, self.size)
@@ -104,11 +102,13 @@ class IPCA:
         # attribute for storing interval data
         self.task_durations = dict({})
 
+        # initialize model variables
         self.S = np.ones(self.q)
         self.U = np.zeros((self.split_counts[self.rank], self.q))
         self.mu = np.zeros((self.split_counts[self.rank], 1))
         self.total_variance = np.zeros((self.split_counts[self.rank], 1))
 
+        self.incorporated_images = 0
         self.outliers, self.loss_data = [], []
 
     def set_ipca_params(self, num_images, num_components, block_size, bin_factor):
@@ -425,6 +425,9 @@ class IPCA:
             )
 
     def verify_model_accuracy(self):
+        """
+        Run benchmark to verify model accuracy.
+        """
         d = self.d
         m = self.m
         q = self.q
@@ -526,20 +529,12 @@ class IPCA:
         """
         Perform iPCA on run subject to initialization parameters.
         """
-        d = self.d
         m = self.m
         q = self.q
-
-        rank = self.rank
-        size = self.size
         num_images = self.num_images
-        start_index, end_index = self.split_indices[rank], self.split_indices[rank + 1]
 
         if self.init_with_pca and not self.benchmark_mode:
-            img_block = self.psi.fetch_formatted_images(
-                q, d, start_index, end_index, self.downsample, self.bin_factor
-            )
-            self.initialize_model(img_block)
+            self.fetch_and_update(q, initialize=True)
 
         # divide remaning number of images into blocks
         # will become redundant in a streaming setting, need to change
@@ -551,72 +546,161 @@ class IPCA:
 
         # update model with remaining blocks
         for block_size in block_sizes:
-            img_block = self.psi.fetch_formatted_images(
-                block_size, d, start_index, end_index, self.downsample, self.bin_factor
-            )
+            self.fetch_and_update(block_size)
+
+        self.report_interval_data(save_data=self.benchmark_mode)
+
+    def fetch_formatted_images(self, n, start_index, end_index):
+        """
+        Fetch n - x image segments from run, where x is the number of 'dead' images.
+
+        Parameters
+        ----------
+        n : int
+            number of images to retrieve
+        start_index : int
+            start index of subsection of data to retrieve
+        end_index : int
+            end index of subsection of data to retrieve
+
+        Returns
+        -------
+        ndarray, shape (end_index-start_index, n-x)
+            n-x retrieved image segments of dimension end_index-start_index
+        """
+
+        bin_factor = self.bin_factor
+        downsample = self.downsample
+
+        # may have to rewrite eventually when number of images becomes large,
+        # i.e. streamed setting, either that or downsample aggressively
+        imgs = self.psi.get_images(n, assemble=False)
+
+        if downsample:
+            imgs = bin_data(imgs, bin_factor)
+
+        imgs = imgs[
+            [i for i in range(imgs.shape[0]) if not np.isnan(imgs[i : i + 1]).any()]
+        ]
+
+        num_valid_imgs, p, x, y = imgs.shape
+        formatted_imgs = np.reshape(imgs, (num_valid_imgs, p * x * y)).T
+
+        return formatted_imgs[start_index:end_index, :]
+
+    def fetch_and_update(self, n, initialize=False):
+        """
+        Fetch images and update model.
+
+        Parameters
+        ----------
+        n : int
+            number of images to incorporate
+        initialize : bool, optional
+            use images in initialization, by default False
+        """
+
+        d = self.d
+        rank = self.rank
+        start_index, end_index = self.split_indices[rank], self.split_indices[rank + 1]
+
+        img_block = self.fetch_formatted_images(n, d, start_index, end_index)
+
+        if initialize:
+            self.initialize_model(img_block)
+        else:
             self.update_model(img_block)
 
-        if self.benchmark_mode and rank == 0:
-            save_interval_data(
-                q,
-                d,
-                self.incorporated_images,
-                size,
-                m,
-                self.task_durations,
-                self.output_dir,
+    def report_interval_data(self, save_data=False):
+        """
+        Report and record time interval data gathered during iPCA.
+
+        Parameters
+        ----------
+        save_data : bool, optional
+            if True, save interval data to file in self.output_dir, by default False
+        """
+
+        q = self.q
+        d = self.d
+        n = self.incorporated_images
+        m = self.m
+        rank = self.rank
+        size = self.size
+        dir_path = self.output_dir
+        task_durations = self.task_durations
+
+        if not len(task_durations):
+            print("No model updates or initialization recorded.")
+            return
+
+        # log data
+        for key in list(task_durations.keys()):
+            interval_mean = np.mean(task_durations[key])
+            print(
+                "Mean per-block compute time of step" + f"'{key}': {interval_mean:.4g}s"
             )
 
+        # save data if specified
+        if save_data and rank == 0:
+            file_name = "task_" + str(q) + str(d) + str(n) + str(r) + ".csv"
 
-def report_interval_data(task_durations):
-    """
-    Report time interval data gathered during iPCA.
-    """
+            with open(
+                os.path.join(dir_path, file_name),
+                "x",
+                newline="",
+                encoding="utf-8",
+            ) as f:
 
-    if not len(task_durations):
-        print("No model updates or initialization recorded.")
-        return
+                if len(task_durations):
+                    writer = csv.writer(f)
 
-    for key in list(task_durations.keys()):
-        interval_mean = np.mean(task_durations[key])
-        print("Mean per-block compute time of step" + f"'{key}': {interval_mean:.4g}s")
+                    writer.writerow(["q", q])
+                    writer.writerow(["d", d])
+                    writer.writerow(["n", n])
+                    writer.writerow(["ranks", size])
+                    writer.writerow(["m", m])
+
+                    keys = list(task_durations.keys())
+                    values = list(task_durations.values())
+                    values_transposed = np.array(values).T
+
+                    writer.writerow(keys)
+                    writer.writerows(values_transposed)
 
 
-def save_interval_data(q, d, n, r, m, task_durations, dir_path=None):
-    """
-    Save time interval data gathered during iPCA to file.
+def distribute_indices(d, size):
+    """_summary_
 
     Parameters
     ----------
-    dir_path : str
-        Path to output directory.
+    d : int
+        total number of dimensions
+    size : int
+        number of ranks in world
+
+    Returns
+    -------
+    split_indices : ndarray, shape (size+1 x 1)
+        division indices between ranks
+    split_counts : ndarray, shape (size x 1)
+        number of dimensions allocated per rank
     """
 
-    if not dir_path:
-        print("Failed to specify output directory.")
-        return
+    total_indices = 0
+    split_indices, split_counts = [0], []
 
-    file_name = "task_" + str(q) + str(d) + str(n) + str(r) + ".csv"
+    for r in range(size):
+        num_per_rank = d // size
+        if r < (d % size):
+            num_per_rank += 1
 
-    with open(
-        os.path.join(dir_path, file_name),
-        "x",
-        newline="",
-        encoding="utf-8",
-    ) as f:
+        split_counts.append(num_per_rank)
 
-        if len(task_durations):
-            writer = csv.writer(f)
+        total_indices += num_per_rank
+        split_indices.append(total_indices)
 
-            writer.writerow(["q", q])
-            writer.writerow(["d", d])
-            writer.writerow(["n", n])
-            writer.writerow(["ranks", r])
-            writer.writerow(["m", m])
+    split_indices = np.array(split_indices)
+    split_counts = np.array(split_counts)
 
-            keys = list(task_durations.keys())
-            values = list(task_durations.values())
-            values_transposed = np.array(values).T
-
-            writer.writerow(keys)
-            writer.writerows(values_transposed)
+    return split_indices, split_counts
