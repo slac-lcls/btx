@@ -108,7 +108,7 @@ class IPCA:
         self.total_variance = np.zeros((self.split_counts[self.rank], 1))
 
         self.n = 0
-        self.outliers, self.cl_data = [], []
+        self.outliers, self.pc_data = [], []
 
     def get_ipca_params(self):
         """
@@ -430,9 +430,9 @@ class IPCA:
             cb = X_tot - np.tile(mu, (1, m))
 
             pcs = U.T @ cb
-            self.cl_data = (
-                np.concatenate((self.cl_data, pcs), axis=1)
-                if len(self.cl_data)
+            self.pc_data = (
+                np.concatenate((self.pc_data, pcs), axis=1)
+                if len(self.pc_data)
                 else pcs
             )
 
