@@ -479,7 +479,7 @@ class IPCA:
 
             # run svd on centered image batch
             print("Gathering images for batch PCA...")
-            X = self.fetch_formatted_images(num_images, 0, d)
+            X = self.get_formatted_images(num_images, 0, d)
             y, x = X.shape
 
             print("Performing batch PCA...")
@@ -578,7 +578,7 @@ class IPCA:
         if self.benchmark:
             self.save_interval_data()
 
-    def fetch_formatted_images(self, n, start_index, end_index):
+    def get_formatted_images(self, n, start_index, end_index):
         """
         Fetch n - x image segments from run, where x is the number of 'dead' images.
 
@@ -631,7 +631,7 @@ class IPCA:
         rank = self.rank
         start_index, end_index = self.split_indices[rank], self.split_indices[rank + 1]
 
-        img_block = self.fetch_formatted_images(n, start_index, end_index)
+        img_block = self.get_formatted_images(n, start_index, end_index)
 
         if initialize:
             self.initialize_model(img_block)
