@@ -459,7 +459,7 @@ class IPCA:
             self.psi.counter = event_index - n
 
             try:
-                print("Verifying Model Accuracy\n------------------------\n")
+                print("\nVerifying Model Accuracy\n------------------------\n")
                 print(f"q = {q}")
                 print(f"d = {d}")
                 print(f"n = {n}")
@@ -467,7 +467,7 @@ class IPCA:
                 print("\n")
 
                 # run svd on centered image batch
-                print("\nGathering images for batch PCA...")
+                print("Gathering images for batch PCA...")
                 X = self.fetch_formatted_images(n, 0, d)
 
                 print("Performing batch PCA...")
@@ -566,7 +566,7 @@ class IPCA:
             self.fetch_and_update(block_size)
 
         if self.benchmark:
-            self.verify_model_accuracy()
+            self.save_interval_data()
 
     def fetch_formatted_images(self, n, start_index, end_index):
         """
@@ -628,23 +628,14 @@ class IPCA:
         else:
             self.update_model(img_block)
 
-    def report_interval_data(self, save_data=False):
+    def report_interval_data(self):
         """
-        Report and record time interval data gathered during iPCA.
-
-        Parameters
-        ----------
-        save_data : bool, optional
-            if True, save interval data to file in self.output_dir, by default False
+        Method to print out iPCA time interval data.
         """
 
-        q = self.q
-        d = self.d
-        n = self.incorporated_images
-        m = self.m
-        rank = self.rank
-        size = self.size
-        dir_path = self.output_dir
+        if self.rank != 0:
+            return
+
         task_durations = self.task_durations
 
         if not len(task_durations):
@@ -652,38 +643,59 @@ class IPCA:
             return
 
         # log data
+        print("\n")
         for key in list(task_durations.keys()):
             interval_mean = np.mean(task_durations[key])
             print(
-                "Mean per-block compute time of step" + f"'{key}': {interval_mean:.4g}s"
+                "Mean per-block compute time of step "
+                + f"'{key}': {interval_mean:.4g}s"
             )
 
-        # save data if specified
-        if save_data and rank == 0:
-            file_name = "task_" + str(q) + str(d) + str(n) + str(r) + ".csv"
+    def save_interval_data(self):
+        """
+        Save time interval data gathered during iPCA.
 
-            with open(
-                os.path.join(dir_path, file_name),
-                "x",
-                newline="",
-                encoding="utf-8",
-            ) as f:
+        Parameters
+        ----------
+        save_data : bool, optional
+            if True, save interval data to file in self.output_dir, by default False
+        """
 
-                if len(task_durations):
-                    writer = csv.writer(f)
+        if self.rank != 0:
+            return
 
-                    writer.writerow(["q", q])
-                    writer.writerow(["d", d])
-                    writer.writerow(["n", n])
-                    writer.writerow(["ranks", size])
-                    writer.writerow(["m", m])
+        q = self.q
+        d = self.d
+        n = self.incorporated_images
+        m = self.m
+        size = self.size
+        dir_path = self.output_dir
+        task_durations = self.task_durations
 
-                    keys = list(task_durations.keys())
-                    values = list(task_durations.values())
-                    values_transposed = np.array(values).T
+        file_name = "task_" + str(q) + str(d) + str(n) + str(r) + ".csv"
 
-                    writer.writerow(keys)
-                    writer.writerows(values_transposed)
+        with open(
+            os.path.join(dir_path, file_name),
+            "x",
+            newline="",
+            encoding="utf-8",
+        ) as f:
+
+            if len(task_durations):
+                writer = csv.writer(f)
+
+                writer.writerow(["q", q])
+                writer.writerow(["d", d])
+                writer.writerow(["n", n])
+                writer.writerow(["ranks", size])
+                writer.writerow(["m", m])
+
+                keys = list(task_durations.keys())
+                values = list(task_durations.values())
+                values_transposed = np.array(values).T
+
+                writer.writerow(keys)
+                writer.writerows(values_transposed)
 
 
 def distribute_indices(d, size):
