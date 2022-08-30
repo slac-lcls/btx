@@ -438,7 +438,7 @@ class IPCA:
         n = self.num_images
 
         self.comm.Barrier()
-        U, S, mu, var = self.ipca.get_model()
+        U, S, mu, var = self.get_model()
 
         if self.rank == 0:
             # store current event index from self.psi and reset
