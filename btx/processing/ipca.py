@@ -69,9 +69,10 @@ class IPCA:
         exp,
         run,
         det_type,
+        start_offset=0,
+        num_images=10,
         num_components=10,
         block_size=10,
-        num_images=10,
         initialize=False,
         benchmark=False,
         downsample=False,
@@ -84,6 +85,7 @@ class IPCA:
         self.size = self.comm.Get_size()
 
         self.psi = PsanaInterface(exp=exp, run=run, det_type=det_type)
+        self.psi.counter = start_offset
 
         self.initialize = initialize
         self.benchmark = benchmark
@@ -760,6 +762,13 @@ def parse_input():
         help="Detector name, e.g epix10k2M or jungfrau4M",
         required=True,
         type=str,
+    )
+    parser.add_argument(
+        "-o",
+        "--start_offset",
+        help="Offset from start of run.",
+        required=False,
+        type=int,
     )
     parser.add_argument(
         "-c",
