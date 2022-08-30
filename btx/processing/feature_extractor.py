@@ -1,466 +1,302 @@
-import numpy as np
 import argparse
-import h5py
-import os
-import requests
+
+import numpy as np
 from mpi4py import MPI
-from btx.interfaces.psana_interface import *
-from psalgos.pypsalgos import PyAlgos
+
+from btx.interfaces.psana_interface import PsanaInterface
+from btx.processing.ipca import IPCA
 
 from matplotlib import pyplot as plt
-from time import perf_counter
 
-class TaskTimer:
-    """
-    A context manager to record the duration of managed task.
-
-    Attributes
-    ----------
-    start_time : float
-        reference time for start time of task
-    intervals : list
-        list containing time interval data
-    """
-    
-    def __init__(self, intervals):
-        """
-        Construct all necessary attributes for the TaskTimer context manager.
-
-        Parameters
-        ----------
-        intervals : list of float
-            List containing interval data
-        """
-        self.start_time = 0.
-        self.intervals = intervals
-    
-    def __enter__(self):
-        """
-        Set reference start time.
-        """
-        self.start_time = perf_counter()
-    
-    def __exit__(self, *args, **kwargs):
-        """
-        Mutate interval list with interval duration of current task.
-        """
-        self.intervals.append(perf_counter() - self.start_time)
 
 class FeatureExtractor:
-    """
-    Extract features from a psana run using dimensionality reduction.
-    """
-    
-    def __init__(self, exp, run, det_type, q=50, block_size=10, num_images=100, init_with_pca=False):
 
+    """
+    Class to manage feature extraction on image data subject to initialization
+    parameters.
+    """
+
+    def __init__(
+        self,
+        exp,
+        run,
+        det_type,
+        num_components=10,
+        block_size=10,
+        num_images=10,
+        init_with_pca=False,
+        benchmark_mode=False,
+        downsample=False,
+        bin_factor=2,
+        output_dir="",
+    ):
         self.comm = MPI.COMM_WORLD
         self.rank = self.comm.Get_rank()
         self.size = self.comm.Get_size()
 
         self.psi = PsanaInterface(exp=exp, run=run, det_type=det_type)
 
-        self.ipca_intervals = dict({})
-        self.reduced_indices = np.array([])
-
-        self.q = q
-        self.block_size = block_size
-        self.num_images = num_images
         self.init_with_pca = init_with_pca
- 
-        
-    def set_ipca_params(self, q=None, block_size=None, num_images=None, init_with_pca=None):
-        """
-        Update parameters to be used in iPCA algorithm.
+        self.benchmark_mode = benchmark_mode
+        self.downsample = downsample
+        self.output_dir = output_dir
+
+        self.num_images, self.q, self.m, self.d = self.set_ipca_params(
+            num_images, num_components, block_size, bin_factor
+        )
+
+        self.distribute_indices()
+
+        self.cl_data = []
+        self.hit_indices = []
+
+    def set_ipca_params(self, num_images, num_components, block_size, bin_factor):
+        """_summary_
 
         Parameters
         ----------
-        q : int 
-            number of principal axes to be computed
-        block_size : int
-            block size to be used in iPCA algorithm
-        num_images : int
-            number of images on which iPCA will be ran
-        init_with_pca : bool
-            whether to initialize iPCA algorithm with batch PCA on first q observations
-        """
-        self.q = q if self.q else self.q
-        self.block_size = block_size if self.block_size else self.block_size
-        self.num_images = num_images if self.num_images else self.num_images
-        self.init_with_pca = init_with_pca if self.init_with_pca else self.init_with_pca
+        num_images : _type_
+            _description_
+        num_components : _type_
+            _description_
+        block_size : _type_
+            _description_
+        bin_factor : _type_
+            _description_
 
-    def generate_reduced_indices(self, new_dim):
+        Returns
+        -------
+        _type_
+            _description_
         """
-        Sample, without replacement, and store new_dim indices from unassembed image dimension.
+        max_events = self.psi.max_events
+        benchmark = self.benchmark_mode
+        downsample = self.downsample
 
-        Parameters
-        ----------
-        new_dim : int
-            number of sampled indices to be drawn
-        """
-        z, x, y = self.psi.det.shape()
-        det_pixels = z * x * y
+        # set n, q, and m
+        n = num_images
+        q = num_components
+        m = block_size
 
-        if det_pixels < new_dim:
-            print('Detector dimension must be greater than or equal to reduced dimension.')
-            return
+        if benchmark:
+            min_n = max(int(4 * q), 40)
+            n = min(min_n, max_events)
+            m = q
+        else:
+            n = min(n, max_events) if n != -1 else max_events
+            q = min(q, n)
+            m = min(m, n)
 
-        self.reduced_indices = np.random.choice(det_pixels, new_dim, replace=False)
+        # set d
+        det_shape = self.psi.det.shape()
+        d = np.prod(det_shape).astype(int)
 
-    def remove_reduced_indices(self):
-        """
-        Remove stored reduced indices.
-        """
-        self.reduced_indices = np.array([])
+        if downsample:
+            if det_shape[-1] % bin_factor or det_shape[-2] % bin_factor:
+                print("Invalid bin factor, toggled off downsampling.")
+                self.downsample = False
+            else:
+                d = int(d / bin_factor**2)
+                self.bin_factor = bin_factor
 
-    def get_distributed_indices(self, d):
-        """
-        Distribute d indices over ranks in MPI world.
-        """
-        split_indices = np.zeros(self.size)
-        for r in range(self.size):
-            num_per_rank = d // self.size
-            if r < (d % self.size):
+        return n, q, m, d
+
+    def distribute_indices(self):
+        d = self.d
+        size = self.size
+
+        # determine boundary indices between ranks
+        split_indices = np.zeros(size)
+        for r in range(size):
+            num_per_rank = d // size
+            if r < (d % size):
                 num_per_rank += 1
             split_indices[r] = num_per_rank
-        split_indices = np.append(np.array([0]), np.cumsum(split_indices)).astype(int)
 
-        self.start_index = split_indices[self.rank]
-        self.end_index = split_indices[self.rank + 1]
+        trailing_indices = np.cumsum(split_indices)
+        split_indices = np.append(np.array([0]), trailing_indices).astype(int)
 
-    def ipca(self, img_data=None):
+        self.split_indices = split_indices
+
+    def get_formatted_images(self, n, get_all_features=False):
         """
-        Run iPCA with run subset subject to initialization parameters.
+        Retrieve and format n images from run.
 
-        Parameters
-        ----------
-        img_data : ndarray, (d x n) (optional)
-            optional run data fetched and formatted through retrieve_run_data
+        Paramters
+        ---------
+        n : int
+            number of images to retrieve and format
+
+        Return
+        ------
+        formatted_imgs: ndarray, shape (d x n)
+            n formatted (d x 1) images from run
+
+        Notes
+        -----
+        The PsanaInterface instance self.psi has an internal counter which is
+        updated on calls to get_images, ensuring that images are retrieved
+        sequentially using this method.
         """
+        d = self.d
+        rank = self.rank
+
+        # get start index, end index
+        start_index = 0 if get_all_features else self.split_indices[rank]
+        end_index = d if get_all_features else self.split_indices[rank + 1]
+
+        # may have to rewrite eventually when number of images becomes large,
+        # i.e. streamed setting, either that or downsample aggressively
+        imgs = self.psi.get_images(n, assemble=False)
+
+        if self.downsample:
+            imgs = bin_data(imgs, self.bin_factor)
+
+        imgs = imgs[
+            [i for i in range(imgs.shape[0]) if not np.isnan(imgs[i : i + 1]).any()]
+        ]
+
+        num_valid_imgs, _, _, _ = imgs.shape
+        formatted_imgs = np.reshape(imgs, (num_valid_imgs, d)).T
+
+        return formatted_imgs[start_index:end_index, :]
+
+    def run_ipca(self):
+        """
+        Perform iPCA on run subject to initialization parameters.
+        """
+        d = self.d
+        m = self.m
         q = self.q
-        block_size = self.block_size
+
+        self.ipca = IPCA(d, q, m, self.split_indices)
+
+        parsed_images = 0
         num_images = self.num_images
-        init_with_pca = self.init_with_pca
 
-        runner = self.psi.runner
-        times = self.psi.times
-        det = self.psi.det
+        if self.init_with_pca and not self.benchmark_mode:
+            img_block = self.get_formatted_images(q)
+            self.ipca.initialize_model(img_block)
 
-        self.ipca_intervals['load_event'] = []
-        self.ipca_intervals['concat'] = []
-        self.ipca_intervals['ortho'] = []
-        self.ipca_intervals['build_r'] = []
-        self.ipca_intervals['svd'] = []
-        self.ipca_intervals['update_basis'] = []
+            parsed_images = q
 
-        if num_images == -1:
-            end_idx = self.psi.max_events
-        
-        imgs = np.array([[]])
-        new_obs = np.array([[]])
+        # divide remaning number of images into blocks
+        # will become redundant in a streaming setting, need to change
+        rem_imgs = num_images - parsed_images
+        block_sizes = np.array(
+            [m] * np.floor(rem_imgs / m).astype(int)
+            + ([rem_imgs % m] if rem_imgs % m else [])
+        )
 
-        z, x, y = det.shape()
-        d = z * x * y if not self.reduced_indices.size else self.reduced_indices.size
-    
-        self.get_distributed_indices(d)
+        # update model with remaining blocks
+        for block_size in block_sizes:
+            img_block = self.get_formatted_images(block_size)
+            self.ipca.update_model(img_block)
 
-        self.S = np.eye(q)
-        self.U = np.zeros((d, q))
-        self.mu = np.zeros((d, 1))
-        self.total_variance = np.zeros((d, 1))
+        if self.benchmark_mode:
+            self.ipca.save_interval_data(self.output_dir)
 
-        end_idx = min(self.psi.max_events, num_images)
+    def verify_model_accuracy(self):
+        d = self.d
+        m = self.m
+        q = self.q
+        n = self.num_images
 
-        for idx in range(end_idx):
+        self.comm.Barrier()
+        U, S, mu, var = self.ipca.get_model()
 
-            if self.rank == 0:
-                print(f'Processing observation: {idx + 1}')
-
-                if img_data is None:
-                    with TaskTimer(self.ipca_intervals['load_event']): 
-                        evt = runner.event(times[idx])
-                        img_panels = det.calib(evt=evt)
-                
-                    img = self.flatten_img(img_panels)
-
-                    if self.reduced_indices.size:
-                        img = img[self.reduced_indices]
-                else:
-                    img = img_data[:, idx:idx+1]
-                
-                new_obs = np.hstack((new_obs, img)) if new_obs.size else img
-
-                # initialize model on first q observations, if init_with_pca is true
-                if init_with_pca and (idx + 1) <= q:
-                    if (idx + 1) == q:
-                        self.mu, self.total_variance = calculate_sample_mean_and_variance(new_obs)
-                        
-                        centered_obs = new_obs - np.tile(self.mu, q)
-                        self.U, s, _ = np.linalg.svd(centered_obs, full_matrices=False)
-                        self.S = np.diag(s)
-                        
-                        new_obs = np.array([[]])
-                    continue
-            
-            # update model with block every m samples, or img limit
-            if (idx + 1) % block_size == 0 or (idx + 1) == end_idx:
-
-                X_pm_loc = None
-
-                if self.rank == 0:
-                    # size of current block
-                    m = (idx+1) % block_size if (idx+1) % block_size else block_size
-
-                    # number of samples factored into model thus far
-                    n = (idx + 1) - m
-
-                    mu_m, s_m = calculate_sample_mean_and_variance(new_obs)
-                    
-                    with TaskTimer(self.ipca_intervals['concat']):
-                        X_centered = new_obs - np.tile(mu_m, m)
-                        X_m = np.hstack((X_centered, np.sqrt(n * m / (n + m)) * (mu_m - self.mu)))
-                    
-                    with TaskTimer(self.ipca_intervals['ortho']):
-                        UX_m = self.U.T @ X_m
-                        dX_m = X_m - self.U @ UX_m
-                        X_pm, _ = np.linalg.qr(dX_m, mode='reduced')
-                    
-                    with TaskTimer(self.ipca_intervals['build_r']):
-                        R = np.block([[self.S, UX_m], [np.zeros((m + 1, q)), X_pm.T @ dX_m]])
-                    
-                    with TaskTimer(self.ipca_intervals['svd']):
-                        U_tilde, S_tilde, _ = np.linalg.svd(R)
-                    
-                    self.comm.Bcast(self.U, root=0)
-                    self.comm.Bcast(X_pm, root=0)
-
-                self.comm.Barrier()
-
-                with TaskTimer(self.ipca_intervals['update_basis']):
-
-                    U_split = self.U[self.start_index:self.end_index, :]
-                    X_pm_split = X_pm[self.start_index:self.end_index, :]
-
-                    U_prime_partial = np.hstack((U_split, X_pm_split)) @ U_tilde
-
-                    U_prime = None
-                    if self.rank == 0:
-                        U_prime = np.empty((d, q+m+1))
-
-                    self.comm.Gather(U_prime_partial, U_prime, root=0)
-
-                if self.rank == 0:
-                    # U_prime = np.hstack((self.U, X_pm)) @ U_tilde
-                    self.U = U_prime[:, :q]
-                    self.S = np.diag(S_tilde[:q])
-
-                    self.total_variance = update_sample_variance(self.total_variance, s_m, self.mu, mu_m, n, m)
-                    self.mu = update_sample_mean(self.mu, mu_m, n, m)
-                    
-                    new_obs = np.array([[]])
-
-    def retrieve_run_data(self):
-        """
-        Retrieve run data subject to intitialization parameters.
-
-        Returns
-        -------
-        formatted_images : ndarray, shape (d x n)
-            formatted image data from run
-        """
-        num_imgs = min(self.num_images, self.psi.max_events)
-
-        try:
-            imgs = self.psi.get_images(num_imgs, assemble=False)
-        except MemoryError:
-            print('Requested image set too large to fit in memory.')
-            return np.empty(0)
-
-        n, z, y, x = imgs.shape
-        d = self.reduced_indices.size if self.reduced_indices.size else x*y*z
-
-        formatted_images = np.empty((d, n))
-
-        for i in range(n):
-            if self.reduced_indices.size:
-                formatted_images[:, i:i+1] = self.flatten_img(imgs[i])[self.reduced_indices]
-            else:
-                formatted_images[:, i:i+1] = self.flatten_img(imgs[i])
-        
-        return formatted_images
-
-    def batch_pca(self, img_data=None):
-        """
-        Run batch PCA on first num_images in run.
-
-        Parameters
-        ----------
-        img_data : ndarray, (d x n) (optional)
-            optional run data fetched and formatted through retrieve_run_data
-        """
-        formatted_imgs = img_data
-
-        if formatted_imgs is None:
-            imgs = self.psi.get_images(self.num_images, assemble=False)
-
-            n, z, y, x = imgs.shape
-            d = self.reduced_indices.size if self.reduced_indices.size else x*y*z
-
-            formatted_images = np.empty((d, n))
-
-            for i in range(n):
-                if self.reduced_indices.size:
-                    formatted_images[:, i:i+1] = self.flatten_img(imgs[i])[self.reduced_indices]
-                else:
-                    formatted_images[:, i:i+1] = self.flatten_img(imgs[i])
-        
-        d, n = formatted_imgs.shape
-            
-        mu_n = np.reshape(np.mean(formatted_imgs, axis=1), (d, 1))
-        mu_n_tiled = np.tile(mu_n, n)
-
-        imgs_centered = formatted_imgs - mu_n_tiled 
-
-        self.mu_pca = mu_n
-        self.U_pca, self.S_pca, _ = np.linalg.svd(imgs_centered, full_matrices=False)
-
-    def report_interval_data(self):
-        """
-        Report time interval data gathered during iPCA.
-        """
         if self.rank == 0:
-            if len(self.ipca_intervals) == 0:
-                print('iPCA has not yet been performed.')
-                return
+            # store current event index from self.psi and reset
+            event_index = self.psi.counter
+            self.psi.counter = event_index - n
 
-            for key in list(self.ipca_intervals.keys()):
-                interval_mean = np.mean(self.ipca_intervals[key])
-                print(f'Mean compute time of step \'{key}\': {interval_mean:.4g}s')
+            try:
+                print("Verifying Model Accuracy\n------------------------\n")
+                print(f"q = {q}")
+                print(f"d = {d}")
+                print(f"n = {n}")
+                print(f"m = {m}")
+                print("\n")
 
-    def flatten_img(self, img):
-        """
-        Flatten unflattened input image.
+                # run svd on centered image batch
+                print("\nGathering images for batch PCA...")
+                X = self.get_formatted_images(n, get_all_features=True)
 
-        Parameters
-        ----------
-        img : ndarray, shape (z, y, x)
-            unflattened input image, comprised of z (y x x) panels
+                print("Performing batch PCA...")
+                mu_pca = np.reshape(np.mean(X, axis=1), (X.shape[0], 1))
+                var_pca = np.reshape(np.var(X, ddof=1, axis=1), (X.shape[0], 1))
 
-        Returns
-        -------
-        img_flattened : ndarray, shape (z*y*x, 1)
-            input image, flattened
-        """
-        z, y, x = self.psi.det.shape()
-        img_flattened = np.reshape(img, (z*y*x, 1))
+                mu_n = np.tile(mu_pca, n)
+                X_centered = X - mu_n
 
-        return img_flattened
-    
-    def unflatten_image(self, img):
-        """
-        Unflatten flattened input image.
+                U_pca, S_pca, _ = np.linalg.svd(X_centered, full_matrices=False)
+                print("\n")
 
-        Parameters
-        ----------
-        img : ndarray, shape (z*y*x, 1)
-            flattened input image
-        
-        Returns
-        -------
-        img_unflattened : ndarray, shape (z, y, x)
-            input image, unflattened
-        """
-        z, y, x = self.psi.det.shape()
-        img_unflattened = np.reshape(img, (z, y, x))
+                q_pca = min(q, n)
 
-        return img_unflattened
+                # calculate compression loss, normalized if given flag
+                norm = True
+                norm_str = "Normalized " if norm else ""
 
-def calculate_sample_mean_and_variance(imgs):
-    """
-    Compute the sample mean and variance of a flattened stack of n images.
+                ipca_loss = compression_loss(X, U[:, :q_pca], normalized=norm)
+                print(f"iPCA {norm_str}Compression Loss: {ipca_loss}")
 
-    Parameters
-    ----------
-    imgs : ndarray, shape (d x n)
-        horizonally stacked batch of flattened images 
+                pca_loss = compression_loss(X, U_pca[:, :q_pca], normalized=norm)
+                print(f"PCA {norm_str}Compression Loss: {pca_loss}")
 
-    Returns
-    -------
-    mu_m : ndarray, shape (d x 1)
-        mean of imgs
-    su_m : ndarray, shape (d x 1)
-        sample variance of imgs (1 dof)
-    """
-    d, m = imgs.shape
+                print("\n")
+                ipca_tot_var = np.sum(var)
+                pca_tot_var = np.sum(var_pca)
 
-    mu_m = np.reshape(np.mean(imgs, axis=1), (d, 1))
-    s_m  = np.zeros((d, 1))
+                print(f"iPCA Total Variance: {ipca_tot_var}")
+                print(f"PCA Total Variance: {pca_tot_var}")
+                print("\n")
 
-    if m > 1:
-        s_m = np.reshape(np.var(imgs, axis=1, ddof=1), (d, 1))
-    
-    return mu_m, s_m
+                ipca_exp_var = (np.sum(S[:q_pca] ** 2) / (n - 1)) / np.sum(var)
+                print(f"iPCA Explained Variance: {ipca_exp_var}")
 
-def update_sample_mean(mu_n, mu_m, n, m):
-    """
-    Combine combined mean of two blocks of data.
+                pca_exp_var = (np.sum(S_pca[:q_pca] ** 2) / (n - 1)) / np.sum(var_pca)
+                print(f"PCA Explained Variance: {pca_exp_var}")
+                print("\n")
 
-    Parameters
-    ----------
-    mu_n : ndarray, shape (d x 1)
-        mean of first block of data
-    mu_m : ndarray, shape (d x 1)
-        mean of second block of data
-    n : int
-        number of observations in first block of data
-    m : int
-        number of observations in second block of data
+                print("iPCA Singular Values: \n")
+                print(S)
+                print("\n")
 
-    Returns
-    -------
-    mu_nm : ndarray, shape (d x 1)
-        combined mean of both blocks of input data
-    """
-    mu_nm = mu_m
+                print("PCA Singular Values: \n")
+                print(S_pca[:q_pca])
+                print("\n")
 
-    if n != 0:
-        mu_nm = (1 / (n + m)) * (n * mu_n + m * mu_m)
+                mean_inner_prod = np.inner(mu.flatten(), mu_pca.flatten()) / (
+                    np.linalg.norm(mu) * np.linalg.norm(mu_pca)
+                )
 
-    return mu_nm
+                print("Normalized Mean Inner Product: " + f"{mean_inner_prod}")
+                print("\n")
 
-def update_sample_variance(s_n, s_m, mu_n, mu_m, n, m):
-    """
-    Compute combined sample variance of two blocks of data described by input parameters.
+                print("Basis Inner Product: \n")
+                print(np.diagonal(np.abs(U[:, :q_pca].T @ U_pca[:, :q_pca])))
 
-    Parameters
-    ----------
-    s_n : ndarray, shape (d x 1)
-        sample variance of first block of data
-    s_m : ndarray, shape (d x 1)
-        sample variance of second block of data
-    mu_n : ndarray, shape (d x 1)
-        mean of first block of data
-    mu_m : ndarray, shape (d x 1)
-        mean of second block of data
-    n : int
-        number of observations in first block of data
-    m : int
-        number of observations in second block of data
+                ipca_mu_u = np.hstack((mu / np.linalg.norm(mu), U[:, :q_pca]))
+                pca_mu_u = np.hstack(
+                    (mu_pca / np.linalg.norm(mu_pca), U_pca[:, :q_pca])
+                )
 
-    Returns
-    -------
-    s_nm : ndarray, shape (d x 1)
-        combined sample variance of both blocks of data described by input parameters
-    """
-    s_nm = s_m
+                b = plt.imshow(np.abs(ipca_mu_u.T @ pca_mu_u))
+                plt.colorbar(b)
+                plt.savefig(f"fig_{q}_{self.size}.png")
+                plt.show()
 
-    if n != 0:
-        s_nm = (((n - 1) * s_n + (m - 1) * s_m) + (n*m*(mu_n - mu_m)**2) / (n + m)) / (n + m - 1) 
+                self.ipca.report_interval_data()
 
-    return s_nm
+            finally:
+                # reset counter
+                self.psi.counter = event_index
+
 
 def compare_basis_vectors(U_1, U_2, q):
     """
-    Quantitatively compare the first q basis vectors of U and U_prime. 
+    Quantitatively compare the first q basis vectors of U and U_prime.
 
     Parameters
     ----------
@@ -470,65 +306,185 @@ def compare_basis_vectors(U_1, U_2, q):
         second matrix of orthonormal basis vectors
     q : int
         number of vectors to compare
-    
+
     Returns
     -------
     acc : float, 0 <= acc <= 1
         quantitative measure of distance between basis vectors
     """
     if q > min(U_1.shape[1], U_2.shape[1]):
-        print('Desired number of vectors is greater than matrix dimension.')
-        return 0.
-    
+        print("Desired number of vectors is greater than matrix dimension.")
+        return 0.0
+
     acc = np.trace(np.abs(U_1[:, :q].T @ U_2[:, :q])) / q
     return acc
-    
 
-def compression_loss(X, U):
+
+def compression_loss(X, U, normalized=False):
     """
-    Calculate the compression loss between centered observation matrix X and its rank-q reconstruction.
+    Calculate the compression loss between centered observation matrix X
+    and its rank-q reconstruction.
 
     Parameters
     ----------
     X : ndarray, shape (d x n)
         flattened, centered image data from n run events
     U : ndarray, shape (d x q)
-        first q singular vectors of X, forming orthonormal basis of q-dimensional subspace of R^d
-    
+        first q singular vectors of X, forming orthonormal basis
+        of q-dimensional subspace of R^d
+
     Returns
     -------
     Ln : float
         compression loss of X
     """
-    d, n = X.shape
+    _, n = X.shape
 
     UX = U.T @ X
     UUX = U @ UX
 
-    Ln = ((np.linalg.norm(X - UUX, 'fro')) ** 2) / n
-    return Ln 
+    Ln = ((np.linalg.norm(X - UUX, "fro")) ** 2) / n
+
+    if normalized:
+        Ln /= np.linalg.norm(X, "fro") ** 2
+
+    return Ln
 
 
-#### For command line use ####
-            
+def bin_data(arr, bin_factor, det_shape=None):
+    """
+    Bin detector data by bin_factor through averaging.
+    Retrieved from
+    https://github.com/apeck12/cmtip/blob/main/cmtip/prep_data.py
+
+    :param arr: array shape (n_images, n_panels, panel_shape_x, panel_shape_y)
+      or if det_shape is given of shape (n_images, 1, n_pixels_per_image)
+    :param bin_factor: how may fold to bin arr by
+    :param det_shape: tuple of detector shape, optional
+    :return arr_binned: binned data of same dimensions as arr
+    """
+    # reshape as needed
+    if det_shape is not None:
+        arr = np.array([arr[i].reshape(det_shape) for i in range(arr.shape[0])])
+
+    n, p, y, x = arr.shape
+
+    # ensure that original shape is divisible by bin factor
+    assert y % bin_factor == 0
+    assert x % bin_factor == 0
+
+    # bin each panel of each image
+    binned_arr = (
+        arr.reshape(
+            n,
+            p,
+            int(y / bin_factor),
+            bin_factor,
+            int(x / bin_factor),
+            bin_factor,
+        )
+        .mean(-1)
+        .mean(3)
+    )
+
+    # if input data were flattened, reflatten
+    if det_shape is not None:
+        flattened_size = np.prod(np.array(binned_arr.shape[1:]))
+        binned_arr = binned_arr.reshape((binned_arr.shape[0], 1) + (flattened_size,))
+    return binned_arr
+
+
+def bin_pixel_index_map(arr, bin_factor):
+    """
+    Bin pixel_index_map by bin factor.
+    Retrieved from
+    https://github.com/apeck12/cmtip/blob/main/cmtip/prep_data.py
+
+    :param arr: pixel_index_map of shape (n_panels, panel_shape_x, panel_shape_y, 2)
+    :param bin_factor: how may fold to bin arr by
+    :return binned_arr: binned pixel_index_map of same dimensions as arr
+    """
+    arr = np.moveaxis(arr, -1, 0)
+    arr = np.minimum(arr[..., ::bin_factor, :], arr[..., 1::bin_factor, :])
+    arr = np.minimum(arr[..., ::bin_factor], arr[..., 1::bin_factor])
+    arr = arr // bin_factor
+
+    return np.moveaxis(arr, 0, -1)
+
+
+# For command line use #
+
+
 def parse_input():
     """
     Parse command line input.
     """
+
     parser = argparse.ArgumentParser()
-    parser.add_argument('-e', '--exp', help='Experiment name', required=True, type=str)
-    parser.add_argument('-r', '--run', help='Run number', required=True, type=int)
-    parser.add_argument('-d', '--det_type', help='Detector name, e.g epix10k2M or jungfrau4M',  required=True, type=str)
-    parser.add_argument('-q', '--components', help='Number of principal components to be extracted', required=False, type=int)
-    parser.add_argument('-m', '--block_size', help='iPCA block size', required=False, type=int)
-    parser.add_argument('-n', '--num_events', help='Number of events to process',  required=False, type=int)
-    parser.add_argument('--pca_init', help='Initialize on q elements using batch PCA', required=False, action='store_true')
+    parser.add_argument("-e", "--exp", help="Experiment name", required=True, type=str)
+    parser.add_argument("-r", "--run", help="Run number", required=True, type=int)
+    parser.add_argument(
+        "-d",
+        "--det_type",
+        help="Detector name, e.g epix10k2M or jungfrau4M",
+        required=True,
+        type=str,
+    )
+    parser.add_argument(
+        "-c",
+        "--num_components",
+        help="Number of principal components to compute",
+        required=False,
+        type=int,
+    )
+    parser.add_argument(
+        "-m",
+        "--block_size",
+        help="Desired block size",
+        required=False,
+        type=int,
+    )
+    parser.add_argument(
+        "-n", "--num_images", help="Number of images", required=False, type=int
+    )
+
+    parser.add_argument(
+        "--output_dir",
+        help="Path to output directory.",
+        required=False,
+        type=str,
+    )
+    parser.add_argument(
+        "--init_with_pca",
+        help="Initialize with PCA",
+        required=False,
+        action="store_true",
+    )
+    parser.add_argument(
+        "--benchmark_mode",
+        help="Run algorithm in benchmark mode.",
+        required=False,
+        action="store_true",
+    )
+    parser.add_argument(
+        "--downsample", help="Enable downsampling.", required=False, action="store_true"
+    )
+    parser.add_argument(
+        "--bin_factor",
+        help="Bin factor if using downsizing.",
+        required=False,
+        type=int,
+    )
 
     return parser.parse_args()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
+
     params = parse_input()
-    fe = FeatureExtractor(exp=params.exp, run=params.run, det_type=params.det_type)
-    fe.set_ipca_params(q=params.components, block_size=params.block_size, num_images=params.num_events, init_with_pca=params.pca_init)
-    fe.ipca()
-    fe.report_interval_data()
+    kwargs = {k: v for k, v in vars(params).items() if v is not None}
+
+    fe = FeatureExtractor(**kwargs)
+    fe.run_ipca()
+    # fe.verify_model_accuracy()
+    fe.ipca.get_loss_stats()
