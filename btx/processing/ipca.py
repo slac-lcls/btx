@@ -351,6 +351,7 @@ class IPCA:
         start_indices = self.split_indices[:-1]
 
         print(start_indices)
+        print(self.split_counts)
 
         print(self.rank, " here")
         self.comm.Gatherv(
@@ -373,7 +374,7 @@ class IPCA:
             [
                 mu_tot,
                 self.split_counts * self.q,
-                start_indices * self.q,
+                start_indices,
                 MPI.DOUBLE,
             ],
             root=0,
@@ -383,7 +384,7 @@ class IPCA:
             [
                 var_tot,
                 self.split_counts * self.q,
-                start_indices * self.q,
+                start_indices,
                 MPI.DOUBLE,
             ],
             root=0,
