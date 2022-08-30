@@ -111,6 +111,17 @@ class IPCA:
         self.incorporated_images = 0
         self.outliers, self.loss_data = [], []
 
+    def retrieve_ipca_params(self):
+        """
+        Method to retrieve iPCA params.
+
+        Returns
+        -------
+        _type_
+            _description_
+        """
+        return self.num_images, self.q, self.m, self.d
+
     def set_ipca_params(self, num_images, num_components, block_size, bin_factor):
         """_summary_
 
