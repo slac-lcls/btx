@@ -284,44 +284,6 @@ class PsanaInterface:
 
         return images
 
-    def fetch_formatted_images(
-        self, n, d, start_index, end_index, downsample=False, bin_factor=1
-    ):
-        """_summary_
-
-        Parameters
-        ----------
-        n : _type_
-            _description_
-        d : _type_
-            _description_
-        index_bounds : _type_
-            _description_
-        downsample : _type_
-            _description_
-
-        Returns
-        -------
-        _type_
-            _description_
-        """
-
-        # may have to rewrite eventually when number of images becomes large,
-        # i.e. streamed setting, either that or downsample aggressively
-        imgs = self.get_images(n, assemble=False)
-
-        if downsample:
-            imgs = bin_data(imgs, bin_factor)
-
-        imgs = imgs[
-            [i for i in range(imgs.shape[0]) if not np.isnan(imgs[i : i + 1]).any()]
-        ]
-
-        num_valid_imgs, _, _, _ = imgs.shape
-        formatted_imgs = np.reshape(imgs, (num_valid_imgs, d)).T
-
-        return formatted_imgs[start_index:end_index, :]
-
 
 #### Miscellaneous functions ####
 
@@ -432,9 +394,7 @@ def disassemble_image_stack_batch(images, pixel_index_map):
 
     return image_stack_batch
 
-
-#### Binning methods ###
-
+#### binning methods ####
 
 def bin_data(arr, bin_factor, det_shape=None):
     """
@@ -476,6 +436,7 @@ def bin_data(arr, bin_factor, det_shape=None):
     if det_shape is not None:
         flattened_size = np.prod(np.array(binned_arr.shape[1:]))
         binned_arr = binned_arr.reshape((binned_arr.shape[0], 1) + (flattened_size,))
+
     return binned_arr
 
 
@@ -495,3 +456,4 @@ def bin_pixel_index_map(arr, bin_factor):
     arr = arr // bin_factor
 
     return np.moveaxis(arr, 0, -1)
+

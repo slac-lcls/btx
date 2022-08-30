@@ -6,13 +6,12 @@ from mpi4py import MPI
 from time import perf_counter
 from matplotlib import pyplot as plt
 
-from btx.interfaces.psana_interface import PsanaInterface
+from btx.interfaces.psana_interface import PsanaInterface, bin_data
 from btx.misc.ipca_helpers import (
     calculate_sample_mean_and_variance,
     update_sample_variance,
     update_sample_mean,
     compression_loss,
-    bin_data,
 )
 
 
