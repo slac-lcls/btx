@@ -1,5 +1,4 @@
-import os
-import csv
+import os, csv, argparse
 
 import numpy as np
 from mpi4py import MPI
@@ -73,7 +72,7 @@ class IPCA:
         num_components=10,
         block_size=10,
         num_images=10,
-        init_with_pca=False,
+        initialize=False,
         benchmark=False,
         downsample=False,
         bin_factor=2,
@@ -86,7 +85,7 @@ class IPCA:
 
         self.psi = PsanaInterface(exp=exp, run=run, det_type=det_type)
 
-        self.init_with_pca = init_with_pca
+        self.initialize = initialize
         self.benchmark = benchmark
         self.downsample = downsample
         self.bin_factor = bin_factor
@@ -109,7 +108,7 @@ class IPCA:
         self.total_variance = np.zeros((self.split_counts[self.rank], 1))
 
         self.incorporated_images = 0
-        self.outliers, self.pc_data = [], []
+        self.outliers, self.loss_data = [], []
 
     def get_ipca_params(self):
         """
@@ -316,6 +315,8 @@ class IPCA:
             with TaskTimer(self.task_durations, "parallel QR"):
                 UB_tilde, U_tilde, S_tilde = self.parallel_qr(qr_input)
 
+            # concatenating first preserves the memory contiguity
+            # of U_prime and thus self.U
             with TaskTimer(self.task_durations, "compute local U_prime"):
                 U_prime = UB_tilde @ U_tilde[:, :q]
 
@@ -421,9 +422,9 @@ class IPCA:
             cb = X_tot - np.tile(mu, (1, m))
 
             pcs = U.T @ cb
-            self.pc_data = (
-                np.concatenate((self.pc_data, pcs), axis=1)
-                if len(self.pc_data)
+            self.loss_data = (
+                np.concatenate((self.loss_data, pcs), axis=1)
+                if len(self.loss_data)
                 else pcs
             )
 
@@ -548,7 +549,7 @@ class IPCA:
         q = self.q
         num_images = self.num_images
 
-        if self.init_with_pca and not self.benchmark:
+        if self.initialize and not self.benchmark:
             self.fetch_and_update(q, initialize=True)
 
         # divide remaning number of images into blocks
@@ -731,3 +732,81 @@ def distribute_indices(d, size):
     split_counts = np.array(split_counts)
 
     return split_indices, split_counts
+
+
+#### for command line use ###
+
+
+def parse_input():
+    """
+    Parse command line input.
+    """
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-e", "--exp", help="Experiment name", required=True, type=str)
+    parser.add_argument("-r", "--run", help="Run number", required=True, type=int)
+    parser.add_argument(
+        "-d",
+        "--det_type",
+        help="Detector name, e.g epix10k2M or jungfrau4M",
+        required=True,
+        type=str,
+    )
+    parser.add_argument(
+        "-c",
+        "--num_components",
+        help="Number of principal components to compute",
+        required=False,
+        type=int,
+    )
+    parser.add_argument(
+        "-m",
+        "--block_size",
+        help="Desired block size",
+        required=False,
+        type=int,
+    )
+    parser.add_argument(
+        "-n", "--num_images", help="Number of images", required=False, type=int
+    )
+
+    parser.add_argument(
+        "--output_dir",
+        help="Path to output directory.",
+        required=False,
+        type=str,
+    )
+    parser.add_argument(
+        "--initialize",
+        help="Initialize with PCA",
+        required=False,
+        action="store_true",
+    )
+    parser.add_argument(
+        "--benchmark",
+        help="Run algorithm in benchmark mode.",
+        required=False,
+        action="store_true",
+    )
+    parser.add_argument(
+        "--downsample", help="Enable downsampling.", required=False, action="store_true"
+    )
+    parser.add_argument(
+        "--bin_factor",
+        help="Bin factor if using downsizing.",
+        required=False,
+        type=int,
+    )
+
+    return parser.parse_args()
+
+
+if __name__ == "__main__":
+
+    params = parse_input()
+    kwargs = {k: v for k, v in vars(params).items() if v is not None}
+
+    ipca = IPCA(**kwargs)
+    ipca.run_ipca()
+    # fe.verify_model_accuracy()
+    ipca.ipca.get_loss_stats()
