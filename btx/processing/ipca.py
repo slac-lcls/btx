@@ -74,7 +74,7 @@ class IPCA:
         block_size=10,
         num_images=10,
         init_with_pca=False,
-        benchmark_mode=False,
+        benchmark=False,
         downsample=False,
         bin_factor=2,
         output_dir="",
@@ -87,7 +87,7 @@ class IPCA:
         self.psi = PsanaInterface(exp=exp, run=run, det_type=det_type)
 
         self.init_with_pca = init_with_pca
-        self.benchmark_mode = benchmark_mode
+        self.benchmark = benchmark
         self.downsample = downsample
         self.bin_factor = bin_factor
         self.output_dir = output_dir
@@ -142,7 +142,7 @@ class IPCA:
             _description_
         """
         max_events = self.psi.max_events
-        benchmark = self.benchmark_mode
+        benchmark = self.benchmark
         downsample = self.downsample
 
         # set n, q, and m
@@ -550,7 +550,7 @@ class IPCA:
         q = self.q
         num_images = self.num_images
 
-        if self.init_with_pca and not self.benchmark_mode:
+        if self.init_with_pca and not self.benchmark:
             self.fetch_and_update(q, initialize=True)
 
         # divide remaning number of images into blocks
@@ -565,7 +565,7 @@ class IPCA:
         for block_size in block_sizes:
             self.fetch_and_update(block_size)
 
-        if self.benchmark_mode:
+        if self.benchmark:
             self.verify_model_accuracy()
 
     def fetch_formatted_images(self, n, start_index, end_index):
