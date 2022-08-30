@@ -552,7 +552,8 @@ class IPCA:
         for block_size in block_sizes:
             self.fetch_and_update(block_size)
 
-        self.report_interval_data(save_data=self.benchmark_mode)
+        if self.benchmark_mode:
+            self.verify_model_accuracy()
 
     def fetch_formatted_images(self, n, start_index, end_index):
         """
