@@ -3,6 +3,9 @@ import os, csv, argparse
 import numpy as np
 from mpi4py import MPI
 
+from time import perf_counter
+from matplotlib import pyplot as plt
+
 from btx.interfaces.psana_interface import PsanaInterface
 from btx.misc.ipca_helpers import (
     calculate_sample_mean_and_variance,
@@ -11,9 +14,6 @@ from btx.misc.ipca_helpers import (
     compression_loss,
     bin_data,
 )
-
-from time import perf_counter
-from matplotlib import pyplot as plt
 
 
 class TaskTimer:
@@ -107,8 +107,8 @@ class IPCA:
         self.mu = np.zeros((self.split_counts[self.rank], 1))
         self.total_variance = np.zeros((self.split_counts[self.rank], 1))
 
-        self.incorporated_images = 0
-        self.outliers, self.loss_data = [], []
+        self.n = 0
+        self.outliers, self.cl_data = [], []
 
     def get_ipca_params(self):
         """
@@ -116,10 +116,16 @@ class IPCA:
 
         Returns
         -------
-        _type_
-            _description_
+        num_images : int
+            number of images used to build model
+        q : int
+            number of components maintained in model
+        m : int
+            block size used in model updates
+        d : int
+            dimensionality of incorporated images
         """
-        return self.num_images, self.q, self.m, self.d
+        return self.n, self.q, self.m, self.d
 
     def set_ipca_params(self, num_images, num_components, block_size, bin_factor):
         """_summary_
@@ -182,14 +188,16 @@ class IPCA:
         X : ndarray, shape (d x m)
             set of m (d x 1) observations
         """
-        print(f"Rank {self.rank}, initializing model with {self.q} samples...")
+
+        if self.rank == 0:
+            print(f"Initializing model with {self.q} samples...")
 
         self.mu, self.total_variance = calculate_sample_mean_and_variance(X)
 
         centered_data = X - np.tile(self.mu, self.q)
         self.U, self.S, _ = np.linalg.svd(centered_data, full_matrices=False)
 
-        self.incorporated_images += self.q
+        self.n += self.q
 
     def parallel_qr(self, A):
         """_summary_
@@ -273,7 +281,7 @@ class IPCA:
         https://link.springer.com/content/pdf/10.1007/s11263-007-0075-7.pdf
         """
         _, m = X.shape
-        n = self.incorporated_images
+        n = self.n
         q = self.q
 
         with TaskTimer(self.task_durations, "total update"):
@@ -323,7 +331,7 @@ class IPCA:
             self.U = U_prime
             self.S = S_tilde[:q]
 
-            self.incorporated_images += m
+            self.n += m
 
     def get_model(self):
         """
@@ -394,7 +402,7 @@ class IPCA:
             _description_
         """
         _, m = X.shape
-        n, d = self.incorporated_images, self.d
+        n, d = self.n, self.d
 
         start_indices = self.split_indices[-1]
 
@@ -422,9 +430,9 @@ class IPCA:
             cb = X_tot - np.tile(mu, (1, m))
 
             pcs = U.T @ cb
-            self.loss_data = (
-                np.concatenate((self.loss_data, pcs), axis=1)
-                if len(self.loss_data)
+            self.cl_data = (
+                np.concatenate((self.cl_data, pcs), axis=1)
+                if len(self.cl_data)
                 else pcs
             )
 
@@ -453,11 +461,11 @@ class IPCA:
         d = self.d
         m = self.m
         q = self.q
-        n = self.num_images
+        num_images = self.num_images
 
         # store current event index from self.psi and reset
         event_index = self.psi.counter
-        self.psi.counter = event_index - n
+        self.psi.counter = event_index - num_images
 
         try:
             print("\nVerifying Model Accuracy\n------------------------\n")
@@ -469,19 +477,20 @@ class IPCA:
 
             # run svd on centered image batch
             print("Gathering images for batch PCA...")
-            X = self.fetch_formatted_images(n, 0, d)
+            X = self.fetch_formatted_images(num_images, 0, d)
+            y, x = X.shape
 
             print("Performing batch PCA...")
-            mu_pca = np.reshape(np.mean(X, axis=1), (X.shape[0], 1))
-            var_pca = np.reshape(np.var(X, ddof=1, axis=1), (X.shape[0], 1))
+            mu_pca = np.reshape(np.mean(X, axis=1), (y, 1))
+            var_pca = np.reshape(np.var(X, ddof=1, axis=1), (y, 1))
 
-            mu_n = np.tile(mu_pca, n)
+            mu_n = np.tile(mu_pca, x)
             X_centered = X - mu_n
 
             U_pca, S_pca, _ = np.linalg.svd(X_centered, full_matrices=False)
             print("\n")
 
-            q_pca = min(q, n)
+            q_pca = min(q, x)
 
             # calculate compression loss, normalized if given flag
             norm = True
@@ -501,10 +510,10 @@ class IPCA:
             print(f"PCA Total Variance: {pca_tot_var}")
             print("\n")
 
-            ipca_exp_var = (np.sum(S[:q_pca] ** 2) / (n - 1)) / np.sum(var)
+            ipca_exp_var = (np.sum(S[:q_pca] ** 2) / (x - 1)) / np.sum(var)
             print(f"iPCA Explained Variance: {ipca_exp_var}")
 
-            pca_exp_var = (np.sum(S_pca[:q_pca] ** 2) / (n - 1)) / np.sum(var_pca)
+            pca_exp_var = (np.sum(S_pca[:q_pca] ** 2) / (x - 1)) / np.sum(var_pca)
             print(f"PCA Explained Variance: {pca_exp_var}")
             print("\n")
 
@@ -554,7 +563,7 @@ class IPCA:
 
         # divide remaning number of images into blocks
         # will become redundant in a streaming setting, need to change
-        rem_imgs = num_images - self.incorporated_images
+        rem_imgs = num_images - self.n
         block_sizes = np.array(
             [m] * np.floor(rem_imgs / m).astype(int)
             + ([rem_imgs % m] if rem_imgs % m else [])
@@ -665,7 +674,7 @@ class IPCA:
 
         q = self.q
         d = self.d
-        n = self.incorporated_images
+        n = self.n
         m = self.m
         size = self.size
         dir_path = self.output_dir
