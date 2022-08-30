@@ -350,6 +350,9 @@ class IPCA:
 
         start_indices = self.split_indices[:-1]
 
+        print(start_indices)
+
+        print("here")
         self.comm.Gatherv(
             self.U.flatten(),
             [
@@ -360,6 +363,7 @@ class IPCA:
             ],
             root=0,
         )
+        print("there")
 
         if self.rank == 0:
             U_tot = np.reshape(U_tot, (self.d, self.q))
@@ -414,7 +418,6 @@ class IPCA:
         else:
             X_tot = None
 
-        print("here")
         self.comm.Gatherv(
             X.flatten(),
             [
@@ -425,8 +428,6 @@ class IPCA:
             ],
             root=0,
         )
-
-        print("there")
 
         if self.rank == 0:
 
