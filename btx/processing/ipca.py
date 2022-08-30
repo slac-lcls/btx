@@ -109,7 +109,7 @@ class IPCA:
         self.total_variance = np.zeros((self.split_counts[self.rank], 1))
 
         self.incorporated_images = 0
-        self.outliers, self.loss_data = [], []
+        self.outliers, self.pc_data = [], []
 
     def get_ipca_params(self):
         """
@@ -155,7 +155,7 @@ class IPCA:
             n = min(min_n, max_events)
             m = q
 
-            print(f"Benchmarking, setting q = {q}, n = {n}, m = {m}.")
+            print(f"In benchmarking mode, setting q = {q}, n = {n}, m = {m}.")
         else:
             n = min(n, max_events) if n != -1 else max_events
             q = min(q, n)
@@ -316,8 +316,6 @@ class IPCA:
             with TaskTimer(self.task_durations, "parallel QR"):
                 UB_tilde, U_tilde, S_tilde = self.parallel_qr(qr_input)
 
-            # concatenating first preserves the memory contiguity
-            # of U_prime and thus self.U
             with TaskTimer(self.task_durations, "compute local U_prime"):
                 U_prime = UB_tilde @ U_tilde[:, :q]
 
@@ -423,9 +421,9 @@ class IPCA:
             cb = X_tot - np.tile(mu, (1, m))
 
             pcs = U.T @ cb
-            self.loss_data = (
-                np.concatenate((self.loss_data, pcs), axis=1)
-                if len(self.loss_data)
+            self.pc_data = (
+                np.concatenate((self.pc_data, pcs), axis=1)
+                if len(self.pc_data)
                 else pcs
             )
 
