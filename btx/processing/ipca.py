@@ -294,11 +294,10 @@ class IPCA:
                     )
                 )
 
-            print("here")
             with TaskTimer(self.task_durations, "record compression loss data"):
                 if n > 0:
                     self.gather_interim_data(X)
-            print("there")
+
             with TaskTimer(self.task_durations, "update mean and variance"):
                 mu_n = self.mu
                 mu_m, s_m = calculate_sample_mean_and_variance(X)
@@ -415,6 +414,7 @@ class IPCA:
         else:
             X_tot = None
 
+        print("here")
         self.comm.Gatherv(
             X.flatten(),
             [
@@ -425,6 +425,8 @@ class IPCA:
             ],
             root=0,
         )
+
+        print("there")
 
         if self.rank == 0:
 
