@@ -93,9 +93,12 @@ class IPCA:
         self.bin_factor = bin_factor
         self.output_dir = output_dir
 
-        self.num_images, self.q, self.m, self.d = self.set_ipca_params(
-            num_images, num_components, batch_size, bin_factor
-        )
+        (
+            self.num_images,
+            self.num_components,
+            self.batch_size,
+            self.d,
+        ) = self.set_ipca_params(num_images, num_components, batch_size, bin_factor)
 
         # compute number of counts in and start indices over ranks
         self.split_indices, self.split_counts = distribute_indices(self.d, self.size)
@@ -121,21 +124,22 @@ class IPCA:
         d : int
             dimensionality of incorporated images
         """
-        return self.n, self.q, self.m, self.d
+        return self.n, self.num_components, self.batch_size, self.d
 
     def set_ipca_params(self, num_images, num_components, batch_size, bin_factor):
-        """_summary_
+        """
+        Method to initialize iPCA parameters.
 
         Parameters
         ----------
-        num_images : _type_
-            _description_
-        num_components : _type_
-            _description_
-        batch_size : _type_
-            _description_
-        bin_factor : _type_
-            _description_
+        num_images : int
+            Number of images to incorporate into model.
+        num_components : int
+            Number of components for model to maintain.
+        batch_size : int
+            Size of image block to be incorporated into model at each update.
+        bin_factor : int
+            Factor to bin data by.
 
         Returns
         -------
@@ -186,14 +190,14 @@ class IPCA:
         """
 
         if self.rank == 0:
-            print(f"Initializing model with {self.q} samples...")
+            print(f"Initializing model with {self.num_components} samples...")
 
         self.mu, self.total_variance = calculate_sample_mean_and_variance(X)
 
-        centered_data = X - np.tile(self.mu, self.q)
+        centered_data = X - np.tile(self.mu, self.num_components)
         self.U, self.S, _ = np.linalg.svd(centered_data, full_matrices=False)
 
-        self.num_incorporated_images += self.q
+        self.num_incorporated_images += self.num_components
 
     def parallel_qr(self, A):
         """
@@ -229,7 +233,7 @@ class IPCA:
         International journal of computer vision. 2008 May;77(1):125-41.
         """
         _, x = A.shape
-        q = self.q
+        q = self.num_components
         m = x - q - 1
 
         with TaskTimer(self.task_durations, "qr - local qr"):
@@ -297,8 +301,8 @@ class IPCA:
         International journal of computer vision. 2008 May;77(1):125-41.
         """
         _, m = X.shape
-        n = self.n
-        q = self.q
+        n = self.num_incorporated_images
+        q = self.num_components
 
         with TaskTimer(self.task_durations, "total update"):
 
@@ -363,7 +367,7 @@ class IPCA:
             Sample data variance computed from all input images.
         """
         if self.rank == 0:
-            U_tot = np.empty(self.d * self.q)
+            U_tot = np.empty(self.d * self.num_components)
             mu_tot = np.empty((self.d, 1))
             var_tot = np.empty((self.d, 1))
             S_tot = self.S
@@ -376,21 +380,21 @@ class IPCA:
             self.U.flatten(),
             [
                 U_tot,
-                self.split_counts * self.q,
-                start_indices * self.q,
+                self.split_counts * self.num_components,
+                start_indices * self.num_components,
                 MPI.DOUBLE,
             ],
             root=0,
         )
 
         if self.rank == 0:
-            U_tot = np.reshape(U_tot, (self.d, self.q))
+            U_tot = np.reshape(U_tot, (self.d, self.num_components))
 
         self.comm.Gatherv(
             self.mu,
             [
                 mu_tot,
-                self.split_counts * self.q,
+                self.split_counts * self.num_components,
                 start_indices,
                 MPI.DOUBLE,
             ],
@@ -400,7 +404,7 @@ class IPCA:
             self.total_variance,
             [
                 var_tot,
-                self.split_counts * self.q,
+                self.split_counts * self.num_components,
                 start_indices,
                 MPI.DOUBLE,
             ],
@@ -484,8 +488,8 @@ class IPCA:
             return
 
         d = self.d
-        m = self.m
-        q = self.q
+        m = self.batch_size
+        q = self.num_components
         num_images = self.num_images
 
         # store current event index from self.psi and reset
@@ -579,16 +583,16 @@ class IPCA:
         """
         Perform iPCA on run subject to initialization parameters.
         """
-        m = self.m
+        m = self.batch_size
         num_images = self.num_images
 
         # initialize and prime model, if specified
         if self.priming and not self.benchmarking:
-            img_batch = self.get_formatted_images(self.q, 0, self.d)
+            img_batch = self.get_formatted_images(self.num_components, 0, self.d)
             self.prime_model(img_batch)
         else:
-            self.U = np.zeros((self.split_counts[self.rank], self.q))
-            self.S = np.ones(self.q)
+            self.U = np.zeros((self.split_counts[self.rank], self.num_components))
+            self.S = np.ones(self.num_components)
             self.mu = np.zeros((self.split_counts[self.rank], 1))
             self.total_variance = np.zeros((self.split_counts[self.rank], 1))
 
@@ -600,7 +604,7 @@ class IPCA:
             + ([rem_imgs % m] if rem_imgs % m else [])
         )
 
-        # update model with remaining batchs
+        # update model with remaining batches
         for batch_size in batch_sizes:
             self.fetch_and_update(batch_size)
 
@@ -698,10 +702,11 @@ class IPCA:
         if self.rank != 0:
             return
 
-        q = self.q
+        q = self.num_components
         d = self.d
         n = self.num_incorporated_images
-        m = self.m
+        m = self.batch_size
+
         size = self.size
         dir_path = self.output_dir
         task_durations = self.task_durations
