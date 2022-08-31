@@ -316,10 +316,10 @@ class IPCA:
                 X_aug = np.hstack((X_centered, v_augment))
 
             with TaskTimer(self.task_durations, "first matrix product U@S"):
-                us = self.U @ np.diag(self.S)
+                US = self.U @ np.diag(self.S)
 
             with TaskTimer(self.task_durations, "QR concatenate"):
-                A = np.hstack((us, X_aug))
+                A = np.hstack((US, X_aug))
 
             with TaskTimer(self.task_durations, "parallel QR"):
                 Q1, Q2, R = self.parallel_qr(A)
