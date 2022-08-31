@@ -1,3 +1,4 @@
+from mimetypes import init
 import os, csv, argparse
 
 import numpy as np
@@ -72,8 +73,8 @@ class IPCA:
         num_images=10,
         num_components=10,
         block_size=10,
-        initialize=False,
-        benchmark=False,
+        priming=False,
+        benchmarking=False,
         downsample=False,
         bin_factor=2,
         output_dir="",
@@ -86,8 +87,8 @@ class IPCA:
         self.psi = PsanaInterface(exp=exp, run=run, det_type=det_type)
         self.psi.counter = start_offset
 
-        self.initialize = initialize
-        self.benchmark = benchmark
+        self.priming = priming
+        self.benchmarking = benchmarking
         self.downsample = downsample
         self.bin_factor = bin_factor
         self.output_dir = output_dir
@@ -102,13 +103,7 @@ class IPCA:
         # attribute for storing interval data
         self.task_durations = dict({})
 
-        # initialize model variables
-        self.S = np.ones(self.q)
-        self.U = np.zeros((self.split_counts[self.rank], self.q))
-        self.mu = np.zeros((self.split_counts[self.rank], 1))
-        self.total_variance = np.zeros((self.split_counts[self.rank], 1))
-
-        self.n = 0
+        self.num_incorporated_images = 0
         self.outliers, self.pc_data = [], []
 
     def get_ipca_params(self):
@@ -148,7 +143,7 @@ class IPCA:
             _description_
         """
         max_events = self.psi.max_events
-        benchmark = self.benchmark
+        benchmarking = self.benchmarking
         downsample = self.downsample
 
         # set n, q, and m
@@ -156,7 +151,7 @@ class IPCA:
         q = num_components
         m = block_size
 
-        if benchmark:
+        if benchmarking:
             min_n = max(int(4 * q), 40)
             n = min(min_n, max_events)
             m = q
@@ -180,7 +175,7 @@ class IPCA:
 
         return n, q, m, d
 
-    def initialize_model(self, X):
+    def prime_model(self, X):
         """
         Initialiize model on sample of data using batch PCA.
 
@@ -198,25 +193,30 @@ class IPCA:
         centered_data = X - np.tile(self.mu, self.q)
         self.U, self.S, _ = np.linalg.svd(centered_data, full_matrices=False)
 
-        self.n += self.q
+        self.num_incorporated_images += self.q
 
     def parallel_qr(self, A):
-        """_summary_
+        """
+        Perform parallelized qr factorization on input matrix A.
 
         Parameters
         ----------
-        A : _type_
-            _description_
+        A : ndarray, shape (_ x q+m+1)
+            Input data to be factorized.
 
         Returns
         -------
-        _type_
-            _description_
+        q_fin : ndarray, shape (_, q+m+1)
+            Q_{r,1} from TSQR algorithm, where r = self.rank + 1
+        U_tilde : ndarray, shape (q+m+1, q+m+1)
+            Q_{r,2} from TSQR algorithm, where r = self.rank + 1
+        S_tilde : ndarray, shape (q+m+1)
+            R_tilde from TSQR algorithm, where r = self.rank + 1
 
         Notes
         -----
         Method acquired from
-        https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=6691583&tag=1
+        https://www.cs.cornell.edu/~arb/papers/mrtsqr-bigdata2013.pdf
         """
         _, x = A.shape
         q = self.q
@@ -294,7 +294,7 @@ class IPCA:
                     )
                 )
 
-            with TaskTimer(self.task_durations, "record compression loss data"):
+            with TaskTimer(self.task_durations, "record pc data"):
                 if n > 0:
                     self.gather_interim_data(X)
 
@@ -322,17 +322,15 @@ class IPCA:
                 qr_input = np.hstack((us, X_aug))
 
             with TaskTimer(self.task_durations, "parallel QR"):
-                UB_tilde, U_tilde, S_tilde = self.parallel_qr(qr_input)
+                Q1, Q2, R = self.parallel_qr(qr_input)
 
             # concatenating first preserves the memory contiguity
             # of U_prime and thus self.U
             with TaskTimer(self.task_durations, "compute local U_prime"):
-                U_prime = UB_tilde @ U_tilde[:, :q]
+                self.U = Q1 @ Q2[:, :q]
+                self.S = R[:q]
 
-            self.U = U_prime
-            self.S = S_tilde[:q]
-
-            self.n += m
+            self.num_incorporated_images += m
 
     def get_model(self):
         """
@@ -451,7 +449,7 @@ class IPCA:
 
     def verify_model_accuracy(self):
         """
-        Run benchmark to verify model accuracy.
+        Run benchmarking to verify model accuracy.
         """
         self.comm.Barrier()
         U, S, mu, var = self.get_model()
@@ -556,15 +554,21 @@ class IPCA:
         Perform iPCA on run subject to initialization parameters.
         """
         m = self.m
-        q = self.q
         num_images = self.num_images
 
-        if self.initialize and not self.benchmark:
-            self.fetch_and_update(q, initialize=True)
+        # initialize and prime model, if specified
+        if self.priming and not self.benchmarking:
+            img_batch = self.get_formatted_images(self.q, 0, self.d)
+            self.prime_model(img_batch)
+        else:
+            self.U = np.zeros((self.split_counts[self.rank], self.q))
+            self.S = np.ones(self.q)
+            self.mu = np.zeros((self.split_counts[self.rank], 1))
+            self.total_variance = np.zeros((self.split_counts[self.rank], 1))
 
         # divide remaning number of images into blocks
         # will become redundant in a streaming setting, need to change
-        rem_imgs = num_images - self.n
+        rem_imgs = num_images - self.num_incorporated_images
         block_sizes = np.array(
             [m] * np.floor(rem_imgs / m).astype(int)
             + ([rem_imgs % m] if rem_imgs % m else [])
@@ -574,7 +578,7 @@ class IPCA:
         for block_size in block_sizes:
             self.fetch_and_update(block_size)
 
-        if self.benchmark:
+        if self.benchmarking:
             self.save_interval_data()
 
     def get_formatted_images(self, n, start_index, end_index):
@@ -615,7 +619,7 @@ class IPCA:
 
         return formatted_imgs[start_index:end_index, :]
 
-    def fetch_and_update(self, n, initialize=False):
+    def fetch_and_update(self, n):
         """
         Fetch images and update model.
 
@@ -623,8 +627,6 @@ class IPCA:
         ----------
         n : int
             number of images to incorporate
-        initialize : bool, optional
-            use images in initialization, by default False
         """
 
         rank = self.rank
@@ -632,10 +634,7 @@ class IPCA:
 
         img_block = self.get_formatted_images(n, start_index, end_index)
 
-        if initialize:
-            self.initialize_model(img_block)
-        else:
-            self.update_model(img_block)
+        self.update_model(img_block)
 
     def report_interval_data(self):
         """
@@ -675,7 +674,7 @@ class IPCA:
 
         q = self.q
         d = self.d
-        n = self.n
+        n = self.num_incorporated_images
         m = self.m
         size = self.size
         dir_path = self.output_dir
@@ -792,14 +791,14 @@ def parse_input():
         type=str,
     )
     parser.add_argument(
-        "--initialize",
+        "--priming",
         help="Initialize model with PCA.",
         required=False,
         action="store_true",
     )
     parser.add_argument(
-        "--benchmark",
-        help="Run algorithm in benchmark mode.",
+        "--benchmarking",
+        help="Run algorithm in benchmarking mode.",
         required=False,
         action="store_true",
     )
