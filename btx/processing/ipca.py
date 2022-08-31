@@ -753,36 +753,38 @@ def parse_input():
     """
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--exp", help="Experiment name", required=True, type=str)
-    parser.add_argument("--run", help="Run number", required=True, type=int)
+    parser.add_argument("--exp", help="Experiment name.", required=True, type=str)
+    parser.add_argument("--run", help="Run number.", required=True, type=int)
     parser.add_argument(
         "--det_type",
-        help="Detector name, e.g epix10k2M or jungfrau4M",
+        help="Detector name, e.g epix10k2M or jungfrau4M .",
         required=True,
         type=str,
     )
     parser.add_argument(
         "--start_offset",
-        help="Offset from start of run.",
+        help="Index in run of first image to be incorporated into iPCA model.",
         required=False,
         type=int,
     )
     parser.add_argument(
         "--num_components",
-        help="Number of principal components to compute",
+        help="Number of principal components to compute and maintain.",
         required=False,
         type=int,
     )
     parser.add_argument(
         "--block_size",
-        help="Desired block size",
+        help="Size of image blocks incorporated in model updates.",
         required=False,
         type=int,
     )
     parser.add_argument(
-        "--num_images", help="Number of images", required=False, type=int
+        "--num_images",
+        help="Total number of images used to update model.",
+        required=False,
+        type=int,
     )
-
     parser.add_argument(
         "--output_dir",
         help="Path to output directory.",
@@ -791,7 +793,7 @@ def parse_input():
     )
     parser.add_argument(
         "--initialize",
-        help="Initialize with PCA",
+        help="Initialize model with PCA.",
         required=False,
         action="store_true",
     )
@@ -802,7 +804,10 @@ def parse_input():
         action="store_true",
     )
     parser.add_argument(
-        "--downsample", help="Enable downsampling.", required=False, action="store_true"
+        "--downsample",
+        help="Enable downsampling of images.",
+        required=False,
+        action="store_true",
     )
     parser.add_argument(
         "--bin_factor",
