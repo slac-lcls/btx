@@ -215,12 +215,18 @@ class IPCA:
 
         Notes
         -----
-        Method acquired from:
-        https://www.cs.cornell.edu/~arb/papers/mrtsqr-bigdata2013.pdf
+        Parallel QR algorithm implemented from [1], with additional elements from [2]
+        sprinkled in to record elements for iPCA using SVD, etc.
 
-        SVD step introduced from:
-        https://link.springer.com/content/pdf/10.1007/s11263-007-0075-7.pdf
+        References
+        ----------
 
+        [1] Benson AR, Gleich DF, Demmel J. Direct QR factorizations for tall-and-skinny
+        matrices in MapReduce architectures. In2013 IEEE international conference on
+        big data 2013 Oct 6 (pp. 264-272). IEEE.
+
+        [2] Ross DA, Lim J, Lin RS, Yang MH. Incremental learning for robust visual tracking.
+        International journal of computer vision. 2008 May;77(1):125-41.
         """
         _, x = A.shape
         q = self.q
