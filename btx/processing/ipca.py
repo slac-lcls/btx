@@ -753,49 +753,47 @@ def parse_input():
     """
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("-e", "--exp", help="Experiment name", required=True, type=str)
-    parser.add_argument("-r", "--run", help="Run number", required=True, type=int)
+    parser.add_argument("--exp", help="Experiment name.", required=True, type=str)
+    parser.add_argument("--run", help="Run number.", required=True, type=int)
     parser.add_argument(
-        "-d",
         "--det_type",
-        help="Detector name, e.g epix10k2M or jungfrau4M",
+        help="Detector name, e.g epix10k2M or jungfrau4M.",
         required=True,
         type=str,
     )
     parser.add_argument(
-        "-o",
         "--start_offset",
-        help="Offset from start of run.",
+        help="Run index of first image to be incorporated into iPCA model.",
         required=False,
         type=int,
     )
     parser.add_argument(
-        "-c",
         "--num_components",
-        help="Number of principal components to compute",
+        help="Number of principal components to compute and maintain.",
         required=False,
         type=int,
     )
     parser.add_argument(
-        "-m",
         "--block_size",
-        help="Desired block size",
+        help="Size of image block incorporated in each model update.",
         required=False,
         type=int,
     )
     parser.add_argument(
-        "-n", "--num_images", help="Number of images", required=False, type=int
+        "--num_images",
+        help="Total number of images to be incorporated into model.",
+        required=False,
+        type=int,
     )
-
     parser.add_argument(
         "--output_dir",
-        help="Path to output directory.",
+        help="Path to output directory for recording interval data.",
         required=False,
         type=str,
     )
     parser.add_argument(
         "--initialize",
-        help="Initialize with PCA",
+        help="Initialize model with PCA.",
         required=False,
         action="store_true",
     )
@@ -806,7 +804,10 @@ def parse_input():
         action="store_true",
     )
     parser.add_argument(
-        "--downsample", help="Enable downsampling.", required=False, action="store_true"
+        "--downsample",
+        help="Enable downsampling of images.",
+        required=False,
+        action="store_true",
     )
     parser.add_argument(
         "--bin_factor",
