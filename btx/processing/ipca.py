@@ -224,7 +224,6 @@ class IPCA:
 
         References
         ----------
-
         [1] Benson AR, Gleich DF, Demmel J. Direct QR factorizations for tall-and-skinny
         matrices in MapReduce architectures. In2013 IEEE international conference on
         big data 2013 Oct 6 (pp. 264-272). IEEE.
