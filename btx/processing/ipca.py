@@ -319,10 +319,10 @@ class IPCA:
                 us = self.U @ np.diag(self.S)
 
             with TaskTimer(self.task_durations, "QR concatenate"):
-                qr_input = np.hstack((us, X_aug))
+                A = np.hstack((us, X_aug))
 
             with TaskTimer(self.task_durations, "parallel QR"):
-                Q1, Q2, R = self.parallel_qr(qr_input)
+                Q1, Q2, R = self.parallel_qr(A)
 
             # concatenating first preserves the memory contiguity
             # of U_prime and thus self.U
