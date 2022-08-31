@@ -140,18 +140,24 @@ class IPCA:
         Parameters
         ----------
         num_images : int
-            Number of images to incorporate into model.
+            Desired number of images to incorporate into model.
         num_components : int
-            Number of components for model to maintain.
+            Desired number of components for model to maintain.
         batch_size : int
-            Size of image block to be incorporated into model at each update.
+            Desired size of image block to be incorporated into model at each update.
         bin_factor : int
             Factor to bin data by.
 
         Returns
         -------
-        _type_
-            _description_
+        n : int
+            Number of images to incorporate into model.
+        q : int
+            Number of components for model to maintain.
+        m : int
+            Size of image block to be incorporated into model at each update.
+        d : int
+            Number of features (dimension) in each image.
         """
         max_events = self.psi.max_events
         benchmarking = self.benchmarking
