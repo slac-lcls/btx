@@ -757,13 +757,13 @@ def parse_input():
     parser.add_argument("--run", help="Run number.", required=True, type=int)
     parser.add_argument(
         "--det_type",
-        help="Detector name, e.g epix10k2M or jungfrau4M .",
+        help="Detector name, e.g epix10k2M or jungfrau4M.",
         required=True,
         type=str,
     )
     parser.add_argument(
         "--start_offset",
-        help="Index in run of first image to be incorporated into iPCA model.",
+        help="Run index of first image to be incorporated into iPCA model.",
         required=False,
         type=int,
     )
@@ -775,19 +775,19 @@ def parse_input():
     )
     parser.add_argument(
         "--block_size",
-        help="Size of image blocks incorporated in model updates.",
+        help="Size of image block incorporated in each model update.",
         required=False,
         type=int,
     )
     parser.add_argument(
         "--num_images",
-        help="Total number of images used to update model.",
+        help="Total number of images to be incorporated into model.",
         required=False,
         type=int,
     )
     parser.add_argument(
         "--output_dir",
-        help="Path to output directory.",
+        help="Path to output directory for recording interval data.",
         required=False,
         type=str,
     )
