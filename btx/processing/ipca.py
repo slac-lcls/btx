@@ -72,7 +72,7 @@ class IPCA:
         start_offset=0,
         num_images=10,
         num_components=10,
-        block_size=10,
+        batch_size=10,
         priming=False,
         benchmarking=False,
         downsample=False,
@@ -94,7 +94,7 @@ class IPCA:
         self.output_dir = output_dir
 
         self.num_images, self.q, self.m, self.d = self.set_ipca_params(
-            num_images, num_components, block_size, bin_factor
+            num_images, num_components, batch_size, bin_factor
         )
 
         # compute number of counts in and start indices over ranks
@@ -117,13 +117,13 @@ class IPCA:
         q : int
             number of components maintained in model
         m : int
-            block size used in model updates
+            batch size used in model updates
         d : int
             dimensionality of incorporated images
         """
         return self.n, self.q, self.m, self.d
 
-    def set_ipca_params(self, num_images, num_components, block_size, bin_factor):
+    def set_ipca_params(self, num_images, num_components, batch_size, bin_factor):
         """_summary_
 
         Parameters
@@ -132,7 +132,7 @@ class IPCA:
             _description_
         num_components : _type_
             _description_
-        block_size : _type_
+        batch_size : _type_
             _description_
         bin_factor : _type_
             _description_
@@ -149,7 +149,7 @@ class IPCA:
         # set n, q, and m
         n = num_images
         q = num_components
-        m = block_size
+        m = batch_size
 
         if benchmarking:
             min_n = max(int(4 * q), 40)
@@ -280,12 +280,12 @@ class IPCA:
 
     def update_model(self, X):
         """
-        Update model with new block of observations using iPCA.
+        Update model with new batch of observations using iPCA.
 
         Parameters
         ----------
         X : ndarray, shape (d x m)
-            block of m (d x 1) observations
+            batch of m (d x 1) observations
 
         Notes
         -----
@@ -311,7 +311,7 @@ class IPCA:
 
             with TaskTimer(self.task_durations, "record pc data"):
                 if n > 0:
-                    self.gather_interim_data(X)
+                    self.record_loadings(X)
 
             with TaskTimer(self.task_durations, "update mean and variance"):
                 mu_n = self.mu
@@ -416,13 +416,15 @@ class IPCA:
         if self.rank == 0:
             print(self.outliers)
 
-    def gather_interim_data(self, X):
-        """_summary_
+    def record_loadings(self, X):
+        """
+        Method to store all loadings, ΣV^T, from present batch using past
+        model iteration.
 
         Parameters
         ----------
-        X : _type_
-            _description_
+        X : ndarray, shape (_ x m)
+            Local subdivision of current image data batch.
         """
         _, m = X.shape
         n, d = self.n, self.d
@@ -463,12 +465,12 @@ class IPCA:
             std = np.std(pc_dist)
             mu = np.mean(pc_dist)
 
-            block_outliers = np.where(np.abs(pc_dist - mu) > std)[0] + n - m
+            batch_outliers = np.where(np.abs(pc_dist - mu) > std)[0] + n - m
 
             self.outliers = (
-                np.concatenate((self.outliers, block_outliers), axis=0)
+                np.concatenate((self.outliers, batch_outliers), axis=0)
                 if len(self.outliers)
-                else block_outliers
+                else batch_outliers
             )
 
     def verify_model_accuracy(self):
@@ -590,17 +592,17 @@ class IPCA:
             self.mu = np.zeros((self.split_counts[self.rank], 1))
             self.total_variance = np.zeros((self.split_counts[self.rank], 1))
 
-        # divide remaning number of images into blocks
+        # divide remaning number of images into batches
         # will become redundant in a streaming setting, need to change
         rem_imgs = num_images - self.num_incorporated_images
-        block_sizes = np.array(
+        batch_sizes = np.array(
             [m] * np.floor(rem_imgs / m).astype(int)
             + ([rem_imgs % m] if rem_imgs % m else [])
         )
 
-        # update model with remaining blocks
-        for block_size in block_sizes:
-            self.fetch_and_update(block_size)
+        # update model with remaining batchs
+        for batch_size in batch_sizes:
+            self.fetch_and_update(batch_size)
 
         if self.benchmarking:
             self.save_interval_data()
@@ -656,9 +658,9 @@ class IPCA:
         rank = self.rank
         start_index, end_index = self.split_indices[rank], self.split_indices[rank + 1]
 
-        img_block = self.get_formatted_images(n, start_index, end_index)
+        img_batch = self.get_formatted_images(n, start_index, end_index)
 
-        self.update_model(img_block)
+        self.update_model(img_batch)
 
     def report_interval_data(self):
         """
@@ -679,7 +681,7 @@ class IPCA:
         for key in list(task_durations.keys()):
             interval_mean = np.mean(task_durations[key])
             print(
-                "Mean per-block compute time of step "
+                "Mean per-batch compute time of step "
                 + f"'{key}': {interval_mean:.4g}s"
             )
 
@@ -797,8 +799,8 @@ def parse_input():
         type=int,
     )
     parser.add_argument(
-        "--block_size",
-        help="Size of image block incorporated in each model update.",
+        "--batch_size",
+        help="Size of image batch incorporated in each model update.",
         required=False,
         type=int,
     )
