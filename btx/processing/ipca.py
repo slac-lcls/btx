@@ -311,15 +311,15 @@ class IPCA:
                 self.task_durations, "center data and compute augment vector"
             ):
                 X_centered = X - np.tile(mu_m, m)
-                v_augment = np.sqrt(n * m / (n + m)) * (mu_m - mu_n)
+                mean_augment_vector = np.sqrt(n * m / (n + m)) * (mu_m - mu_n)
 
-                X_aug = np.hstack((X_centered, v_augment))
+                X_augmented = np.hstack((X_centered, mean_augment_vector))
 
             with TaskTimer(self.task_durations, "first matrix product U@S"):
                 US = self.U @ np.diag(self.S)
 
             with TaskTimer(self.task_durations, "QR concatenate"):
-                A = np.hstack((US, X_aug))
+                A = np.hstack((US, X_augmented))
 
             with TaskTimer(self.task_durations, "parallel QR"):
                 Q1, Q2, R = self.parallel_qr(A)
