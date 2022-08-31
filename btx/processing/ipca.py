@@ -711,7 +711,7 @@ class IPCA:
         dir_path = self.output_dir
         task_durations = self.task_durations
 
-        file_name = "task_" + str(q) + str(d) + str(n) + str(r) + ".csv"
+        file_name = "task_" + str(q) + str(d) + str(n) + str(size) + ".csv"
 
         with open(
             os.path.join(dir_path, file_name),
