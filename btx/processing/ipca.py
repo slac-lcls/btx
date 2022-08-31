@@ -327,13 +327,13 @@ class IPCA:
                 A = np.hstack((US, X_augmented))
 
             with TaskTimer(self.task_durations, "parallel QR"):
-                Q1, Q2, R = self.parallel_qr(A)
+                Q_r, U_tilde, S_tilde = self.parallel_qr(A)
 
             # concatenating first preserves the memory contiguity
             # of U_prime and thus self.U
             with TaskTimer(self.task_durations, "compute local U_prime"):
-                self.U = Q1 @ Q2[:, :q]
-                self.S = R[:q]
+                self.U = Q_r @ U_tilde[:, :q]
+                self.S = S_tilde[:q]
 
             self.num_incorporated_images += m
 
