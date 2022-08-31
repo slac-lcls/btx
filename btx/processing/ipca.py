@@ -101,7 +101,9 @@ class IPCA:
         ) = self.set_ipca_params(num_images, num_components, batch_size, bin_factor)
 
         # compute number of counts in and start indices over ranks
-        self.split_indices, self.split_counts = distribute_indices(self.num_features, self.size)
+        self.split_indices, self.split_counts = distribute_indices(
+            self.num_features, self.size
+        )
 
         # attribute for storing interval data
         self.task_durations = dict({})
@@ -115,16 +117,21 @@ class IPCA:
 
         Returns
         -------
-        num_images : int
+        num_incorporated_images : int
             number of images used to build model
-        q : int
+        num_components : int
             number of components maintained in model
-        m : int
+        batch_size : int
             batch size used in model updates
-        d : int
+        num_features : int
             dimensionality of incorporated images
         """
-        return self.n, self.num_components, self.batch_size, self.num_features
+        return (
+            self.num_incorporated_images,
+            self.num_components,
+            self.batch_size,
+            self.num_features,
+        )
 
     def set_ipca_params(self, num_images, num_components, batch_size, bin_factor):
         """
@@ -587,7 +594,9 @@ class IPCA:
 
         # initialize and prime model, if specified
         if self.priming and not self.benchmarking:
-            img_batch = self.get_formatted_images(self.num_components, 0, self.num_features)
+            img_batch = self.get_formatted_images(
+                self.num_components, 0, self.num_features
+            )
             self.prime_model(img_batch)
         else:
             self.U = np.zeros((self.split_counts[self.rank], self.num_components))
@@ -785,7 +794,8 @@ def parse_input():
     parser.add_argument("-e", "--exp", help="Experiment name.", required=True, type=str)
     parser.add_argument("-r", "--run", help="Run number.", required=True, type=int)
     parser.add_argument(
-        "-d", "--det_type",
+        "-d",
+        "--det_type",
         help="Detector name, e.g epix10k2M or jungfrau4M.",
         required=True,
         type=str,
