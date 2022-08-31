@@ -443,7 +443,7 @@ class IPCA:
             Local subdivision of current image data batch.
         """
         _, m = X.shape
-        n, d = self.n, self.num_features
+        n, d = self.num_incorporated_images, self.num_features
 
         start_indices = self.split_indices[:-1]
 
