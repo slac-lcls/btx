@@ -97,11 +97,11 @@ class IPCA:
             self.num_images,
             self.num_components,
             self.batch_size,
-            self.d,
+            self.num_features,
         ) = self.set_ipca_params(num_images, num_components, batch_size, bin_factor)
 
         # compute number of counts in and start indices over ranks
-        self.split_indices, self.split_counts = distribute_indices(self.d, self.size)
+        self.split_indices, self.split_counts = distribute_indices(self.num_features, self.size)
 
         # attribute for storing interval data
         self.task_durations = dict({})
@@ -124,7 +124,7 @@ class IPCA:
         d : int
             dimensionality of incorporated images
         """
-        return self.n, self.num_components, self.batch_size, self.d
+        return self.n, self.num_components, self.batch_size, self.num_features
 
     def set_ipca_params(self, num_images, num_components, batch_size, bin_factor):
         """
@@ -366,9 +366,9 @@ class IPCA:
             Sample data variance computed from all input images.
         """
         if self.rank == 0:
-            U_tot = np.empty(self.d * self.num_components)
-            mu_tot = np.empty((self.d, 1))
-            var_tot = np.empty((self.d, 1))
+            U_tot = np.empty(self.num_features * self.num_components)
+            mu_tot = np.empty((self.num_features, 1))
+            var_tot = np.empty((self.num_features, 1))
             S_tot = self.S
         else:
             U_tot, mu_tot, var_tot, S_tot = None, None, None, None
@@ -387,7 +387,7 @@ class IPCA:
         )
 
         if self.rank == 0:
-            U_tot = np.reshape(U_tot, (self.d, self.num_components))
+            U_tot = np.reshape(U_tot, (self.num_features, self.num_components))
 
         self.comm.Gatherv(
             self.mu,
@@ -430,7 +430,7 @@ class IPCA:
             Local subdivision of current image data batch.
         """
         _, m = X.shape
-        n, d = self.n, self.d
+        n, d = self.n, self.num_features
 
         start_indices = self.split_indices[:-1]
 
@@ -486,7 +486,7 @@ class IPCA:
         if self.rank != 0:
             return
 
-        d = self.d
+        d = self.num_features
         m = self.batch_size
         q = self.num_components
         num_images = self.num_images
@@ -587,7 +587,7 @@ class IPCA:
 
         # initialize and prime model, if specified
         if self.priming and not self.benchmarking:
-            img_batch = self.get_formatted_images(self.num_components, 0, self.d)
+            img_batch = self.get_formatted_images(self.num_components, 0, self.num_features)
             self.prime_model(img_batch)
         else:
             self.U = np.zeros((self.split_counts[self.rank], self.num_components))
@@ -702,7 +702,7 @@ class IPCA:
             return
 
         q = self.num_components
-        d = self.d
+        d = self.num_features
         n = self.num_incorporated_images
         m = self.batch_size
 
@@ -782,10 +782,10 @@ def parse_input():
     """
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--exp", help="Experiment name.", required=True, type=str)
-    parser.add_argument("--run", help="Run number.", required=True, type=int)
+    parser.add_argument("-e", "--exp", help="Experiment name.", required=True, type=str)
+    parser.add_argument("-r", "--run", help="Run number.", required=True, type=int)
     parser.add_argument(
-        "--det_type",
+        "-d", "--det_type",
         help="Detector name, e.g epix10k2M or jungfrau4M.",
         required=True,
         type=str,
