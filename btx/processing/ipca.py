@@ -349,9 +349,18 @@ class IPCA:
 
     def get_model(self):
         """
-        Notes
-        -----
-        Intended to be called from the root process.
+        Method to retrieve model parameters.
+
+        Returns
+        -------
+        U_tot : ndarray, shape (d x q)
+            iPCA principal axes from model.
+        S_tot : ndarray, shape (1 x q)
+            iPCA singular values from model.
+        mu_tot : ndarray, shape (1 x d)
+            Data mean computed from all input images.
+        var_tot : ndarray, shape (1 x d)
+            Sample data variance computed from all input images.
         """
         if self.rank == 0:
             U_tot = np.empty(self.d * self.q)
