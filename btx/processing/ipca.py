@@ -289,8 +289,12 @@ class IPCA:
 
         Notes
         -----
-        Method retrieved from
-        https://link.springer.com/content/pdf/10.1007/s11263-007-0075-7.pdf
+        Implementation of iPCA algorithm from [1].
+
+        References
+        ----------
+        [1] Ross DA, Lim J, Lin RS, Yang MH. Incremental learning for robust visual tracking.
+        International journal of computer vision. 2008 May;77(1):125-41.
         """
         _, m = X.shape
         n = self.n
