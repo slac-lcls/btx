@@ -215,45 +215,50 @@ class IPCA:
 
         Notes
         -----
-        Method acquired from
+        Method acquired from:
         https://www.cs.cornell.edu/~arb/papers/mrtsqr-bigdata2013.pdf
+
+        SVD step introduced from:
+        https://link.springer.com/content/pdf/10.1007/s11263-007-0075-7.pdf
+
         """
         _, x = A.shape
         q = self.q
         m = x - q - 1
 
         with TaskTimer(self.task_durations, "qr - local qr"):
-            q_loc, r_loc = np.linalg.qr(A, mode="reduced")
+            Q_r1, R_r = np.linalg.qr(A, mode="reduced")
 
         self.comm.Barrier()
 
         with TaskTimer(self.task_durations, "qr - r_tot gather"):
             if self.rank == 0:
-                r_tot = np.empty((self.size * (q + m + 1), q + m + 1))
+                R = np.empty((self.size * (q + m + 1), q + m + 1))
             else:
-                r_tot = None
+                R = None
 
-            self.comm.Gather(r_loc, r_tot, root=0)
+            self.comm.Gather(R_r, R, root=0)
 
         if self.rank == 0:
             with TaskTimer(self.task_durations, "qr - global qr"):
-                q_tot, r_tilde = np.linalg.qr(r_tot, mode="reduced")
+                Q_2, R_tilde = np.linalg.qr(R, mode="reduced")
 
+            # compute SVD of R_tilde, from iPCA algorithm
             with TaskTimer(self.task_durations, "qr - global svd"):
-                U_tilde, S_tilde, _ = np.linalg.svd(r_tilde)
+                U_tilde, S_tilde, _ = np.linalg.svd(R_tilde)
         else:
             U_tilde = np.empty((q + m + 1, q + m + 1))
             S_tilde = np.empty(q + m + 1)
-            q_tot = None
+            Q_2 = None
 
         self.comm.Barrier()
 
         with TaskTimer(self.task_durations, "qr - scatter q_tot"):
-            q_tot_loc = np.empty((q + m + 1, q + m + 1))
-            self.comm.Scatter(q_tot, q_tot_loc, root=0)
+            Q_r2 = np.empty((q + m + 1, q + m + 1))
+            self.comm.Scatter(Q_2, Q_r2, root=0)
 
         with TaskTimer(self.task_durations, "qr - local matrix build"):
-            q_fin = q_loc @ q_tot_loc
+            Q_r = Q_r1 @ Q_r2
 
         self.comm.Barrier()
 
@@ -265,7 +270,7 @@ class IPCA:
         with TaskTimer(self.task_durations, "qr - bcast U_tilde"):
             self.comm.Bcast(U_tilde, root=0)
 
-        return q_fin, U_tilde, S_tilde
+        return Q_r, U_tilde, S_tilde
 
     def update_model(self, X):
         """
