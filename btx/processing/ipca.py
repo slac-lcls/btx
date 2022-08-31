@@ -1,4 +1,3 @@
-from mimetypes import init
 import os, csv, argparse
 
 import numpy as np
@@ -6,8 +5,15 @@ from mpi4py import MPI
 
 from time import perf_counter
 from matplotlib import pyplot as plt
+from matplotlib import colors
 
-from btx.interfaces.psana_interface import PsanaInterface, bin_data
+from btx.interfaces.psana_interface import (
+    PsanaInterface,
+    bin_data,
+    bin_pixel_index_map,
+    retrieve_pixel_index_map,
+    assemble_image_stack_batch,
+)
 from btx.misc.ipca_helpers import (
     calculate_sample_mean_and_variance,
     update_sample_variance,
@@ -679,6 +685,55 @@ class IPCA:
         img_batch = self.get_formatted_images(n, start_index, end_index)
 
         self.update_model(img_batch)
+
+    def display_image(self, idx, output_dir="", save_image=False):
+        """
+        Method to retrieve single image from run subject to model binning constraints.
+
+        Parameters
+        ----------
+        idx : int
+            Run index of image to be retrieved.
+        output_dir : str, optional
+            File path to output directory, by default ""
+        save_image : bool, optional
+            Whether to save image to file, by default False
+        """
+        U, S, mu, var = self.get_model()
+        n, q, m, d = self.get_ipca_params()
+
+        if self.rank != 0:
+            return
+
+        a, b, c = self.psi.det.shape()
+        b = int(b / self.bin_factor)
+        c = int(c / self.bin_factor)
+
+        fig, ax = plt.subplots(1)
+
+        counter = self.psi.counter
+        self.psi.counter = idx
+        img = self.get_formatted_images(1, 0, d)
+        self.psi.counter = counter
+
+        img = img - mu
+        img = np.reshape(img, (a, b, c))
+
+        pixel_index_map = retrieve_pixel_index_map(self.psi.det.geometry(self.psi.run))
+        binned_pim = bin_pixel_index_map(pixel_index_map, self.bin_factor)
+
+        img = assemble_image_stack_batch(img, binned_pim)
+
+        vmin = np.min(img.flatten())
+        vmax = np.max(img.flatten())
+        ax.imshow(
+            img, norm=colors.SymLogNorm(linthresh=1.0, linscale=1.0, vmin=0, vmax=vmax)
+        )
+
+        if save_image:
+            plt.savefig(output_dir)
+
+        plt.show()
 
     def report_interval_data(self):
         """
