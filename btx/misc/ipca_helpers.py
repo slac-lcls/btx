@@ -156,15 +156,29 @@ def parse_single_run(data_dir, file_name):
 
     Parameters
     ----------
-    data_dir : _type_
-        _description_
-    file_name : _type_
-        _description_
+    data_dir : str
+        directory containing all benchmark files from iPCA run
+    file_name : str
+        file name of specific benchmark file to parse
 
     Returns
     -------
-    _type_
-        _description_
+    mean : ndarray
+        mean of each iPCA task duration
+    stdev : ndarray
+        stdev of each iPCA task duration
+    q : ndarray
+        number of computed components in iPCA run
+    d : ndarray
+        dimension of underlying iPCA data
+    n : ndarray
+        total number of images incorporated into iPCA model
+    ranks : ndarray
+        size of MPI world in which iPCA was run
+    m : ndarray
+        batch size of each model update
+    headers : ndarray
+        titles of each task in the iPCA algorithm whose time was recorded
     """
     headers = []
 
@@ -223,19 +237,21 @@ def display_interval_data(data_dir, data_desc, savefig=False, tiled_plots=True):
 
     Parameters
     ----------
-    data_dir : _type_
-        _description_
-    data_desc : _type_
-        _description_
+    data_dir : str
+        directory containing timed run data files
+    data_desc : str
+        description of benchmarking run
     savefig : bool, optional
-        _description_, by default False
+        if true, save the generated figure to the working directory, by default False
     tiled_plots : bool, optional
-        _description_, by default True
+        if true, generated per-task paned plot, by default True
 
     Returns
     -------
-    _type_
-        _description_
+    qs : ndarray
+        components of each iteration in benchmarking block
+    total_runtime : ndarray
+        total average runtime and standard deviation of each iPCA task
     """
     intervals = {}
     headers = []
