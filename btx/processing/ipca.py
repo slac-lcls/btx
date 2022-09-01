@@ -209,7 +209,7 @@ class IPCA:
         """
 
         if self.rank == 0:
-            print(f"Initializing model with {self.num_components} samples...")
+            print(f"Priming model with {self.num_components} samples...")
 
         self.mu, self.total_variance = calculate_sample_mean_and_variance(X)
 
@@ -699,11 +699,13 @@ class IPCA:
         save_image : bool, optional
             Whether to save image to file, by default False
         """
+
         U, S, mu, var = self.get_model()
-        n, q, m, d = self.get_ipca_params()
 
         if self.rank != 0:
             return
+
+        n, q, m, d = self.get_ipca_params()
 
         a, b, c = self.psi.det.shape()
         b = int(b / self.bin_factor)
