@@ -151,6 +151,21 @@ def compression_loss(X, U, normalized=False):
 
 
 def parse_single_run(data_dir, file_name):
+    """
+    Method to parse and retrive data from a single file in an iPCA benchmark run.
+
+    Parameters
+    ----------
+    data_dir : _type_
+        _description_
+    file_name : _type_
+        _description_
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
     headers = []
 
     with open(data_dir + file_name, newline="", encoding="utf-8") as f:
@@ -203,6 +218,25 @@ def parse_single_run(data_dir, file_name):
 
 
 def display_interval_data(data_dir, data_desc, savefig=False, tiled_plots=True):
+    """
+    Method to display interval from an iPCA benchmarking run.
+
+    Parameters
+    ----------
+    data_dir : _type_
+        _description_
+    data_desc : _type_
+        _description_
+    savefig : bool, optional
+        _description_, by default False
+    tiled_plots : bool, optional
+        _description_, by default True
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
     intervals = {}
     headers = []
 
