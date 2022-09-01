@@ -1,4 +1,6 @@
 import numpy as np
+import csv
+from matplotlib import pyplot as plt
 
 
 def calculate_sample_mean_and_variance(imgs):
@@ -148,63 +150,129 @@ def compression_loss(X, U, normalized=False):
     return Ln
 
 
-def bin_data(arr, bin_factor, det_shape=None):
-    """
-    Bin detector data by bin_factor through averaging.
-    Retrieved from
-    https://github.com/apeck12/cmtip/blob/main/cmtip/prep_data.py
+def parse_single_run(data_dir, file_name):
+    headers = []
 
-    :param arr: array shape (n_images, n_panels, panel_shape_x, panel_shape_y)
-      or if det_shape is given of shape (n_images, 1, n_pixels_per_image)
-    :param bin_factor: how may fold to bin arr by
-    :param det_shape: tuple of detector shape, optional
-    :return arr_binned: binned data of same dimensions as arr
-    """
-    # reshape as needed
-    if det_shape is not None:
-        arr = np.array([arr[i].reshape(det_shape) for i in range(arr.shape[0])])
+    with open(data_dir + file_name, newline="", encoding="utf-8") as f:
+        reader = csv.reader(f)
 
-    n, p, y, x = arr.shape
+        q = 0
+        d = 0
+        n = 0
+        ranks = 0
+        m = 0
 
-    # ensure that original shape is divisible by bin factor
-    assert y % bin_factor == 0
-    assert x % bin_factor == 0
+        for i in range(6):
+            row = next(reader)
 
-    # bin each panel of each image
-    binned_arr = (
-        arr.reshape(
-            n,
-            p,
-            int(y / bin_factor),
-            bin_factor,
-            int(x / bin_factor),
-            bin_factor,
+            if i == 0:
+                q = int(row[1])
+            if i == 1:
+                d = int(row[1])
+            if i == 2:
+                n = int(row[1])
+            if i == 3:
+                ranks = int(row[1])
+            if i == 4:
+                m = int(row[1])
+            if i == 5:
+                headers = row
+
+        num_entries = np.floor(n / m).astype(int)
+        interval_values = np.array([])
+
+        for i, row in enumerate(reader):
+            if i == 0:
+                continue
+
+            if i == num_entries - 1 and n % m != 0:
+                break
+
+            row_data = np.array(row, dtype=np.float32) / m
+
+            interval_values = (
+                np.vstack([interval_values, row_data])
+                if interval_values.size
+                else row_data
+            )
+
+        mean = np.mean(interval_values, axis=0)
+        stdev = np.std(interval_values, axis=0)
+
+    return mean, stdev, q, d, n, ranks, m, headers
+
+
+def display_interval_data(data_dir, data_desc, savefig=False, tiled_plots=True):
+    intervals = {}
+    headers = []
+
+    for file_name in os.listdir(data_dir):
+        if file_name == ".ipynb_checkpoints":
+            continue
+        value_mean, stdev, q, d, n, ranks, m, headers = parse_single_run(
+            data_dir, file_name
         )
-        .mean(-1)
-        .mean(3)
+        intervals[q] = (value_mean, stdev)
+
+    qs = np.array(list(intervals.keys()))
+    interval_data = np.array(list(intervals.values()))
+    indices = np.argsort(qs)
+
+    qs = qs[indices]
+    interval_data = interval_data[indices]
+
+    # generate overlayed interval plot
+    num_imgs = len(headers)
+    num_cols = 3
+
+    num_rows = int(num_imgs / num_cols)
+
+    if num_imgs % num_cols != 0:
+        num_rows += 1
+
+    total_runtime = interval_data[:, :, -1]
+
+    for i in range(num_imgs):
+        plt.plot(qs, interval_data[:, 0, i], label=headers[i])
+        plt.errorbar(qs, interval_data[:, 0, i], interval_data[:, 1, i], fmt="none")
+
+    plt.rcParams["figure.figsize"] = (15, 8)
+    plt.xlabel("q")
+    plt.ylabel("per-block compute time, s")
+    plt.title(
+        f"Per-Block Compute Time (s) vs. Number of Stored Components (q) for iPCA Algorithm (n = {n}, d = {d}, cores = {ranks}, m = {m})"
     )
+    plt.legend(loc="best")
 
-    # if input data were flattened, reflatten
-    if det_shape is not None:
-        flattened_size = np.prod(np.array(binned_arr.shape[1:]))
-        binned_arr = binned_arr.reshape((binned_arr.shape[0], 1) + (flattened_size,))
+    if savefig:
+        plt.savefig(data_desc + "_overlayed")
 
-    return binned_arr
+    plt.show()
+    plt.clf()
 
+    if tiled_plots:
+        # generate paned per-task interval plots
+        fig = plt.figure(1)
+        fig.set_size_inches(15, 10)
+        fig.set_dpi(100)
 
-def bin_pixel_index_map(arr, bin_factor):
-    """
-    Bin pixel_index_map by bin factor.
-    Retrieved from
-    https://github.com/apeck12/cmtip/blob/main/cmtip/prep_data.py
+        for i in range(num_imgs):
+            ax = fig.add_subplot(num_rows, num_cols, i + 1)
+            ax.set_title(f"Step '{headers[i]}'")
+            ax.set_xlabel("q")
+            ax.set_ylabel("per-block compute time, s")
+            ax.plot(qs, interval_data[:, 0, i])
+            ax.errorbar(qs, interval_data[:, 0, i], interval_data[:, 1, i], fmt="none")
 
-    :param arr: pixel_index_map of shape (n_panels, panel_shape_x, panel_shape_y, 2)
-    :param bin_factor: how may fold to bin arr by
-    :return binned_arr: binned pixel_index_map of same dimensions as arr
-    """
-    arr = np.moveaxis(arr, -1, 0)
-    arr = np.minimum(arr[..., ::bin_factor, :], arr[..., 1::bin_factor, :])
-    arr = np.minimum(arr[..., ::bin_factor], arr[..., 1::bin_factor])
-    arr = arr // bin_factor
+        fig.suptitle(
+            f"Per-Block Compute Time (s) vs. Number of Stored Components (q) for iPCA Algorithm Stages (n = {n}, d = {d}, ranks = {ranks}, m = {m})"
+        )
+        fig.tight_layout()
 
-    return np.moveaxis(arr, 0, -1)
+        if savefig:
+            plt.savefig(data_desc + "_pane")
+
+        plt.show()
+        plt.clf()
+
+    return (qs, total_runtime)
