@@ -388,9 +388,8 @@ class IPCA:
             U_tot = np.empty(self.num_features * self.num_components)
             mu_tot = np.empty((self.num_features, 1))
             var_tot = np.empty((self.num_features, 1))
-            S_tot = self.S
         else:
-            U_tot, mu_tot, var_tot, S_tot = None, None, None, None
+            U_tot, mu_tot, var_tot = None, None, None
 
         start_indices = self.split_indices[:-1]
 
