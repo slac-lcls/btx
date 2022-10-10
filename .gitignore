@@ -3,3 +3,6 @@ adhoc/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
+
+# cli -tmp yaml
+tutorial/*-tmp.yaml
