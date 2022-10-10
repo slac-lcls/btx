@@ -9,7 +9,7 @@ def setupParserOptions():
     # TODO: Add help messages.
     parser = argparse.ArgumentParser()
     parser.add_argument('-c',
-                        '--config',
+                        '--config_file',
                         required=True,
                         help='Path to config file.')
     parser.add_argument('-t', '--task', type=str, help='Task to run.')
