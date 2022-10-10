@@ -19,7 +19,7 @@ def customConfigs(args, config):
 
 
 def editConfig(args):
-    config_filepath = args['config']
+    config_filepath = args['config_file']
     new_config_filepath = config_filepath[:-5] + '-tmp' + '.yaml'
 
     with open(config_filepath, "r") as config_file:

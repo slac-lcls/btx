@@ -137,7 +137,7 @@ def parseShellOptions(args):
     for key in args:
         if args[key] == None:
             pass        
-        elif key == 'task' or key == 'config' or key == 'facility' or key == 'queue' \
+        elif key == 'task' or key == 'config_file' or key == 'facility' or key == 'queue' \
             or key == 'experiment_name' or key == 'n_cores' or key == 'run_number':
             s += ' --%s %s' %(key, args[key])
         else:
@@ -149,7 +149,9 @@ def parseShellOptions(args):
 if __name__ == '__main__':
     args = setupParserOptions()
     editConfig(args)
-    args['config'] = args['config'][:-5] + '-tmp' + '.yaml'
+    print(args)
+    print(args['config_file'])
+    args['config_file'] = args['config_file'][:-5] + '-tmp' + '.yaml'
     cmd = 'elog_submit.sh' + parseShellOptions(args)
     print(cmd)
     subprocess.run(cmd, shell=True)
