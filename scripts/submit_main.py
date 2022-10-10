@@ -149,8 +149,6 @@ def parseShellOptions(args):
 if __name__ == '__main__':
     args = setupParserOptions()
     editConfig(args)
-    print(args)
-    print(args['config_file'])
     args['config_file'] = args['config_file'][:-5] + '-tmp' + '.yaml'
     cmd = 'elog_submit.sh' + parseShellOptions(args)
     print(cmd)
