@@ -253,8 +253,8 @@ class PeakFinder:
             outh5[f'/LCLS/{key}'].resize((self.n_hits,))
 
         # add powders and mask, reshaping to match crystfel conventions
-        outh5["/entry_1/data_1/powderHitsRank"][:] = self.powder_hits.reshape(-1, self.powder_hits.shape[-1])
-        outh5["/entry_1/data_1/powderMissesRank"][:] = self.powder_misses.reshape(-1, self.powder_misses.shape[-1])
+        outh5["/entry_1/data_1/powderHits"][:] = self.powder_hits.reshape(-1, self.powder_hits.shape[-1])
+        outh5["/entry_1/data_1/powderMisses"][:] = self.powder_misses.reshape(-1, self.powder_misses.shape[-1])
         outh5["/entry_1/data_1/mask"][:] = (1-self.mask).reshape(-1, self.mask.shape[-1]) # crystfel expects inverted values
 
         outh5.close()
@@ -362,8 +362,6 @@ class PeakFinder:
         self.n_hits_per_rank = self.comm.gather(self.n_hits, root=0)
         self.n_hits_total = self.comm.reduce(self.n_hits, MPI.SUM)
         self.n_events_per_rank = self.comm.gather(self.n_events, root=0)
-        powder_hits_all = np.max(np.array(self.comm.gather(self.powder_hits, root=0)), axis=0)
-        powder_misses_all = np.max(np.array(self.comm.gather(self.powder_misses, root=0)), axis=0)
 
         if self.rank == 0:
             # write summary file
@@ -372,12 +370,6 @@ class PeakFinder:
                 f.write(f"Number of hits found: {self.n_hits_total}\n")
                 f.write(f"Fractional hit rate: {(self.n_hits_total/self.n_events_per_rank[-1]):.2f}\n")
                 f.write(f'No. hits per rank: {self.n_hits_per_rank}')
-
-            # add final powders, only needed in first and virtual cxis
-            outh5 = h5py.File(self.fname, "r+")
-            outh5["/entry_1/data_1/powderHits"][:] = powder_hits_all.reshape(-1, powder_hits_all.shape[-1])
-            outh5["/entry_1/data_1/powderMisses"][:] = powder_misses_all.reshape(-1, powder_misses_all.shape[-1])
-            outh5.close()
 
             # generate virtual dataset and list for
             vfname = os.path.join(self.outdir, f'{self.psi.exp}_r{self.psi.run:04}{self.tag}.cxi')
@@ -399,6 +391,35 @@ class PeakFinder:
                                             { "key": "Number of hits found", "value": f"{self.n_hits_total}"},
                                             { "key": "Fractional hit rate", "value": f"{(self.n_hits_total/self.n_events_per_rank[-1]):.2f}"}, ])
 
+    def compute_powders(self, fnames):
+        """
+        Compute the powder hits and misses by iterating through valid files.
+        We use this rather than comm.gather to avoid memory errors. 
+    
+        Parameters
+        ----------
+        fnames : list of str
+            list of individual CXI file names
+        """
+        powder_hits, powder_misses = None, None
+        for fn in fnames:
+            f = h5py.File(fn, 'r')
+            if powder_hits is None:
+                powder_hits = f['entry_1/data_1/powderHits'][:].copy()
+                powder_misses = f['entry_1/data_1/powderMisses'][:].copy()
+            else:
+                powder_hits = np.maximum(powder_hits, f['entry_1/data_1/powderHits'][:].copy())
+                powder_misses = np.maximum(powder_misses, f['entry_1/data_1/powderMisses'][:].copy())
+            f.close()
+
+        for fn in fnames:
+            f = h5py.File(fn, 'r+')
+            phits = f['entry_1/data_1/powderHits']
+            phits[...] = powder_hits
+            pmisses = f['entry_1/data_1/powderMisses']
+            pmisses[...] = powder_misses
+            f.close()
+
     def add_virtual_dataset(self, vfname, fnames, dname, shape, dtype, mode='a'):
         """
         Add a virtual dataset to the hdf5 file.
@@ -418,6 +439,7 @@ class PeakFinder:
         mode : str
             'w' if first dataset, 'a' otherwise
         """
+        self.compute_powders(fnames)
         layout = h5py.VirtualLayout(shape=(self.n_hits_total,) + shape[1:], dtype=dtype)
         cursor = 0
         for i,fn in enumerate(fnames):
@@ -548,8 +570,8 @@ def visualize_hits(fname, exp, run, det_type, savepath=None, vmax_ind=3, vmax_po
     # 'powder' hits and misses
     fig2, (ax1, ax2) = plt.subplots(1, 2, figsize=(12,6))
     
-    ax1.imshow(mask*powder_hits, vmin=0, vmax=vmax_powder)
-    ax2.imshow(mask*powder_misses, vmin=0, vmax=vmax_powder)
+    ax1.imshow(mask*powder_hits, vmin=0, vmax=vmax_powder*powder_hits.mean())
+    ax2.imshow(mask*powder_misses, vmin=0, vmax=vmax_powder*powder_hits.mean())
     ax1.set_title("Powder Hits", fontsize=18)
     ax2.set_title("Powder Misses", fontsize=18)
     
