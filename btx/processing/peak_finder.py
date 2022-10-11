@@ -157,7 +157,7 @@ class PeakFinder:
                                         maxshape=(None, dim0, dim1),dtype=np.float32)
         data_1.attrs["axes"] = "experiment_identifier"
         
-        for key in ['powderHits', 'powderMisses', 'mask', 'powderHitsRank', 'powderMissesRank']:
+        for key in ['powderHits', 'powderMisses', 'mask']:
             entry_1.create_dataset(f'/entry_1/data_1/{key}', (dim0, dim1), chunks=(dim0, dim1), maxshape=(dim0, dim1), dtype=float)
                 
         # peak-related keys
