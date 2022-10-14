@@ -231,7 +231,7 @@ class Geoptimizer:
         cell_new = os.path.join(root_dir, "cell", f"{tag}.cell")
         
         mtz_opt = os.path.join(self.scan_dir, f"merge/g{num}.mtz")
-        mtz_new = os.path.join(root_dir, "solve", f"{tag}.mtz")
+        mtz_new = os.path.join(root_dir, "solve", f"{tag}", f"{tag}.mtz")
         os.makedirs(os.path.join(root_dir, "solve"), exist_ok=True)
 
         for opt,new in zip([geom_opt,cell_opt,mtz_opt],[geom_new,cell_new,mtz_new]):
