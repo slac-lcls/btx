@@ -3,7 +3,7 @@ import h5py
 import os
 import sys
 import glob
-from btx.interfaces.psana_interface import *
+from btx.interfaces.ipsana import *
 
 class MaskInterface:
     
