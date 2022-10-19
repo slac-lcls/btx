@@ -2,7 +2,7 @@ import numpy as np
 import os, sys
 import argparse
 from psgeom import camera, sensors
-from btx.interfaces.psana_interface import PsanaInterface
+from btx.interfaces.ipsana import PsanaInterface
 
 def retrieve_from_mrxv(det_type, out_geom, mrxv_path='/cds/sw/package/autosfx/mrxv/geometries'):
     """
