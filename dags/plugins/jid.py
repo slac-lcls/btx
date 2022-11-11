@@ -74,8 +74,8 @@ class JIDSlurmOperator( BaseOperator ):
     def __params_to_args__(params):
       return " ".join(["--" + k + " " + str(v) for k, v in params.items()])
 
-    def __slurm_parameters__(params, task_id):
-      return __params_to_args__(params) + " --task " + task_id
+    def __slurm_parameters__(params, task_id, location):
+      return __params_to_args__(params) + " --task " + task_id + " --facility " + location
 
     return {
       "_id" : str(uuid.uuid4()),
@@ -93,7 +93,7 @@ class JIDSlurmOperator( BaseOperator ):
         "trigger" : "MANUAL",
         "location" : self.get_location(context),
         "parameters" : __slurm_parameters__(context.get('dag_run').conf.get('parameters', {}),
-                                            self.task_id),
+                                            self.task_id, self.get_location(context)),
         "run_as_user" : self.user
       }
     }
