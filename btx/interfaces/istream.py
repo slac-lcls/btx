@@ -358,8 +358,6 @@ class StreamInterface:
                     
             if line.find("Cell parameters") != -1:
                 cell = line.split()[2:5] + line.split()[6:9]
-                if float(cell[2])*10.0 > 96 and write:
-                    print(stream_file, cell[2], n_chunk, n_crystal)
                 n_crystal += 1
                 
                 if (n_chunk, n_crystal+1) not in target:
