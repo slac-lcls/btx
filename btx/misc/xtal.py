@@ -4,11 +4,9 @@ def cos_sq(angles):
     """ Compute cosine squared of input angles in radians. """
     return np.square(np.cos(angles))
 
-
 def sin_sq(angles):
     """ Compute sine squared of input angles in radianss. """
     return np.square(np.sin(angles))
-
 
 def compute_resolution(cell, hkl):
     """
@@ -18,7 +16,7 @@ def compute_resolution(cell, hkl):
     Parameters
     ----------
     cell : numpy.ndarray, shape (n_refl, 6)
-        unit cell parameters (a,b,c,alpha,beta,gamma)
+        unit cell parameters (a,b,c,alpha,beta,gamma) in Ang/deg
     hkl : numpy.ndarray, shape (n_refl, 3)
         Miller indices of reflections
             
@@ -28,8 +26,8 @@ def compute_resolution(cell, hkl):
         resolution associated with each reflection in 1/Angstrom
     """
 
-    a,b,c = [10.0 * cell[:,i] for i in range(3)] # nm to Angstrom
-    alpha,beta,gamma = [np.radians(cell[:,i]) for i in range(3,6)] # degrees to radians
+    a,b,c = [cell[:,i] for i in range(3)] 
+    alpha,beta,gamma = [np.radians(cell[:,i]) for i in range(3,6)] 
     h,k,l = [hkl[:,i] for i in range(3)]
 
     pf = 1.0 - cos_sq(alpha) - cos_sq(beta) - cos_sq(gamma) + 2.0*np.cos(alpha)*np.cos(beta)*np.cos(gamma)
@@ -40,7 +38,6 @@ def compute_resolution(cell, hkl):
 
     return np.sqrt((n1 + n2a + n2b + n2c) / pf)
 
-
 def compute_cell_volume(cell):
     """
     Compute unit cell volume.
@@ -48,15 +45,15 @@ def compute_cell_volume(cell):
     Parameters
     ----------
     cell : numpy.ndarray, shape (n_refl, 6)
-        unit cell parameters (a,b,c,alpha,beta,gamma)
+        unit cell parameters (a,b,c,alpha,beta,gamma) in Ang/deg
 
     Returns
     -------
     volume : numpy.ndarray, shape (n_refl)
         unit cell volume in Angstroms cubed
     """
-    a,b,c = [10.0 * cell[:,i] for i in range(3)] # nm to Angstrom
-    alpha,beta,gamma = [np.radians(cell[:,i]) for i in range(3,6)] # degrees to radians    
+    a,b,c = [10.0 * cell[:,i] for i in range(3)] 
+    alpha,beta,gamma = [np.radians(cell[:,i]) for i in range(3,6)] 
     
     volume = 1.0 - cos_sq(alpha) - cos_sq(beta) - cos_sq(gamma) + 2.0*np.cos(alpha)*np.cos(beta)*np.cos(gamma)
     volume = a*b*c*np.sqrt(volume)
