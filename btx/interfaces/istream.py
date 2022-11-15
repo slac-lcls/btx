@@ -16,6 +16,7 @@ class StreamInterface:
         self.stream_data, self.file_limits_cell, self.file_limits_refn = self.read_all_streams(self.input_files)
         if self.rank == 0:
             self.compute_cell()
+            self.store_stats()
             if not self.cell_only:
                 self.compute_resolution()
     
@@ -143,7 +144,6 @@ class StreamInterface:
                     if in_refl:
                         in_refl = False
                         print(f"Warning! Line {lc} associated with chunk {n_chunk} is problematic: {line}")
-                    #single_stream_data['n_chunk'].append(n_chunk)
 
                 if line.find("Cell parameters") != -1:
                     cell = line.split()[2:5] + line.split()[6:9]
@@ -186,6 +186,16 @@ class StreamInterface:
                 
         return single_stream_data
     
+    def store_stats(self):
+        """
+        Store statistics regarding the number of indexed, multi-lattice events, etc.
+        """
+        counts = np.bincount(self.stream_data['n_chunk'])
+        self.n_indexed_images = len(np.unique(self.stream_data['n_chunk'])) # nubmer of indexable images
+        self.n_lattices = len(self.stream_data['n_crystal']) # number of lattices found, accounting for multi-lattice indexing
+        self.n_single_hits = len(np.where(counts==1)[0]) # number of indexed with exactly one lattice found
+        self.n_multi_hits = len(np.where(counts>1)[0]) # number of indexed with more than one lattice found
+
     def compute_cell(self):
         """ 
         Compute the mean and std. dev. of the unit cell parameters in A/degrees. 
@@ -301,12 +311,16 @@ class StreamInterface:
         with open(summary_file, 'w') as f:
             f.write("Cell mean: " + " ".join(f"{self.cell_params[i]:.3f}" for i in range(self.cell_params.shape[0])) + "\n")
             f.write("Cell std: " + " ".join(f"{self.cell_params_std[i]:.3f}" for i in range(self.cell_params.shape[0])) + "\n")
-                        
+            f.write(f"Number of indexed images: {self.n_indexed_images}" + "\n")
+            f.write(f"Fraction of indexed with multiple lattices: {self.n_multi_hits/self.n_indexed_images:.2f}" + "\n")
+            
         # report to elog
         update_url = os.environ.get('JID_UPDATE_COUNTERS')
         if update_url is not None:
             labels = ["a", "b", "c", "alpha", "beta", "gamma"]
             elog_json = [{"key": labels[i], "value": f"{self.cell_params[i]:.3f} +/- {self.cell_params_std[i]:.3f}"} for i in range(len(labels))]
+            elog_json.append({'key': 'Number of indexed events', 'value': f'{self.n_indexed_images}'})
+            elog_json.append({'key': 'Fraction of indexed with multiple lattices', 'value': f'{self.n_multi_hits/self.n_indexed_images:.2f}'})
             requests.post(update_url, json=elog_json)
             
     def copy_from_stream(self, stream_file, chunk_indices, crystal_indices, output):
