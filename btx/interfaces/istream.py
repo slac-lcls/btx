@@ -311,18 +311,22 @@ class StreamInterface:
         if output is not None:
             fig.savefig(output, dpi=300)
 
-    def report(self, update_url=None):
+    def report(self, tag=None):
         """
         Summarize the cell parameters and optionally report to the elog.
     
         Parameters
         ----------
-        update_url : str
-            elog URL for posting progress update
+        tag : str
+            suffix for naming summary file
         """
         # write summary file
+        if tag is not None:
+            tag = "_" + tag
+        else:
+            tag = ""
         counts = np.bincount(self.stream_data['n_lattice'])
-        summary_file = os.path.join(os.path.dirname(self.input_files[0]), "stream.summary")
+        summary_file = os.path.join(os.path.dirname(self.input_files[0]), f"stream{tag}.summary")
         with open(summary_file, 'w') as f:
             f.write("Cell mean: " + " ".join(f"{self.cell_params[i]:.3f}" for i in range(self.cell_params.shape[0])) + "\n")
             f.write("Cell std: " + " ".join(f"{self.cell_params_std[i]:.3f}" for i in range(self.cell_params.shape[0])) + "\n")
