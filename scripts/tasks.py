@@ -177,7 +177,7 @@ def stream_analysis(config):
     st = StreamInterface(input_files=glob.glob(stream_files), cell_only=task.get('cell_only') if task.get('cell_only') is not None else False)
     if st.rank == 0:
         logger.debug(f'Read stream files: {stream_files}')
-        st.report()
+        st.report(tag=task.tag)
         st.plot_cell_parameters(output=os.path.join(taskdir, f"figs/cell_{task.tag}.png"))
         if not st.cell_only:
             st.plot_peakogram(output=os.path.join(taskdir, f"figs/peakogram_{task.tag}.png"))

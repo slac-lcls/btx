@@ -66,7 +66,7 @@ class StreamInterface:
                     for narr in range(1, len(stream_data[key])):
                         stream_data[key][narr] += stream_data[key][narr-1][-1]+1
                 stream_data[key] = np.concatenate(np.array(stream_data[key], dtype=object))
-                if key in ['n_crystal','n_chunk', 'n_crystal_cell', 'h', 'k', 'l']:
+                if key in ['n_crystal','n_chunk', 'n_crystal_cell', 'n_lattice', 'h', 'k', 'l']:
                     stream_data[key] = stream_data[key].astype(int)
                 else:
                     stream_data[key] = stream_data[key].astype(float)
@@ -124,7 +124,7 @@ class StreamInterface:
         """
         # set up storage arrays
         single_stream_data = {}
-        keys = ['a','b','c','alpha','beta','gamma','n_crystal','n_chunk', 'n_crystal_cell']
+        keys = ['a','b','c','alpha','beta','gamma','n_crystal','n_chunk', 'n_crystal_cell', 'n_lattice']
         if not self.cell_only:
             keys.extend(['h','k','l','sumI','sigI','maxI'])
         for key in keys:
@@ -139,11 +139,11 @@ class StreamInterface:
             f = open(input_file)
             for lc,line in enumerate(f):
                 if line.find("Begin chunk") != -1:
+                    n_lattice = 0
                     n_chunk += 1
                     if in_refl:
                         in_refl = False
                         print(f"Warning! Line {lc} associated with chunk {n_chunk} is problematic: {line}")
-                    #single_stream_data['n_chunk'].append(n_chunk)
 
                 if line.find("Cell parameters") != -1:
                     cell = line.split()[2:5] + line.split()[6:9]
@@ -155,7 +155,11 @@ class StreamInterface:
                     single_stream_data['n_chunk'].append(n_chunk)
                     if self.cell_only:
                         single_stream_data['n_crystal'].append(self.n_crystal)
-                        
+                    n_lattice += 1
+
+                if line.find("End chunk") != -1:
+                    single_stream_data['n_lattice'].append(n_lattice)
+
                 if not self.cell_only:
                     if line.find("Reflections measured after indexing") != -1:
                         in_refl = True
@@ -287,26 +291,56 @@ class StreamInterface:
         if output is not None:
             fig.savefig(output, dpi=300)
 
-    def report(self, update_url=None):
+    def plot_hits_distribution(self, output=None):
+        """ 
+        Plot the distribution of unindexed, single hit, and multi-lattice events.
+
+        Parameters
+        ----------
+        output : string, default=None  
+            if supplied, path for saving png file
+        """
+        f, ax1 = plt.subplots(figsize=(6,4))
+
+        counts = np.bincount(self.stream_data['n_lattice'])
+        ax1.bar(range(0, len(counts)), counts, color='black')
+        ax1.set_xlabel("Number of lattices", fontsize=14)
+        ax1.set_ylabel('Number of images', fontsize=14)
+        ax1.set_title("Distribution of single vs. multi-hits", fontsize=14)
+
+        if output is not None:
+            fig.savefig(output, dpi=300)
+
+    def report(self, tag=None):
         """
         Summarize the cell parameters and optionally report to the elog.
     
         Parameters
         ----------
-        update_url : str
-            elog URL for posting progress update
+        tag : str
+            suffix for naming summary file
         """
         # write summary file
-        summary_file = os.path.join(os.path.dirname(self.input_files[0]), "stream.summary")
+        if tag is not None:
+            tag = "_" + tag
+        else:
+            tag = ""
+        counts = np.bincount(self.stream_data['n_lattice'])
+        summary_file = os.path.join(os.path.dirname(self.input_files[0]), f"stream{tag}.summary")
         with open(summary_file, 'w') as f:
             f.write("Cell mean: " + " ".join(f"{self.cell_params[i]:.3f}" for i in range(self.cell_params.shape[0])) + "\n")
             f.write("Cell std: " + " ".join(f"{self.cell_params_std[i]:.3f}" for i in range(self.cell_params.shape[0])) + "\n")
-                        
+            f.write(f"Number of indexed events: {np.sum(counts[1:])}" + "\n")
+            f.write(f"Fractional indexing rate: {np.sum(counts[1:]) / np.sum(counts):.2f}" + "\n")
+            f.write(f"Fraction of indexed with multiple lattices: {np.sum(counts[2:]) / np.sum(counts[1:]):.2f}" + "\n")
+            
         # report to elog
         update_url = os.environ.get('JID_UPDATE_COUNTERS')
         if update_url is not None:
             labels = ["a", "b", "c", "alpha", "beta", "gamma"]
             elog_json = [{"key": labels[i], "value": f"{self.cell_params[i]:.3f} +/- {self.cell_params_std[i]:.3f}"} for i in range(len(labels))]
+            elog_json.append({'key': 'Number of indexed events', 'value': f'{np.sum(counts[1:]):.2f}'})
+            elog_json.append({'key': 'Fraction of indexed with multiple lattices', 'value': f'{np.sum(counts[2:]) / np.sum(counts[1:]):.2f}'})
             requests.post(update_url, json=elog_json)
             
     def copy_from_stream(self, stream_file, chunk_indices, crystal_indices, output):
