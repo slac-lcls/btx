@@ -7,6 +7,7 @@ from btx.interfaces.ipsana import assemble_image_stack_batch
 from btx.misc.metrology import *
 from btx.misc.radial import pix2q
 from .ag_behenate import *
+import itertools
 
 class GeomOpt:
     

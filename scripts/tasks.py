@@ -90,27 +90,29 @@ def opt_geom(config):
     setup = config.setup
     task = config.opt_geom
     """ Optimize and deploy the detector geometry from a silver behenate run. """
-    if task.get('center') is not None:
-        task.center = tuple([float(elem) for elem in task.center.split()])
-    else:
-        task.center = None
     taskdir = os.path.join(setup.root_dir, 'geom')
     os.makedirs(taskdir, exist_ok=True)
     os.makedirs(os.path.join(taskdir, 'figs'), exist_ok=True)
+    mask_file = fetch_latest(fnames=os.path.join(setup.root_dir, 'mask', 'r*.npy'), run=setup.run)
+    task.dx = tuple([float(elem) for elem in task.dx.split()])
+    task.dx = np.linspace(task.dx[0], task.dx[1], int(task.dx[2]))
+    task.dy = tuple([float(elem) for elem in task.dy.split()])
+    task.dy = np.linspace(task.dy[0], task.dy[1], int(task.dy[2]))
+    task.n_peaks = [int(elem) for elem in task.npeaks.split()]
+    centers = list(itertools.product(task.dx, task.dy))
     geom_opt = GeomOpt(exp=setup.exp,
                        run=setup.run,
                        det_type=setup.det_type)
+    geom_opt.opt_geom(powder=os.path.join(setup.root_dir, f"powder/r{setup.run:04}_max.npy"),
+                      mask=mask_file,
+                      distance=task.get('distance'),
+                      center=centers,
+                      n_iterations=task.get('n_iterations'), 
+                      n_peaks = task.n_peaks,
+                      threshold=task.get('threshold'),
+                      plot=os.path.join(taskdir, f'figs/r{setup.run:04}.png'))
+    geom_opt.finalize()
     if geom_opt.rank == 0:
-        mask_file = fetch_latest(fnames=os.path.join(setup.root_dir, 'mask', 'r*.npy'), run=setup.run)
-        logger.debug(f'Optimizing detector distance for run {setup.run} of {setup.exp}...')
-        geom_opt.opt_geom(powder=os.path.join(setup.root_dir, f"powder/r{setup.run:04}_max.npy"),
-                          mask=mask_file,
-                          distance=task.get('distance'),
-                          center=task.center,
-                          n_iterations=task.get('n_iterations'), 
-                          n_peaks=task.get('n_peaks'), 
-                          threshold=task.get('threshold'),
-                          plot=os.path.join(taskdir, f'figs/r{setup.run:04}.png'))
         try:
             geom_opt.report(update_url)
         except:
