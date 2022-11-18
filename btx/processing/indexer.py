@@ -117,8 +117,8 @@ class Indexer:
             
         # write summary file
         with open(self.indexing_summary, 'w') as f:
-            f.write(f"Number of indexed events: {n_indexed}\n")
-            f.write(f"Fractional indexing rate rate: {(n_indexed/n_total):.2f}\n")
+            f.write(f"Number of lattices found: {n_indexed}\n")
+            f.write(f"Fractional indexing rate rate (including multiple lattices): {(n_indexed/n_total):.2f}\n")
 
         # post to elog
         update_url = os.environ.get('JID_UPDATE_COUNTERS')
@@ -133,8 +133,8 @@ class Indexer:
                 requests.post(update_url, json=[{ "key": f"{pf_keys[0]}", "value": f"{pf_vals[0]}"},
                                                 { "key": f"{pf_keys[1]}", "value": f"{pf_vals[1]}"},
                                                 { "key": f"{pf_keys[2]}", "value": f"{pf_vals[2]}"},
-                                                { "key": "Number of indexed events", "value": f"{n_indexed}"},
-                                                { "key": "Fractional indexing rate", "value": f"{(n_indexed/n_total):.2f}"}, ])
+                                                { "key": "Number of lattices found", "value": f"{n_indexed}"},
+                                                { "key": "Fractional indexing rate (including multiple lattices)", "value": f"{(n_indexed/n_total):.2f}"}, ])
             except:
                 print("Could not communicate with the elog update url")
 
