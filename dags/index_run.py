@@ -14,7 +14,6 @@ dag = DAG(
     description=description,
   )
 
-
 # Tasks SETUP
 task_id='find_peaks'
 find_peaks = JIDSlurmOperator( task_id=task_id, dag=dag)
