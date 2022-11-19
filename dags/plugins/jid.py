@@ -109,7 +109,7 @@ class JIDSlurmOperator( BaseOperator ):
       slurm_script = self.btx_locations[location] + "scripts/elog_submit.sh"
     else:
       slurm_script = self.btx_locations[location] + f"scripts/{relative_path}"
-    if location is 'NERSC':
+    if location == 'NERSC':
       slurm_script = "-C cpu -A lcls " + slurm_script
     return slurm_script
 
