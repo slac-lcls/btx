@@ -527,6 +527,54 @@ def cluster_cell_params(cell, out_clusters, out_cell, in_cell=None, eps=5, min_s
     
     return clustering.labels_
 
+def plot_cell_trajectory(base_dir, tag, plot=None):
+    """
+    Plot the cell parameter distribution as a function of run number.
+    
+    Parameters
+    ----------
+    base_dir : str
+        directory of indexing results in run folders named r****
+    tag : str
+        sample name or geometry suffix
+    plot : str
+        if given, save plot to png file
+    """
+    fstreams = natural_sort(glob.glob(os.path.join(base_dir, f"r*{tag}.stream")))
+    runs = [int(f.split("/")[-1][1:].split("_")[0]) for f in fstreams]
+    
+    cparams = {}
+    for r,f in zip(runs,fstreams):
+        try:
+            st = StreamInterface([f], cell_only=True)
+            cparams[r] = st.get_cell_parameters()
+        except:
+            print(f"{f} could not be loaded by StreamInterface")
+            
+    cells = np.vstack(np.array([cparams[r] for r in cparams.keys()], dtype='object'))
+    ncryst = np.array([cparams[r].shape[0] for r in cparams.keys()], dtype='object').astype(int)
+    runval = np.repeat(np.array(list(cparams.keys())), ncryst)
+    
+    f, ((ax1,ax2,ax3),(ax4,ax5,ax6)) = plt.subplots(2,3,figsize=(16,8))
+
+    labels = ["$a$", "$b$", "$c$", r"$\alpha$", r"$\beta$", r"$\gamma$"]
+    for i,ax in enumerate([ax1,ax2,ax3,ax4,ax5,ax6]):
+        ax.hexbin(runval, cells[:,i], mincnt=1)
+        if i < 3: 
+            ax.set_title(labels[i], fontsize=14)
+        else: 
+            ax.set_title(labels[i], fontsize=14)
+        ax.set_xlabel("Run no.", fontsize=14)
+        ax.plot([runval.min()-1, runval.max()+1], [np.mean(cells[:,i], axis=0), np.mean(cells[:,i], axis=0)], linestyle='dashed', c='grey')
+        ax.set_xlim(runval.min()-1, runval.max()+1)
+    ax1.set_ylabel("Angstrom", fontsize=14)
+    ax4.set_ylabel("degrees", fontsize=14)
+        
+    f.subplots_adjust(hspace=0.4)
+    
+    if plot is not None:
+        f.savefig(plot, dpi=300, bbox_inches='tight')
+
 #### For command line use ####
             
 def parse_input():
