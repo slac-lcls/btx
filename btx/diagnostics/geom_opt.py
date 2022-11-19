@@ -42,8 +42,8 @@ class GeomOpt:
         split_indices = np.append(np.array([0]), np.cumsum(split_indices)).astype(int) 
         return scan[split_indices[self.rank]:split_indices[self.rank+1]]
         
-    def opt_geom(self, powder, mask=None, center=None, distance=None,
-                 n_iterations=5, n_peaks=[3], threshold=1e6, deltas=True, plot=None):
+    def opt_geom(self, powder, mask=None, center=None, distance=None, n_iterations=5, 
+                 n_peaks=[3], threshold=1e6, deltas=True, plot=None, plot_final_only=False):
         """
         Estimate the sample-detector distance based on the properties of the powder
         diffraction image. Currently only implemented for silver behenate.
@@ -71,7 +71,9 @@ class GeomOpt:
             whether centers are in absolute positions or delta pixels from detector center
         plot : str or None
             output path for figure; if '', plot but don't save; if None, don't plot
-        
+        plot_final_only: bool
+            if True, only generate plot for the best distance / center
+
         Returns
         -------
         distance : float
@@ -108,6 +110,10 @@ class GeomOpt:
 
         scan = list(itertools.product(n_peaks, center, distance))
         scan_rank = self.distribute_scan(scan)
+
+        plot_intermediate=plot
+        if plot_final_only:
+            plot_intermediate=None
         
         ag_behenate = AgBehenate(powder_img,
                                  mask,
@@ -121,7 +127,7 @@ class GeomOpt:
                                      n_peaks=params[0], 
                                      threshold=threshold, 
                                      center_i=params[1],
-                                     plot=plot)
+                                     plot=plot_intermediate)
         self.comm.Barrier()
         
         self.scan = {}
@@ -131,7 +137,14 @@ class GeomOpt:
         self.scan['scores_min'] = self.comm.gather(ag_behenate.scores_min, root=0)
         self.scan['scores_mean'] = self.comm.gather(ag_behenate.scores_mean, root=0)
         self.scan['scores_std'] = self.comm.gather(ag_behenate.scores_std, root=0)
-        
+
+        self.finalize()
+        if self.rank == 0:
+            # generate plot based on best geometry
+            ag_behenate.centers.append(self.center)
+            ag_behenate.distances.append(self.distance)
+            ag_behenate.opt_distance(plot=plot)
+
     def finalize(self):
         """
         Compute the final score based on how many standard deviations the 

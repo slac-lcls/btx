@@ -115,8 +115,8 @@ def opt_geom(config):
                       n_peaks = task.n_peaks,
                       threshold=task.get('threshold'),
                       deltas=True,
-                      plot=os.path.join(taskdir, f'figs/r{setup.run:04}.png'))
-    geom_opt.finalize()
+                      plot=os.path.join(taskdir, f'figs/r{setup.run:04}.png'),
+                      plot_final_only=True)
     if geom_opt.rank == 0:
         try:
             geom_opt.report(update_url)
