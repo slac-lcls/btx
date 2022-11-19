@@ -43,7 +43,7 @@ class GeomOpt:
         return scan[split_indices[self.rank]:split_indices[self.rank+1]]
         
     def opt_geom(self, powder, mask=None, center=None, distance=None,
-                 n_iterations=5, n_peaks=[3], threshold=1e6, plot=None):
+                 n_iterations=5, n_peaks=[3], threshold=1e6, deltas=True, plot=None):
         """
         Estimate the sample-detector distance based on the properties of the powder
         diffraction image. Currently only implemented for silver behenate.
@@ -67,6 +67,8 @@ class GeomOpt:
             list of the number of observed peaks to use for center fitting
         threshold : float
             pixels above this intensity in powder get set to 0; None for no thresholding.
+        deltas: bool
+            whether centers are in absolute positions or delta pixels from detector center
         plot : str or None
             output path for figure; if '', plot but don't save; if None, don't plot
         
@@ -86,6 +88,7 @@ class GeomOpt:
                                                         self.diagnostics.pixel_index_map)
         else:
             sys.exit("Unrecognized powder type, expected a path or number")
+        self.img_shape = powder_img.shape
         
         if mask:
             print(f"Loading mask {mask}")
@@ -95,8 +98,14 @@ class GeomOpt:
 
         if distance is None:
             distance = [self.diagnostics.psi.estimate_distance()]
+
+        midpt = np.array(powder_img.shape)/2
         if center is None:
-            center = [(int(powder_img.shape[1]/2), int(powder_img.shape[0]/2))]
+            center = tuple(midpt)
+        else:
+            if deltas:
+                center = [(c[0]+midpt[0], c[1]+midpt[1]) for c in center]
+
         scan = list(itertools.product(n_peaks, center, distance))
         scan_rank = self.distribute_scan(scan)
         
@@ -116,13 +125,13 @@ class GeomOpt:
         self.comm.Barrier()
         
         self.scan = {}
-        self.scan['distance'] = np.concatenate(self.comm.gather(ag_behenate.distances, root=0)) # in mm
-        self.scan['center'] = np.concatenate(self.comm.gather(ag_behenate.centers, root=0)) # in pixels
-        self.scan['npeaks'] = np.concatenate(self.comm.gather(ag_behenate.npeaks, root=0))
-        self.scan['scores_min'] = np.concatenate(self.comm.gather(ag_behenate.scores_min, root=0))
-        self.scan['scores_mean'] = np.concatenate(self.comm.gather(ag_behenate.scores_mean, root=0))
-        self.scan['scores_std'] = np.concatenate(self.comm.gather(ag_behenate.scores_std, root=0))
-                                    
+        self.scan['distance'] = self.comm.gather(ag_behenate.distances, root=0) # in mm
+        self.scan['center'] = self.comm.gather(ag_behenate.centers, root=0) # in pixels
+        self.scan['npeaks'] = self.comm.gather(ag_behenate.npeaks, root=0)
+        self.scan['scores_min'] = self.comm.gather(ag_behenate.scores_min, root=0)
+        self.scan['scores_mean'] = self.comm.gather(ag_behenate.scores_mean, root=0)
+        self.scan['scores_std'] = self.comm.gather(ag_behenate.scores_std, root=0)
+        
     def finalize(self):
         """
         Compute the final score based on how many standard deviations the 
@@ -130,6 +139,8 @@ class GeomOpt:
         store the optimal distance, center, and edge resolution.
         """
         if self.rank == 0:
+            for key in self.scan.keys():
+                self.scan[key] = np.array([item for sublist in self.scan[key] for item in sublist])
             invalid = np.isnan(self.scan['scores_min'])
             for key in self.scan.keys():
                 self.scan[key] = self.scan[key][~invalid]
@@ -138,7 +149,7 @@ class GeomOpt:
             index = np.argmax(self.scan['scores_final']) 
             self.distance = self.scan['distance'][index] # in mm
             self.center = self.scan['center'][index] # in pixels
-            self.edge_resolution = 1.0 / pix2q(self.center,
+            self.edge_resolution = 1.0 / pix2q(np.array([self.img_shape[0]/2]),
                                                self.diagnostics.psi.get_wavelength(), 
                                                self.distance,
                                                self.diagnostics.psi.get_pixel_size())[0] # in Angstrom

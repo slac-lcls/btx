@@ -4,6 +4,7 @@ import requests
 import glob
 import shutil
 import numpy as np
+import itertools
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -98,8 +99,11 @@ def opt_geom(config):
     task.dx = np.linspace(task.dx[0], task.dx[1], int(task.dx[2]))
     task.dy = tuple([float(elem) for elem in task.dy.split()])
     task.dy = np.linspace(task.dy[0], task.dy[1], int(task.dy[2]))
-    task.n_peaks = [int(elem) for elem in task.npeaks.split()]
     centers = list(itertools.product(task.dx, task.dy))
+    if type(task.n_peaks) == int:
+        task.n_peaks = [int(task.n_peaks)]
+    else:
+        task.n_peaks = [int(elem) for elem in task.n_peaks.split()]
     geom_opt = GeomOpt(exp=setup.exp,
                        run=setup.run,
                        det_type=setup.det_type)
@@ -110,6 +114,7 @@ def opt_geom(config):
                       n_iterations=task.get('n_iterations'), 
                       n_peaks = task.n_peaks,
                       threshold=task.get('threshold'),
+                      deltas=True,
                       plot=os.path.join(taskdir, f'figs/r{setup.run:04}.png'))
     geom_opt.finalize()
     if geom_opt.rank == 0:
