@@ -98,7 +98,7 @@ CORES=${CORES:=1}
 if [[ \
  ${TASK} != 'find_peaks' &&\
  ${TASK} != 'run_analysis' &&\
- ${TASK} != 'stream_analysis' &&\
+ ${TASK} != 'stream_analysis' ]]; then
   CORES=1
 fi
 
