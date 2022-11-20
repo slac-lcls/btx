@@ -59,7 +59,7 @@ class eLogInterface:
         elif task == 'geom':
             source_subdir = 'geom/figs/'
             target_subdir = f'runs/{item}/'
-            source_filename = f'{item}.png'
+            source_filename = f'r{item}.png'
         elif task == 'index':
             source_subdir = 'index/figs/'
             target_subdir = f'samples/stats_{item}/'
