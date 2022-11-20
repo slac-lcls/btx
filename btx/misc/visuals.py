@@ -105,7 +105,7 @@ class VisualizeSample:
         for i,ax in enumerate([ax1,ax2,ax3]):
             ax.bar(self.stats['run'], self.stats[order[i+1]], color='grey')
             avg_rate = np.sum(self.stats[order[i+1]])/np.sum(self.stats[order[i]])
-            ax.set_title(f"{titles[i]}\n(total: {np.sum(self.stats[order[i+1]])}, avg: {avg_rate:.2f}%)")
+            ax.set_title(f"{titles[i]}\n(total: {np.sum(self.stats[order[i+1]])}, avg: {100*avg_rate:.1f}%)")
 
         for i,ax in enumerate([ax4,ax5,ax6]):
             ax.bar(self.stats['run'], 100*self.stats[order[i+1]]/self.stats[order[i]], color='grey')
