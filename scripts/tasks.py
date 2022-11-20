@@ -4,6 +4,7 @@ import requests
 import glob
 import shutil
 import numpy as np
+import itertools
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -90,33 +91,39 @@ def opt_geom(config):
     setup = config.setup
     task = config.opt_geom
     """ Optimize and deploy the detector geometry from a silver behenate run. """
-    if task.get('center') is not None:
-        task.center = tuple([float(elem) for elem in task.center.split()])
-    else:
-        task.center = None
     taskdir = os.path.join(setup.root_dir, 'geom')
     os.makedirs(taskdir, exist_ok=True)
     os.makedirs(os.path.join(taskdir, 'figs'), exist_ok=True)
+    mask_file = fetch_latest(fnames=os.path.join(setup.root_dir, 'mask', 'r*.npy'), run=setup.run)
+    task.dx = tuple([float(elem) for elem in task.dx.split()])
+    task.dx = np.linspace(task.dx[0], task.dx[1], int(task.dx[2]))
+    task.dy = tuple([float(elem) for elem in task.dy.split()])
+    task.dy = np.linspace(task.dy[0], task.dy[1], int(task.dy[2]))
+    centers = list(itertools.product(task.dx, task.dy))
+    if type(task.n_peaks) == int:
+        task.n_peaks = [int(task.n_peaks)]
+    else:
+        task.n_peaks = [int(elem) for elem in task.n_peaks.split()]
     geom_opt = GeomOpt(exp=setup.exp,
                        run=setup.run,
                        det_type=setup.det_type)
+    geom_opt.opt_geom(powder=os.path.join(setup.root_dir, f"powder/r{setup.run:04}_max.npy"),
+                      mask=mask_file,
+                      distance=task.get('distance'),
+                      center=centers,
+                      n_iterations=task.get('n_iterations'), 
+                      n_peaks = task.n_peaks,
+                      threshold=task.get('threshold'),
+                      deltas=True,
+                      plot=os.path.join(taskdir, f'figs/r{setup.run:04}.png'),
+                      plot_final_only=True)
     if geom_opt.rank == 0:
-        mask_file = fetch_latest(fnames=os.path.join(setup.root_dir, 'mask', 'r*.npy'), run=setup.run)
-        logger.debug(f'Optimizing detector distance for run {setup.run} of {setup.exp}...')
-        geom_opt.opt_geom(powder=os.path.join(setup.root_dir, f"powder/r{setup.run:04}_max.npy"),
-                          mask=mask_file,
-                          distance=task.get('distance'),
-                          center=task.center,
-                          n_iterations=task.get('n_iterations'), 
-                          n_peaks=task.get('n_peaks'), 
-                          threshold=task.get('threshold'),
-                          plot=os.path.join(taskdir, f'figs/r{setup.run:04}.png'))
         try:
             geom_opt.report(update_url)
         except:
             logger.debug("Could not communicate with the elog update url")
-        logger.info(f'Detector distance in mm inferred from powder rings: {geom_opt.distance}')
-        logger.info(f'Detector center in pixels inferred from powder rings: {geom_opt.center}')
+        logger.info(f'Refined detector distance in mm: {geom_opt.distance}')
+        logger.info(f'Refined detector center in pixels: {geom_opt.center}')
         logger.info(f'Detector edge resolution in Angstroms: {geom_opt.edge_resolution}')    
         geom_opt.deploy_geometry(taskdir)
         logger.info(f'Updated geometry files saved to: {taskdir}')
@@ -312,6 +319,19 @@ def elog_display(config):
     logger.info(f'Updating the reports in the eLog summary tab.')
     eli = eLogInterface(setup)
     eli.update_summary()
+    logger.debug('Done!')
+
+def visualize_sample(config):
+    from btx.misc.visuals import VisualizeSample
+    setup = config.setup
+    task = config.visualize_sample
+    """ Plot per-run cell parameters and peak-finding/indexing statistics. """
+    logger.info(f'Extracting statistics from stream and summary files.')
+    vs = VisualizeSample(os.path.join(setup.root_dir, "index"), 
+                         task.tag, 
+                         save_plots=True)
+    vs.plot_cell_trajectory()
+    vs.plot_stats()
     logger.debug('Done!')
 
 def clean_up(config):
