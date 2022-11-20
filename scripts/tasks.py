@@ -321,6 +321,19 @@ def elog_display(config):
     eli.update_summary()
     logger.debug('Done!')
 
+def visualize_sample(config):
+    from btx.misc.visuals import VisualizeSample
+    setup = config.setup
+    task = config.visualize_sample
+    """ Plot per-run cell parameters and peak-finding/indexing statistics. """
+    logger.info(f'Extracting statistics from stream and summary files.')
+    vs = VisualizeSample(os.path.join(setup.root_dir, "index"), 
+                         task.tag, 
+                         save_plots=True)
+    vs.plot_cell_trajectory()
+    vs.plot_stats()
+    logger.debug('Done!')
+
 def clean_up(config):
     setup = config.setup
     task = config.clean_up

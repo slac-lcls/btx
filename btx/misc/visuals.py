@@ -8,12 +8,11 @@ from btx.interfaces.istream import *
 class VisualizeSample:
 
     def __init__(self, base_dir, tag, save_plots=False):
-        self.base_dir = base_dir # path to indexed folder
+        self.base_dir = base_dir # path to index folder
         self.tag = tag # sample name
         self.save_plots = save_plots # save to disk if True
         if save_plots:
-            outdir = os.makedir(os.path.join(self.base_dir, "figs"))
-            os.makedirs(outdir, exist_ok=True)
+            os.makedirs(os.path.join(self.base_dir, "figs"), exist_ok=True)
         self.cparams, self.stats = self.extract_stats()
         
     def extract_stats(self):
@@ -92,7 +91,7 @@ class VisualizeSample:
 
         f.subplots_adjust(hspace=0.4)        
         if self.save_plots:
-            f.savefig(os.path.join(self.base_dir, f"figs/cell_trajectory_{sample}.png"), dpi=300, bbox_inches='tight')
+            f.savefig(os.path.join(self.base_dir, f"figs/cell_trajectory_{self.tag}.png"), dpi=300, bbox_inches='tight')
             
     def plot_stats(self):
         """
@@ -116,7 +115,7 @@ class VisualizeSample:
         ax4.set_ylabel("Percentage", fontsize=14)
 
         if self.save_plots:
-            f.savefig(os.path.join(self.base_dir, f"figs/stats_trajectory_{sample}.png"), dpi=300, bbox_inches='tight')
+            f.savefig(os.path.join(self.base_dir, f"figs/stats_trajectory_{self.tag}.png"), dpi=300, bbox_inches='tight')
 
 def natural_sort(l): 
     """ Apply natural sorting to elements in a list of strings."""
