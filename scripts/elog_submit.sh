@@ -99,7 +99,6 @@ if [[ \
  ${TASK} != 'find_peaks' &&\
  ${TASK} != 'run_analysis' &&\
  ${TASK} != 'stream_analysis' &&\
- ${TASK} != 'opt_geom' ]]; then
   CORES=1
 fi
 
