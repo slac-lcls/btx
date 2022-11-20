@@ -16,8 +16,8 @@ dag = DAG(
 
 
 # Tasks SETUP
-task_id='test'
-test = JIDSlurmOperator( task_id=task_id, dag=dag)
+task_id='visualize_sample'
+visualize_sample = JIDSlurmOperator( task_id=task_id, dag=dag)
 
 # Draw the DAG
-test
+visualize_sample
