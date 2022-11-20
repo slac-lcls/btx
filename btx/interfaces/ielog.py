@@ -17,7 +17,7 @@ class eLogInterface:
 
     def update_run(self, run):
         os.makedirs(self.target_dir(subdir=f"runs/{run}"), exist_ok=True)
-        self.update_png(run, 'geom', 'powder')
+        self.update_png(run, 'geom', 'geom')
         self.update_png(run, 'powder', 'powder')
         self.update_png(run, 'powder', 'stats')
         self.update_html(['geom', 'powder', 'stats'], f"runs/{run}/")
