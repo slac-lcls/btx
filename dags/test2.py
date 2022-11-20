@@ -4,7 +4,7 @@ from airflow import DAG
 from plugins.jid import JIDSlurmOperator
 
 # DAG SETUP
-description='BTX optimize geometry DAG'
+description='BTX test DAG'
 dag_name = os.path.splitext(os.path.basename(__file__))[0]
 
 dag = DAG(
@@ -16,15 +16,8 @@ dag = DAG(
 
 
 # Tasks SETUP
-
-task_id='run_analysis'
-run_analysis = JIDSlurmOperator( task_id=task_id, dag=dag)
-
-task_id='opt_geom'
-opt_geom = JIDSlurmOperator( task_id=task_id, dag=dag)
-
-task_id='elog_display'
-elog_display = JIDSlurmOperator(task_id=task_id, dag=dag)
+task_id='test'
+test = JIDSlurmOperator( task_id=task_id, dag=dag)
 
 # Draw the DAG
-run_analysis >> opt_geom >> elog_display
+test
