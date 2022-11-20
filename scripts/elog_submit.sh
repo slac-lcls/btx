@@ -95,8 +95,10 @@ esac
 QUEUE=${QUEUE:='ffbh3q'}
 CORES=${CORES:=1}
 # TODO: find_peaks needs to be handled from ischeduler. For now we do this...
-if [[ ${TASK} != 'find_peaks' &&\
+if [[ \
+ ${TASK} != 'find_peaks' &&\
  ${TASK} != 'run_analysis' &&\
+ ${TASK} != 'stream_analysis' &&\
  ${TASK} != 'opt_geom' ]]; then
   CORES=1
 fi
@@ -111,9 +113,9 @@ fi
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 MAIN_PY="${SCRIPT_DIR}/main.py"
 if [ ${CORES} -gt 1 ]; then
-MAIN_PY="/cds/sw/ds/ana/conda1/inst/envs/ana-4.0.38-py3/bin/mpirun ${MAIN_PY}"
+MAIN_PY="/cds/sw/ds/ana/conda1/inst/envs/ana-4.0.47-py3/bin/mpirun ${MAIN_PY}"
 else
-MAIN_PY="/cds/sw/ds/ana/conda1/inst/envs/ana-4.0.38-py3/bin/python ${MAIN_PY}"
+MAIN_PY="/cds/sw/ds/ana/conda1/inst/envs/ana-4.0.47-py3/bin/python ${MAIN_PY}"
 fi
 
 UUID=$(cat /proc/sys/kernel/random/uuid)
@@ -144,7 +146,7 @@ export PATH=/cds/sw/package/crystfel/crystfel-dev/bin:$PATH
 export PYTHONPATH="${PYTHONPATH}:$( dirname -- ${SCRIPT_DIR})"
 export NCORES=${CORES}
 export TMP_EXE=${TMP_EXE}
-export WHICHPYTHON='/cds/sw/ds/ana/conda1/inst/envs/ana-4.0.38-py3/bin/python'
+export WHICHPYTHON='/cds/sw/ds/ana/conda1/inst/envs/ana-4.0.47-py3/bin/python'
 
 if [ ${RUN_NUM} != 'None' ]; then
   echo "new config file: ${THIS_CONFIGFILE}"
