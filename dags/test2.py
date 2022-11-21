@@ -19,5 +19,9 @@ dag = DAG(
 task_id='visualize_sample'
 visualize_sample = JIDSlurmOperator( task_id=task_id, dag=dag)
 
+task_id='determine_cell'
+determine_cell = JIDSlurmOperator( task_id=task_id, dag=dag)
+
 # Draw the DAG
 visualize_sample
+determine_cell
