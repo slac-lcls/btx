@@ -271,11 +271,12 @@ class StreamInterface:
 
         irow = 0
         ax1 = fig.add_subplot(gs[irow, 0:])
-        ax1.set_title(f"Peakogram ({len(self.stream_data['h'])} reflections)")
 
-        n_neg_peaks = len(np.where(self.stream_data['maxI']<0)[0]) / len(self.stream_data['maxI'])
+        n_neg_peaks = len(np.where(self.stream_data['maxI']<0)[0])
         if n_neg_peaks != 0:
-            print(f"Warning: {100*n_neg_peaks:.2f} have negative intensity and will be excluded from the peakogram.")
+            print(f"Warning: {100*n_neg_peaks/len(self.stream_data['maxI']):.1f}% of reflections have negative intensity.")
+            print("These will be excluded from the peakogram.")
+        ax1.set_title(f"Peakogram ({len(self.stream_data['h']) - n_neg_peaks} reflections)")
 
         H, xedges, yedges = np.histogram2d(np.log10(self.stream_data['maxI'][self.stream_data['maxI']>0]),
                                            self.stream_data['d'][self.stream_data['maxI']>0],
