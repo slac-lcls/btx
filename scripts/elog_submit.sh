@@ -95,7 +95,11 @@ esac
 QUEUE=${QUEUE:='ffbh3q'}
 CORES=${CORES:=1}
 # TODO: find_peaks needs to be handled from ischeduler. For now we do this...
-if [ ${TASK} != 'find_peaks' ] && [ ${TASK} != 'stream_analysis' ] && [ ${TASK} != 'run_analysis' ] && [ ${TASK} != 'opt_geom' ]; then
+if [ ${TASK} != 'find_peaks' ] &&\
+   [ ${TASK} != 'stream_analysis' ] &&\
+   [ ${TASK} != 'run_analysis' ] &&\
+   [ ${TASK} != 'determine_cell' ] &&\
+   [ ${TASK} != 'opt_geom' ]; then
   CORES=1
 fi
 
