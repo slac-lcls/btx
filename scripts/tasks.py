@@ -209,9 +209,9 @@ def determine_cell(config):
         logger.debug(f'Read stream files: {stream_files}')
         celldir = os.path.join(setup.root_dir, 'cell')
         os.makedirs(celldir, exist_ok=True)
-        cell = st.stream_data[:,2:]
-        cell[:,:3] *= 10
-        labels = cluster_cell_params(cell, 
+        keys = ['a','b','c','alpha','beta','gamma']
+        cell = np.array([st.stream_data[key] for key in keys])
+        labels = cluster_cell_params(cell.T, 
                                      os.path.join(taskdir, f"clusters_{task.tag}.txt"),
                                      os.path.join(celldir, f"{task.tag}.cell"),
                                      in_cell=task.get('input_cell'), 
