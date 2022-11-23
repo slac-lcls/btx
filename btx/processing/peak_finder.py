@@ -531,7 +531,8 @@ def visualize_hits(fname, exp, run, det_type, savepath=None, vmax_ind=3, vmax_po
     powder_hits = f['entry_1/data_1/powderHits'][:]
     powder_misses = f['entry_1/data_1/powderMisses'][:]
     shape = f['entry_1/data_1/data'].shape
-    indices = np.sort(np.random.randint(low=0, high=shape[0], size=9))
+    rng = np.random.default_rng()
+    indices = np.sort(rng.choice(shape[0], 9, replace=False))
     hits = f['entry_1/data_1/data'][indices]
     
     if det_type is not 'Rayonix':
@@ -543,22 +544,20 @@ def visualize_hits(fname, exp, run, det_type, savepath=None, vmax_ind=3, vmax_po
     
     # individual hits
     fig1, axs = plt.subplots(nrows=3, ncols=3, figsize=(6,6),dpi=180)
-    n_hits = hits.shape[0]
-    rand_sel = np.random.randint(0, high=n_hits, size=9)
     
     k=0
     for i in np.arange(3):
         for j in np.arange(3):
-            if k >= n_hits:
+            if k >= len(indices):
                 break
             axs[i,j].imshow(hits[k] * mask, vmin=0,vmax=vmax_ind*hits[k].mean(),cmap='Greys')
             axs[i,j].axis('off')
-            npeaks = f['entry_1/result_1/nPeaks'][rand_sel[k]]
+            npeaks = f['entry_1/result_1/nPeaks'][indices[k]]
             axs[i,j].set_title(f'# of peaks: {npeaks}')
             for ipeak in np.arange(npeaks):
-                panel_num = f['entry_1/result_1/peakYPosRaw'][rand_sel[k]] // psi.det.shape()[1]
-                panel_row = f['entry_1/result_1/peakYPosRaw'][rand_sel[k]] % psi.det.shape()[1]
-                panel_col = f['entry_1/result_1/peakXPosRaw'][rand_sel[k]]
+                panel_num = f['entry_1/result_1/peakYPosRaw'][indices[k]] // psi.det.shape()[1]
+                panel_row = f['entry_1/result_1/peakYPosRaw'][indices[k]] % psi.det.shape()[1]
+                panel_col = f['entry_1/result_1/peakXPosRaw'][indices[k]]
                 pixel = pixel_index_map[int(panel_num[ipeak]), int(panel_row[ipeak]), int(panel_col[ipeak])]
                 circle = plt.Circle((pixel[1],pixel[0]),20, color='blue', alpha=0.2)
                 axs[i,j].add_patch(circle)
