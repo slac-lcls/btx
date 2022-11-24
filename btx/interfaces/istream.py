@@ -533,6 +533,10 @@ def cluster_cell_params(cell, out_clusters, out_cell, in_cell=None, eps=5, min_s
     results = np.array([np.concatenate((np.array([counts[nc], counts[nc]/np.sum(counts)]), 
                                         np.median(cell[clustering.labels_==nc], axis=0))) for nc in sort_idx])
     
+    if len(results) == 0:
+        print(f"No clusters found from {cell.shape[0]} crystals.")
+        return
+
     fmt=['%d', '%.2f', '%.2f', '%.2f', '%.2f', '%.2f', '%.2f', '%.2f']
     np.savetxt(out_clusters, results, header=' '.join(cols), fmt=fmt)
     
