@@ -172,29 +172,23 @@ def index(config):
     logger.info(f'Indexing launched!')
 
 def stream_analysis(config):
-    from btx.interfaces.istream import StreamInterface, write_cell_file
+    from btx.interfaces.istream import launch_stream_analysis
     setup = config.setup
     task = config.stream_analysis
-    """ Diagnostics including cell distribution and peakogram. Concatenate streams. """
+    """ Plot cell distribution and peakogram, write new cell file, and concatenate streams. """
     taskdir = os.path.join(setup.root_dir, 'index')
     os.makedirs(os.path.join(taskdir, 'figs'), exist_ok=True)
-    stream_files = os.path.join(taskdir, f"r*{task.tag}.stream")
-    st = StreamInterface(input_files=glob.glob(stream_files), cell_only=task.get('cell_only') if task.get('cell_only') is not None else False)
-    if st.rank == 0:
-        logger.debug(f'Read stream files: {stream_files}')
-        st.report(tag=task.tag)
-        st.plot_cell_parameters(output=os.path.join(taskdir, f"figs/cell_{task.tag}.png"))
-        if not st.cell_only:
-            st.plot_peakogram(output=os.path.join(taskdir, f"figs/peakogram_{task.tag}.png"))
-        logger.info(f'Cell distribution and possibly peakogram generated for sample {task.tag}')
-        celldir = os.path.join(setup.root_dir, 'cell')
-        os.makedirs(celldir, exist_ok=True)
-        write_cell_file(st.cell_params, os.path.join(celldir, f"{task.tag}.cell"), input_file=setup.get('cell'))
-        logger.info(f'Wrote updated CrystFEL cell file to {celldir}')
-        stream_cat = os.path.join(taskdir, f"{task.tag}.stream")
-        os.system(f"cat {stream_files} > {stream_cat}")
-        logger.info(f'Concatenated all stream files to {task.tag}.stream')
-        logger.debug('Done!')
+    os.makedirs(os.path.join(setup.root_dir, 'cell'), exist_ok=True)
+    launch_stream_analysis(os.path.join(taskdir, f"r*{task.tag}.stream"), 
+                           os.path.join(taskdir, f"{task.tag}.stream"), 
+                           os.path.join(taskdir, 'figs'), 
+                           os.path.join(taskdir, "stream_analysis.sh"), 
+                           setup.queue,
+                           ncores=task.get('ncores') if task.get('ncores') is not None else 6, 
+                           cell_only=task.get('cell_only') if task.get('cell_only') is not None else False, 
+                           cell_out=os.path.join(setup.root_dir, 'cell', f'{task.tag}.cell'), 
+                           cell_ref=task.get('ref_cell'))
+    logger.info(f'Stream analysis launched')
 
 def determine_cell(config):
     from btx.interfaces.istream import StreamInterface, write_cell_file, cluster_cell_params
