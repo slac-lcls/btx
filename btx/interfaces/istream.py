@@ -7,6 +7,7 @@ import glob
 import argparse
 import os
 import requests
+from btx.interfaces.ischeduler import JobScheduler
 
 class StreamInterface:
     
@@ -544,6 +545,53 @@ def cluster_cell_params(cell, out_clusters, out_cell, in_cell=None, eps=5, min_s
     
     return clustering.labels_
 
+def launch_stream_analysis(in_stream, out_stream, fig_dir, tmp_exe, 
+                           queue, ncores, cell_only=False, cell_out=None, cell_ref=None):
+    """
+    Launch stream analysis task using iScheduler.
+    
+    Parameters
+    ----------
+    in_stream : str
+        glob-compatible path to input stream file(s)
+    out_stream : str
+        name of output concatenated stream file
+    fig_dir : str
+        directory to write peakogram and cell distribution plot to
+    tmp_exe : str
+        name of temporary executable file
+    queue : str 
+        queue to submit job to
+    ncores : int
+        minimum of number of cores and number of stream files
+    cell_only : bool
+        if True, do not plot peakogram
+    cell_out : str
+        output CrystFEL-style cell file
+    cell_ref : str
+        CrystFEL cell file to copy symmetry from
+    """
+    ncores_max = len(glob.glob(in_stream))
+    if ncores > ncores_max:
+        ncores = ncores_max
+    tag = out_stream.split("/")[-1].split(".")[0]
+
+    script_path = os.path.abspath(__file__)
+    command = f"python {script_path} -i='{in_stream}' -o {fig_dir} -t {tag}"
+    if cell_only:
+        command += " --cell_only"
+    if cell_out is not None:
+        command += f" --cell_out={cell_out}"
+        if cell_ref is not None:
+            command += f" --cell_ref={cell_ref}"
+        
+    js = JobScheduler(tmp_exe, ncores=ncores, jobname=f'stream_analysis', queue=queue)
+    js.write_header()
+    js.write_main(f"{command}\n")
+    js.write_main(f"cat {in_stream} > {out_stream}\n")
+    js.clean_up()
+    js.submit()
+
 #### For command line use ####
             
 def parse_input():
@@ -551,9 +599,12 @@ def parse_input():
     Parse command line input.
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument('-i', '--inputs', help='Input stream files in glob-readable format', required=True, type=str)
+    parser.add_argument('-i', '--inputs', help='Input stream file(s) in glob-readable format', required=True, type=str)
     parser.add_argument('-o', '--outdir', help='Output directory for peakogram and cell plots', required=True, type=str)
+    parser.add_argument('-t', '--tag', help='Sample tag', required=True, type=str)
     parser.add_argument('--cell_only', help='Only read unit cell parameters, not reflections', action='store_true')
+    parser.add_argument('--cell_out', help='Path to output cell file', required=False, type=str)
+    parser.add_argument('--cell_ref', help='Path to reference cell file (for symmetry information)', required=False, type=str)
 
     return parser.parse_args()
 
@@ -562,7 +613,9 @@ if __name__ == '__main__':
     params = parse_input()
     st = StreamInterface(input_files=glob.glob(params.inputs), cell_only=params.cell_only)
     if st.rank == 0:
-        st.plot_cell_parameters(output=os.path.join(params.outdir, "cell_distribution.png"))
+        st.plot_cell_parameters(output=os.path.join(params.outdir, f"{params.tag}_cell.png"))
         if not params.cell_only:
-            st.plot_peakogram(output=os.path.join(params.outdir, "peakogram.png"))
-        st.report(output=os.path.join(params.outdir, "cell.summary"))
+            st.plot_peakogram(output=os.path.join(params.outdir, f"{params.tag}_peakogram.png"))
+        st.report(tag=params.tag)
+        if params.cell_out is not None:
+            write_cell_file(st.cell_params, params.cell_out, input_file=params.cell_ref)
