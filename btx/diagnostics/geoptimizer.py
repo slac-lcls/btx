@@ -158,6 +158,8 @@ class Geoptimizer:
             time.sleep(self.frequency)
             
         self.check_status(statusfile, jobnames)
+        for fname in glob.glob(os.path.join(self.scan_dir, "r*", "stream*summary")):
+            shutil.move(fname, self.scan_dir)
             
     def launch_merging(self, params):
         """
@@ -213,8 +215,12 @@ class Geoptimizer:
         self.cols.append('n_indexed')
         n_indexed = np.zeros(self.scan_results.shape[0])
         for num in range(self.scan_results.shape[0]):
-            st = StreamInterface([os.path.join(self.scan_dir, f'g{num}.stream')], cell_only=True)
-            n_indexed[num] = st.n_indexed
+            fname = os.path.join(self.scan_dir, f"stream_g{num}.summary")
+            with open(fname, "r") as f:
+                lines = f.readlines()
+                for line in lines:
+                    if "Number of indexed events" in line:
+                        n_indexed[num] = int(line.split(":")[1])
         self.scan_results[:,4] = n_indexed
         
         statsdir = os.path.join(self.scan_dir, "merge", "hkl")
