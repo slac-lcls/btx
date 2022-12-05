@@ -119,7 +119,7 @@ class StreamtoMtz:
         command=f"python {self.script_path} -i {self.stream} --symmetry {self.symmetry} --cell {self.cell} --taskdir {self.taskdir} --foms {foms_args} --report --nshells={nshells} --mtz_dir {self.mtz_dir}"
         self.js.write_main(f"{command}\n")
                 
-    def cmd_get_hkl(self, highres=None):
+    def cmd_get_hkl(self, highres=None, anomalous=False):
         """
         Convert hkl to mtz format using CrystFEL's get_hkl tool:
         https://www.desy.de/~twhite/crystfel/manual-get_hkl.html
@@ -128,9 +128,14 @@ class StreamtoMtz:
         ----------
         highres : float
             high-resolution cut-off in Angstroms
+        anomalous : bool
+            if True, separate Bijovet pairs
         """
         outmtz = os.path.join(self.taskdir, f"{self.prefix}.mtz")
-        command = f"get_hkl -i {self.outhkl} -o {outmtz} -p {self.cell} --output-format=mtz"
+        fmat = "mtz"
+        if anomalous:
+            fmat = "mtz-bij"
+        command = f"get_hkl -i {self.outhkl} -o {outmtz} -p {self.cell} --output-format={fmat}"
         if highres is not None:
             command += f" --highres={highres}"
         self.js.write_main(f"{command}\n")

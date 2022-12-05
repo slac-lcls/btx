@@ -230,7 +230,8 @@ def merge(config):
                                   min_res=task.get('min_res'), push_res=task.get('push_res'), max_adu=task.get('max_adu'))
     for ns in [1, task.nshells]:
         stream_to_mtz.cmd_compare_hkl(foms=foms, nshells=ns, highres=task.get('highres'))
-    stream_to_mtz.cmd_get_hkl(highres=task.get('highres'))
+    stream_to_mtz.cmd_get_hkl(highres=task.get('highres'),
+                              anomalous=task.get('anomalous') if task.get('anomalous') is not None else False)
     stream_to_mtz.cmd_report(foms=foms, nshells=task.nshells)
     stream_to_mtz.launch()
     logger.info(f'Merging launched!')
@@ -245,7 +246,8 @@ def solve(config):
                task.pdb, 
                taskdir,
                queue=setup.get('queue'),
-               ncores=task.get('ncores') if task.get('ncores') is not None else 16)
+               ncores=task.get('ncores') if task.get('ncores') is not None else 16,
+               anomalous=task.get('anomalous') if task.get('anomalous') is not None else False)
     logger.info(f'Dimple launched!')
 
 def refine_geometry(config, task=None):
@@ -278,7 +280,7 @@ def refine_geometry(config, task=None):
                         task.dy,
                         task.dz)
     geopt.launch_indexing(setup.exp, setup.det_type, config.index, cell_file)
-    geopt.launch_stream_analysis(config.index.cell)    
+    geopt.launch_stream_wrangling(config.stream_analysis)    
     geopt.launch_merging(config.merge)
     geopt.save_results(setup.root_dir, config.merge.tag)
     check_file_existence(os.path.join(task.scan_dir, "results.txt"), geopt.timeout)

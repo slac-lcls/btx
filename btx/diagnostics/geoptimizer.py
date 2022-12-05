@@ -51,11 +51,12 @@ class Geoptimizer:
             output_geom = os.path.join(self.scan_dir, f"geom/shift{i}.geom")
             offset_geom(input_geom, output_geom, deltas[0], deltas[1], deltas[2])
             
-        self.scan_results = np.zeros((len(shifts_list), 12))
-        self.scan_results[:,:3] = shifts_list
-        self.cols = ['dx', 'dy', 'dz']
+        self.scan_results = np.zeros((len(shifts_list), 7))
+        self.scan_results[:,0] = np.arange(len(shifts_list))
+        self.scan_results[:,1:4] = shifts_list
+        self.cols = ['num', 'dx', 'dy', 'dz']
             
-    def check_status(self, statusfile, jobnames, debug=False):
+    def check_status(self, statusfile, jobnames):
         """
         Check whether all launched jobs have completed.
         
@@ -123,29 +124,40 @@ class Geoptimizer:
 
         self.check_status(statusfile, jobnames)
 
-    def launch_stream_analysis(self, cell_file):
+    def launch_stream_wrangling(self, params):
         """
-        Compute the number of indexed crystals and standard deviations of unit
-        cell parameters and concatenate, with one stream file per geometry file. 
+        Compute the number of indexed crystals and concatenate, 
+        with one stream file per geometry file. 
         
         Parameters
         ----------
-        cell_file : str
-            path to cell file used during indexing
+        params : btx.misc.shortcuts.AttrDict
+            config.merge dictionary containing stream_analysis parameters
         """
         celldir = os.path.join(self.scan_dir, "cell")
         os.makedirs(celldir, exist_ok=True)
+        os.makedirs(os.path.join(self.scan_dir, "figs"))
 
-        for num in range(self.scan_results.shape[0]):
-            stream_files = os.path.join(self.scan_dir, f"r*/r*_g{num}.stream")
-            st = StreamInterface(glob.glob(stream_files), cell_only=True)
-            write_cell_file(st.cell_params, os.path.join(celldir, f"g{num}.cell"), input_file=cell_file)
-            stream_cat = os.path.join(self.scan_dir, f'g{num}.stream')
-            os.system(f"cat {stream_files} >> {stream_cat}")
-            
-            self.scan_results[num,3:10] = np.append(np.array(len(st.unq_inds)), st.cell_params_std) # num indexed, cell std devs
+        jobnames = list()
+        statusfile = os.path.join(self.scan_dir,"status.sh")
         
-        self.cols.extend(['n_indexed', 'a', 'b', 'c', 'alpha', 'beta', 'gamma'])
+        for num in range(self.scan_results.shape[0]):
+            
+            jobname = f"gs{num}"
+            jobfile = os.path.join(self.scan_dir, f"merge_{jobname}.sh")
+            launch_stream_analysis(os.path.join(self.scan_dir, f"r*/r*_g{num}.stream"),
+                                   os.path.join(self.scan_dir, f'g{num}.stream'),
+                                   os.path.join(self.scan_dir, "figs"),
+                                   jobfile,
+                                   self.queue,
+                                   ncores=params.get('ncores') if params.get('ncores') is not None else 16,
+                                   cell_out=os.path.join(celldir, f"g{num}.cell"),
+                                   cell_ref=params.get('ref_cell'),
+                                   addl_command=f"echo {jobname} | tee -a {statusfile}\n")
+            jobnames.append(jobname)
+            time.sleep(self.frequency)
+            
+        self.check_status(statusfile, jobnames)
             
     def launch_merging(self, params):
         """
@@ -186,29 +198,34 @@ class Geoptimizer:
             jobnames.append(jobname)
             time.sleep(self.frequency)
             
-        self.check_status(statusfile, jobnames, debug=True)
-        self.extract_stats(os.path.join(mergedir,"hkl"), params.foms.split(' '))
+        self.check_status(statusfile, jobnames)
+        self.extract_stats(params.foms.split(' '))
         
-    def extract_stats(self, statsdir, foms):
+    def extract_stats(self, foms):
         """
         Extract the overall figure of merit statistics.
         
         Parameters
         ----------
-        statsdir : str
-            directory containing results of crystfel's compare_hkl
         foms : list of str
             figures of merit that were calculated
         """
+        self.cols.append('n_indexed')
+        n_indexed = np.zeros(self.scan_results.shape[0])
+        for num in range(self.scan_results.shape[0]):
+            st = StreamInterface([os.path.join(self.scan_dir, f'g{num}.stream')], cell_only=True)
+            n_indexed[num] = st.n_indexed
+        self.scan_results[:,4] = n_indexed
+        
+        statsdir = os.path.join(self.scan_dir, "merge", "hkl")
         for col,fom in enumerate(foms):
             self.cols.append(fom)
             overall_stat = np.zeros(self.scan_results.shape[0])
-            
             for num in range(self.scan_results.shape[0]):
                 shells_file = os.path.join(statsdir, f"g{num}_{fom}_n1.dat")
                 fom_from_shell_file, stat = wrangle_shells_dat(shells_file)
                 overall_stat[num] = stat
-            self.scan_results[:,10+col] = overall_stat
+            self.scan_results[:,5+col] = overall_stat
 
     def _transfer(self, root_dir, tag, num):
         """
@@ -257,7 +274,7 @@ class Geoptimizer:
         if savepath is None:
             savepath = os.path.join(self.scan_dir, "results.txt")
 
-        fmt=['%.2f', '%.2f', '%.4f', '%d', '%.5f', '%.5f', '%.5f', '%.5f', '%.5f', '%.5f', '%.2f', '%.2f']
+        fmt=['%d', '%.2f', '%.2f', '%.4f', '%d', '%.2f', '%.2f']
         np.savetxt(savepath, self.scan_results, header=' '.join(self.cols), fmt=fmt)
 
         col_index = self.cols.index(metric)
