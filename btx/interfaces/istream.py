@@ -353,8 +353,9 @@ class StreamInterface:
         if update_url is not None:
             labels = ["a", "b", "c", "alpha", "beta", "gamma"]
             elog_json = [{"key": labels[i], "value": f"{self.cell_params[i]:.3f} +/- {self.cell_params_std[i]:.3f}"} for i in range(len(labels))]
-            elog_json.append({'key': 'Number of indexed events', 'value': f'{np.sum(counts[1:]):.2f}'})
-            elog_json.append({'key': 'Fraction of indexed with multiple lattices', 'value': f'{np.sum(counts[2:]) / np.sum(counts[1:]):.2f}'})
+            elog_json.append({'key': 'Number of indexed events', 'value': f'{self.n_indexed}'})
+            elog_json.append({'key': 'Fractional indexing rate', 'value': f'{self.n_indexed/(self.n_indexed+self.n_unindexed):.2f}'})
+            elog_json.append({'key': 'Fraction of indexed with multiple lattices', 'value': f'{self.n_multiple/self.n_indexed:.2f}'})
             requests.post(update_url, json=elog_json)
             
     def copy_from_stream(self, stream_file, chunk_indices, crystal_indices, output):
@@ -545,8 +546,8 @@ def cluster_cell_params(cell, out_clusters, out_cell, in_cell=None, eps=5, min_s
     
     return clustering.labels_
 
-def launch_stream_analysis(in_stream, out_stream, fig_dir, tmp_exe, 
-                           queue, ncores, cell_only=False, cell_out=None, cell_ref=None):
+def launch_stream_analysis(in_stream, out_stream, fig_dir, tmp_exe, queue, ncores, 
+                           cell_only=False, cell_out=None, cell_ref=None, addl_command=None):
     """
     Launch stream analysis task using iScheduler.
     
@@ -570,6 +571,8 @@ def launch_stream_analysis(in_stream, out_stream, fig_dir, tmp_exe,
         output CrystFEL-style cell file
     cell_ref : str
         CrystFEL cell file to copy symmetry from
+    addl_command : str
+        additional command to add to end of job to launch
     """
     ncores_max = len(glob.glob(in_stream))
     if ncores > ncores_max:
@@ -589,6 +592,8 @@ def launch_stream_analysis(in_stream, out_stream, fig_dir, tmp_exe,
     js.write_header()
     js.write_main(f"{command}\n")
     js.write_main(f"cat {in_stream} > {out_stream}\n")
+    if addl_command is not None:
+        js.write_main(f"{addl_command}\n")
     js.clean_up()
     js.submit()
 
