@@ -192,7 +192,7 @@ class Geoptimizer:
                                         ncores=params.get('ncores') if params.get('ncores') is not None else 16)
             stream_to_mtz.cmd_partialator(iterations=params.iterations, model=params.model, 
                                           min_res=params.get('min_res'), push_res=params.get('push_res'))
-            stream_to_mtz.cmd_compare_hkl(foms=params.foms.split(" "), nshells=1, highres=params.get('highres'))
+            stream_to_mtz.cmd_compare_hkl(foms=['CCstar','Rsplit'], nshells=1, highres=params.get('highres'))
             stream_to_mtz.cmd_get_hkl(highres=params.get('highres'))
             stream_to_mtz.js.write_main(f"echo {jobname} | tee -a {statusfile}\n")
             stream_to_mtz.launch()
@@ -201,7 +201,7 @@ class Geoptimizer:
             time.sleep(self.frequency)
             
         self.check_status(statusfile, jobnames)
-        self.extract_stats(params.foms.split(' '))
+        self.extract_stats(['CCstar','Rsplit'])
         
     def extract_stats(self, foms):
         """
