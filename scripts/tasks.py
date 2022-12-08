@@ -109,15 +109,21 @@ def opt_geom(config):
         task.n_peaks = [int(task.n_peaks)]
     else:
         task.n_peaks = [int(elem) for elem in task.n_peaks.split()]
+    if task.get('distance') is None:
+        task.distance = None
+    elif type(task.distance) == float or type(task.distance) == int:
+        task.distance = [float(task.distance)]
+    else:
+        task.distance = [float(elem) for elem in task.distance.split()]
     geom_opt = GeomOpt(exp=setup.exp,
                        run=setup.run,
                        det_type=setup.det_type)
     geom_opt.opt_geom(powder=os.path.join(setup.root_dir, f"powder/r{setup.run:04}_max.npy"),
                       mask=mask_file,
-                      distance=task.get('distance'),
+                      distance=task.distance,
                       center=centers,
                       n_iterations=task.get('n_iterations'), 
-                      n_peaks = task.n_peaks,
+                      n_peaks=task.n_peaks,
                       threshold=task.get('threshold'),
                       deltas=True,
                       plot=os.path.join(taskdir, f'figs/r{setup.run:04}.png'),
