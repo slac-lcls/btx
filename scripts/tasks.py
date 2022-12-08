@@ -78,11 +78,16 @@ def run_analysis(config):
                         run=setup.run,
                         det_type=setup.det_type)
     logger.debug(f'Computing Powder for run {setup.run} of {setup.exp}...')
-    rd.compute_run_stats(max_events=task.max_events, mask=mask_file, threshold=task.get('mean_threshold'))
+    rd.compute_run_stats(max_events=task.max_events, 
+                         mask=mask_file, 
+                         threshold=task.get('mean_threshold'),
+                         gain_mode=task.get('gain_mode'))
     logger.info(f'Saving Powders and plots to {taskdir}')
     rd.save_powders(taskdir)
     rd.visualize_powder(output=os.path.join(taskdir, f"figs/powder_r{rd.psi.run:04}.png"))
     rd.visualize_stats(output=os.path.join(taskdir, f"figs/stats_r{rd.psi.run:04}.png"))
+    if task.get('gain_mode') is not None:
+        rd.visualize_gain_frequency(output=os.path.join(taskdir, f"figs/gain_freq_r{rd.psi.run:04}.png"))
     logger.debug('Done!')
     
 def opt_geom(config):
