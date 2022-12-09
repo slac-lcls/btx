@@ -1,14 +1,17 @@
 import numpy as np
 import argparse
 import os
+from mpi4py import MPI
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import matplotlib.colors as colors
 from matplotlib.colors import LogNorm
+from btx.interfaces.ipsana import *
 
 from psana import EventId
-from btx.interfaces.ipsana import *
-from mpi4py import MPI
+from Detector.UtilsEpix10ka import find_gain_mode
+from Detector.UtilsEpix10ka import info_pixel_gain_mode_statistics_for_raw
+from Detector.UtilsEpix10ka import map_pixel_gain_mode_for_raw
 
 class RunDiagnostics:
 
@@ -21,6 +24,8 @@ class RunDiagnostics:
         self.pixel_index_map = retrieve_pixel_index_map(self.psi.det.geometry(run))
         self.powders = dict() 
         self.stats = dict()
+        self.gain_traj = None
+        self.gain_map = None
         
         self.comm = MPI.COMM_WORLD
         self.rank = self.comm.Get_rank()
@@ -46,22 +51,28 @@ class RunDiagnostics:
     def finalize_powders(self):
         """
         Finalize powders calculation at end of the run, computing the
-        max, avg, and std dev versions.
+        max, avg, and std dev (and gain mode counts if applicable).
         """
         self.powders_final = dict()
         powder_max = np.array(self.comm.gather(self.powders['max'], root=0))
         powder_sum = np.array(self.comm.gather(self.powders['sum'], root=0))
         powder_sqr = np.array(self.comm.gather(self.powders['sqr'], root=0))
         total_n_proc = self.comm.reduce(self.n_proc, MPI.SUM)
+        if self.gain_map is not None:
+            powder_gain = np.array(self.comm.gather(self.gain_map, root=0))
 
         if self.rank == 0:
             self.powders_final['max'] = np.max(powder_max, axis=0)
             self.powders_final['avg'] = np.sum(powder_sum, axis=0) / float(total_n_proc)
             self.powders_final['std'] = np.sqrt(np.sum(powder_sqr, axis=0) / float(total_n_proc) - np.square(self.powders_final['avg']))
+            if self.gain_map is not None:
+                self.powders_final['gain_mode_counts'] = np.sum(powder_gain, axis=0)
             if self.psi.det_type != 'Rayonix':
                 for key in self.powders_final.keys():
                     self.powders_final[key] = assemble_image_stack_batch(self.powders_final[key], self.pixel_index_map)
-
+                    
+        self.panel_mask = assemble_image_stack_batch(np.ones(self.psi.det.shape()), self.pixel_index_map)
+ 
     def save_powders(self, outdir):
         """
         Save powders to output directory.
@@ -92,7 +103,7 @@ class RunDiagnostics:
         self.stats['max'][self.n_proc] = np.max(img)
         self.stats['min'][self.n_proc] = np.min(img)
         
-    def finalize_stats(self, n_empty=0):
+    def finalize_stats(self, n_empty=0, n_empty_raw=0):
         """
         Gather stats from various ranks into single arrays in self.stats_final.
 
@@ -100,20 +111,52 @@ class RunDiagnostics:
         ----------
         n_empty : int
             number of empty images in this rank
+        n_empty_raw : int
+            number of empty raw events in this rank
         """
         self.stats_final = dict()
         for key in self.stats.keys():
             if n_empty != 0:
-                self.stats_final[key] = self.stats[key][:-n_empty]
+                self.stats[key] = self.stats[key][:-n_empty]
             self.stats_final[key] = self.comm.gather(self.stats[key], root=0)
 
         self.stats_final['fiducials'] = self.comm.gather(np.array(self.psi.fiducials), root=0)
         if self.rank == 0:
             for key in self.stats_final.keys():
-                #self.stats_final[key] = np.array(self.stats_final[key]).reshape(-1)
                 self.stats_final[key] = np.hstack(self.stats_final[key])
+                
+        if self.gain_traj is not None:
+            if n_empty_raw != 0:
+                self.gain_traj = self.gain_traj[:-n_empty_raw]
+            self.stats_final['gain_mode_counts'] = self.comm.gather(self.gain_traj, root=0)
+            if self.rank == 0:
+                self.stats_final['gain_mode_counts'] = np.hstack(self.stats_final['gain_mode_counts'])
+                
+    def get_gain_statistics(self, raw, gain_mode='AML-L'):
+        """
+        Retrieve statistics for a particular gain mode, specifically a map 
+        of the number of times a pixel has been in a certain gain mode and 
+        the number of pixels in that gain mode per event.
 
-    def compute_run_stats(self, max_events=-1, mask=None, powder_only=False, threshold=None):
+        Parameters
+        ----------
+        raw : ndarray, shape (det_shape)
+            uncalibrated image
+        gain_mode : str
+            gain mode to retrieve statistics for, e.g. 'AML-L'
+        """
+        if self.gain_traj is None:
+            self.gain_mode = gain_mode
+            self.modes = {'FH':0, 'FM':1, 'FL':2, 'AHL-H':3, 'AML-M':4, 'AHL-L':5, 'AML-L':6}
+            self.gain_traj = np.zeros(self.psi.max_events - self.psi.counter).astype(int)
+            self.gain_map = np.zeros(self.psi.det.shape())
+
+        stats = info_pixel_gain_mode_statistics_for_raw(self.psi.det, raw)
+        self.gain_traj[self.n_proc] = int(stats.split(":")[1].split(",")[self.modes[gain_mode]])
+        evt_map = map_pixel_gain_mode_for_raw(self.psi.det, raw)
+        self.gain_map[evt_map==[self.modes[gain_mode]]] += 1
+            
+    def compute_run_stats(self, max_events=-1, mask=None, powder_only=False, threshold=None, gain_mode=None):
         """
         Compute powders and per-image statistics. If a mask is provided, it is 
         only applied to the stats trajectories, not in computing the powder.
@@ -128,6 +171,8 @@ class RunDiagnostics:
             if True, only compute the powder pattern
         threshold : float
             if supplied, exclude events whose mean is above this value
+        gain_mode : str
+            gain mode to retrieve statistics for, e.g. 'AML-L' 
         """
         if mask is not None:
             if type(mask) == str:
@@ -136,17 +181,15 @@ class RunDiagnostics:
 
         self.psi.distribute_events(self.rank, self.size, max_events=max_events)
         start_idx, end_idx = self.psi.counter, self.psi.max_events
-        self.n_proc, n_empty, n_excluded = 0, 0, 0
+        self.n_proc, n_empty, n_empty_raw, n_excluded = 0, 0, 0, 0
 
         if self.psi.det_type == 'Rayonix':
             if self.rank == 0:
                 if self.check_first_evt(mask=mask):
                     print("First image of the run is an outlier and will be excluded")
                     start_idx += 1
-
+                    
         for idx in np.arange(start_idx, end_idx):
-
-            # retrieve calibrated image
             evt = self.psi.runner.event(self.psi.times[idx])
             self.psi.get_timestamp(evt.get(EventId))
             img = self.psi.det.calib(evt=evt)
@@ -165,6 +208,15 @@ class RunDiagnostics:
                 if mask is not None:
                     img = np.ma.masked_array(img, 1-mask)
                 self.compute_stats(img)
+                
+            if gain_mode is not None and self.psi.det_type == 'epix10k2M':
+                raw = self.psi.det.raw(evt)
+                if raw is None:
+                    n_empty_raw +=1
+                    continue
+                self.get_gain_statistics(raw, gain_mode)
+            else:
+                self.gain_mode = ''
 
             self.n_proc += 1
             if self.psi.counter + n_empty + n_excluded == self.psi.max_events:
@@ -173,7 +225,7 @@ class RunDiagnostics:
         self.comm.Barrier()
         self.finalize_powders()
         if not powder_only:
-            self.finalize_stats(n_empty + n_excluded)
+            self.finalize_stats(n_empty + n_excluded, n_empty_raw)
             print(f"Rank {self.rank}, no. empty images: {n_empty}, no. excluded images: {n_excluded}")
 
     def visualize_powder(self, tag='max', vmin=-1e5, vmax=1e5, output=None, figsize=12, dpi=300):
@@ -221,18 +273,45 @@ class RunDiagnostics:
             path for optionally saving plot to disk
         """
         if self.rank == 0:
-            f, (ax1,ax2,ax3,ax4) = plt.subplots(4,1, figsize=(10,8), sharex=True)
-
-            keys = ['mean', 'max', 'min', 'std']
-            for ax,key in zip([ax1,ax2,ax3,ax4],keys):
-                ax.plot(self.stats_final[key], c='black')
-                ax.set_ylabel(key, fontsize=12)
-        
-            ax.set_xlabel("Event", fontsize=12)
-            ax1.set_title("Run statistics")
+            n_plots = len(self.stats_final.keys())-1
+            keys = ['mean', 'max', 'min', 'std', 'gain_mode_counts']
+            labels = ['mean(I)', 'max(I)', 'min(I)', 'std dev(I)', f'No. pixels in\n{self.gain_mode} mode']
+            
+            f, axs = plt.subplots(n_plots, figsize=(n_plots*2.4,8), sharex=True)
+            for n in range(n_plots):
+                axs[n].plot(self.stats_final[keys[n]], c='black')
+                axs[n].set_ylabel(labels[n], fontsize=12)       
+            axs[n_plots-1].set_xlabel("Event index", fontsize=12)
             
             if output is not None:
                 f.savefig(output, dpi=300)
+                
+    def visualize_gain_frequency(self, output=None):
+        """
+        Plot the distribution of the frequency with which each pixel
+        appears in a particular gain mode.
+        
+        Parameters
+        ----------
+        output : str
+            path for optionally saving plot to disk
+        """
+        if self.gain_map is None:
+            print("Gain statistics were not retrieved.")
+            return
+            
+        if self.rank == 0:
+            f, ax1 = plt.subplots(figsize=(6,3.6))
+
+            freq = self.powders_final['gain_mode_counts'][self.panel_mask==1]/len(self.stats_final['gain_mode_counts'])
+            ax1.hist(freq, bins=50, color='black')
+            ax1.set_yscale('log')
+
+            ax1.set_ylabel("No. pixels", fontsize=12)
+            ax1.set_xlabel(f"Frequency in {self.gain_mode} mode", fontsize=12)
+            
+            if output is not None:
+                f.savefig(output, dpi=300, bbox_inches='tight')
     
     def check_first_evt(self, mask=None, scale_factor=5, n_images=5):
         """

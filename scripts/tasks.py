@@ -78,11 +78,16 @@ def run_analysis(config):
                         run=setup.run,
                         det_type=setup.det_type)
     logger.debug(f'Computing Powder for run {setup.run} of {setup.exp}...')
-    rd.compute_run_stats(max_events=task.max_events, mask=mask_file, threshold=task.get('mean_threshold'))
+    rd.compute_run_stats(max_events=task.max_events, 
+                         mask=mask_file, 
+                         threshold=task.get('mean_threshold'),
+                         gain_mode=task.get('gain_mode'))
     logger.info(f'Saving Powders and plots to {taskdir}')
     rd.save_powders(taskdir)
     rd.visualize_powder(output=os.path.join(taskdir, f"figs/powder_r{rd.psi.run:04}.png"))
     rd.visualize_stats(output=os.path.join(taskdir, f"figs/stats_r{rd.psi.run:04}.png"))
+    if task.get('gain_mode') is not None:
+        rd.visualize_gain_frequency(output=os.path.join(taskdir, f"figs/gain_freq_r{rd.psi.run:04}.png"))
     logger.debug('Done!')
     
 def opt_geom(config):
@@ -104,15 +109,21 @@ def opt_geom(config):
         task.n_peaks = [int(task.n_peaks)]
     else:
         task.n_peaks = [int(elem) for elem in task.n_peaks.split()]
+    if task.get('distance') is None:
+        task.distance = None
+    elif type(task.distance) == float or type(task.distance) == int:
+        task.distance = [float(task.distance)]
+    else:
+        task.distance = [float(elem) for elem in task.distance.split()]
     geom_opt = GeomOpt(exp=setup.exp,
                        run=setup.run,
                        det_type=setup.det_type)
     geom_opt.opt_geom(powder=os.path.join(setup.root_dir, f"powder/r{setup.run:04}_max.npy"),
                       mask=mask_file,
-                      distance=task.get('distance'),
+                      distance=task.distance,
                       center=centers,
                       n_iterations=task.get('n_iterations'), 
-                      n_peaks = task.n_peaks,
+                      n_peaks=task.n_peaks,
                       threshold=task.get('threshold'),
                       deltas=True,
                       plot=os.path.join(taskdir, f'figs/r{setup.run:04}.png'),
@@ -225,12 +236,14 @@ def merge(config):
     foms = task.foms.split(" ")
     stream_to_mtz = StreamtoMtz(input_stream, task.symmetry, taskdir, cellfile, queue=setup.get('queue'), 
                                 ncores=task.get('ncores') if task.get('ncores') is not None else 16, 
-                                mtz_dir=os.path.join(setup.root_dir, "solve", f"{task.tag}"))
+                                mtz_dir=os.path.join(setup.root_dir, "solve", f"{task.tag}"),
+                                anomalous=task.get('anomalous') if task.get('anomalous') is not None else False)
     stream_to_mtz.cmd_partialator(iterations=task.iterations, model=task.model, 
                                   min_res=task.get('min_res'), push_res=task.get('push_res'), max_adu=task.get('max_adu'))
     for ns in [1, task.nshells]:
         stream_to_mtz.cmd_compare_hkl(foms=foms, nshells=ns, highres=task.get('highres'))
-    stream_to_mtz.cmd_get_hkl(highres=task.get('highres'))
+    stream_to_mtz.cmd_hkl_to_mtz(highres=task.get('highres'),
+                                 space_group=task.get('space_group') if task.get('space_group') is not None else 1)
     stream_to_mtz.cmd_report(foms=foms, nshells=task.nshells)
     stream_to_mtz.launch()
     logger.info(f'Merging launched!')
@@ -245,7 +258,8 @@ def solve(config):
                task.pdb, 
                taskdir,
                queue=setup.get('queue'),
-               ncores=task.get('ncores') if task.get('ncores') is not None else 16)
+               ncores=task.get('ncores') if task.get('ncores') is not None else 16,
+               anomalous=task.get('anomalous') if task.get('anomalous') is not None else False)
     logger.info(f'Dimple launched!')
 
 def refine_geometry(config, task=None):
@@ -278,7 +292,7 @@ def refine_geometry(config, task=None):
                         task.dy,
                         task.dz)
     geopt.launch_indexing(setup.exp, setup.det_type, config.index, cell_file)
-    geopt.launch_stream_analysis(config.index.cell)    
+    geopt.launch_stream_wrangling(config.stream_analysis)    
     geopt.launch_merging(config.merge)
     geopt.save_results(setup.root_dir, config.merge.tag)
     check_file_existence(os.path.join(task.scan_dir, "results.txt"), geopt.timeout)
