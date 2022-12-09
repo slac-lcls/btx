@@ -193,7 +193,9 @@ class Geoptimizer:
             stream_to_mtz.cmd_partialator(iterations=params.iterations, model=params.model, 
                                           min_res=params.get('min_res'), push_res=params.get('push_res'))
             stream_to_mtz.cmd_compare_hkl(foms=['CCstar','Rsplit'], nshells=1, highres=params.get('highres'))
-            stream_to_mtz.cmd_get_hkl(highres=params.get('highres'))
+            stream_to_mtz.cmd_hkl_to_mtz(space_group=params.get('space_group') if params.get('space_group') is not None else 1,
+                                         highres=params.get('highres'), 
+                                         xds_style=False)
             stream_to_mtz.js.write_main(f"echo {jobname} | tee -a {statusfile}\n")
             stream_to_mtz.launch()
 
