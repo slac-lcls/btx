@@ -18,7 +18,7 @@ class JobScheduler:
     def _find_python_path(self):
         """ Determine the relevant python path. """
         pythonpath=None
-        possible_paths = ["/cds/sw/ds/ana/conda1/inst/envs/ana-4.0.38-py3/bin/python"]
+        possible_paths = ["/cds/sw/ds/ana/conda1/inst/envs/ana-4.0.47-py3/bin/python"]
     
         try:
             pythonpath = os.environ['WHICHPYTHON']
@@ -56,6 +56,8 @@ class JobScheduler:
 
         with open(self.jobfile, 'w') as jfile:
             jfile.write(template.format(**context))
+            if 'SIT_PSDM_DATA' in os.environ:
+                jfile.write(f"\nexport SIT_PSDM_DATA={os.environ['SIT_PSDM_DATA']}\n")
 
     def _write_dependencies(self, dependencies):
         """ Source dependencies."""
