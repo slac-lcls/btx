@@ -74,8 +74,7 @@ class RunDiagnostics:
             if self.psi.det_type != 'Rayonix':
                 for key in self.powders_final.keys():
                     self.powders_final[key] = assemble_image_stack_batch(self.powders_final[key], self.pixel_index_map)
-                    
-        self.panel_mask = assemble_image_stack_batch(np.ones(self.psi.det.shape()), self.pixel_index_map)
+                self.panel_mask = assemble_image_stack_batch(np.ones(self.psi.det.shape()), self.pixel_index_map)
  
     def save_powders(self, outdir, raw_img=False):
         """
