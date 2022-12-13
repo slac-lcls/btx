@@ -64,7 +64,7 @@ def build_mask(config):
     logger.debug('Done!')
 
 def run_analysis(config):
-    from btx.diagnostics.run import RunDiagnostics
+    from btx.interfaces.ischeduler import JobScheduler
     from btx.misc.shortcuts import fetch_latest
     setup = config.setup
     task = config.run_analysis
@@ -73,22 +73,23 @@ def run_analysis(config):
     os.makedirs(taskdir, exist_ok=True)
     os.makedirs(os.path.join(taskdir, 'figs'), exist_ok=True)
     mask_file = fetch_latest(fnames=os.path.join(setup.root_dir, 'mask', 'r*.npy'), run=setup.run)
-    logger.debug(f'Applying mask: {mask_file}...')
-    rd = RunDiagnostics(exp=setup.exp,
-                        run=setup.run,
-                        det_type=setup.det_type)
-    logger.debug(f'Computing Powder for run {setup.run} of {setup.exp}...')
-    rd.compute_run_stats(max_events=task.max_events, 
-                         mask=mask_file, 
-                         threshold=task.get('mean_threshold'),
-                         gain_mode=task.get('gain_mode'))
-    logger.info(f'Saving Powders and plots to {taskdir}')
-    rd.save_powders(taskdir)
-    rd.visualize_powder(output=os.path.join(taskdir, f"figs/powder_r{rd.psi.run:04}.png"))
-    rd.visualize_stats(output=os.path.join(taskdir, f"figs/stats_r{rd.psi.run:04}.png"))
+    script_path = os.path.join(os.path.dirname(os.path.realpath(__file__)),  "../btx/diagnostics/run.py")
+    command = f"python {script_path}"
+    command += f" -e {setup.exp} -r {setup.run} -d {setup.det_type} -o {taskdir} -m {mask_file}"
     if task.get('gain_mode') is not None:
-        rd.visualize_gain_frequency(output=os.path.join(taskdir, f"figs/gain_freq_r{rd.psi.run:04}.png"))
-    logger.debug('Done!')
+        command += f" --gain_mode={task.gain_mode}"
+    if task.get('raw_img') is not None:
+        if task.raw_img:
+            command += f" --raw_img"
+    js = JobScheduler(os.path.join(".", f'ra_{setup.run:04}.sh'), 
+                      queue=setup.queue, 
+                      ncores=task.ncores,
+                      jobname=f'ra_{setup.run:04}')
+    js.write_header()
+    js.write_main(f"{command}\n", dependencies=['psana'])
+    js.clean_up()
+    js.submit()
+    logger.debug('Run analysis launched!')
     
 def opt_geom(config):
     from btx.diagnostics.geom_opt import GeomOpt

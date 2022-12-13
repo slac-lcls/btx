@@ -7,6 +7,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 import matplotlib.colors as colors
 from matplotlib.colors import LogNorm
 from btx.interfaces.ipsana import *
+from btx.interfaces.ischeduler import JobScheduler
 
 from psana import EventId
 from Detector.UtilsEpix10ka import find_gain_mode
@@ -41,12 +42,13 @@ class RunDiagnostics:
             unassembled, calibrated images of shape (n_panels, n_x, n_y)
         """
         if not self.powders:
-            for key in ['sum', 'sqr', 'max']:
+            for key in ['sum', 'sqr', 'max', 'min']:
                 self.powders[key] = img.copy()
         else:
             self.powders['sum'] += img
             self.powders['sqr'] += np.square(img)
             self.powders['max'] = np.maximum(self.powders['max'], img)
+            self.powders['min'] = np.minimum(self.powders['min'], img)
 
     def finalize_powders(self):
         """
@@ -55,6 +57,7 @@ class RunDiagnostics:
         """
         self.powders_final = dict()
         powder_max = np.array(self.comm.gather(self.powders['max'], root=0))
+        powder_min = np.array(self.comm.gather(self.powders['min'], root=0))
         powder_sum = np.array(self.comm.gather(self.powders['sum'], root=0))
         powder_sqr = np.array(self.comm.gather(self.powders['sqr'], root=0))
         total_n_proc = self.comm.reduce(self.n_proc, MPI.SUM)
@@ -63,6 +66,7 @@ class RunDiagnostics:
 
         if self.rank == 0:
             self.powders_final['max'] = np.max(powder_max, axis=0)
+            self.powders_final['min'] = np.min(powder_min, axis=0)
             self.powders_final['avg'] = np.sum(powder_sum, axis=0) / float(total_n_proc)
             self.powders_final['std'] = np.sqrt(np.sum(powder_sqr, axis=0) / float(total_n_proc) - np.square(self.powders_final['avg']))
             if self.gain_map is not None:
@@ -70,10 +74,9 @@ class RunDiagnostics:
             if self.psi.det_type != 'Rayonix':
                 for key in self.powders_final.keys():
                     self.powders_final[key] = assemble_image_stack_batch(self.powders_final[key], self.pixel_index_map)
-                    
-        self.panel_mask = assemble_image_stack_batch(np.ones(self.psi.det.shape()), self.pixel_index_map)
+                self.panel_mask = assemble_image_stack_batch(np.ones(self.psi.det.shape()), self.pixel_index_map)
  
-    def save_powders(self, outdir):
+    def save_powders(self, outdir, raw_img=False):
         """
         Save powders to output directory.
 
@@ -81,9 +84,14 @@ class RunDiagnostics:
         ----------
         output : str
             path to directory in which to save powders, optional
+        raw_img : bool
+            if True, save powder files with _raw nomenclature
         """
+        suffix=""
+        if raw_img:
+            suffix = "_raw"
         for key in self.powders_final.keys():
-            np.save(os.path.join(outdir, f"r{self.psi.run:04}_{key}.npy"), self.powders_final[key])
+            np.save(os.path.join(outdir, f"r{self.psi.run:04}_{key}{suffix}.npy"), self.powders_final[key])
 
     def compute_stats(self, img):
         """
@@ -156,7 +164,7 @@ class RunDiagnostics:
         evt_map = map_pixel_gain_mode_for_raw(self.psi.det, raw)
         self.gain_map[evt_map==[self.modes[gain_mode]]] += 1
             
-    def compute_run_stats(self, max_events=-1, mask=None, powder_only=False, threshold=None, gain_mode=None):
+    def compute_run_stats(self, max_events=-1, mask=None, powder_only=False, threshold=None, gain_mode=None, raw_img=False):
         """
         Compute powders and per-image statistics. If a mask is provided, it is 
         only applied to the stats trajectories, not in computing the powder.
@@ -173,6 +181,8 @@ class RunDiagnostics:
             if supplied, exclude events whose mean is above this value
         gain_mode : str
             gain mode to retrieve statistics for, e.g. 'AML-L' 
+        raw_img : bool
+            if True, analyze raw rather than calibrated images
         """
         if mask is not None:
             if type(mask) == str:
@@ -192,7 +202,10 @@ class RunDiagnostics:
         for idx in np.arange(start_idx, end_idx):
             evt = self.psi.runner.event(self.psi.times[idx])
             self.psi.get_timestamp(evt.get(EventId))
-            img = self.psi.det.calib(evt=evt)
+            if raw_img:
+                img = self.psi.det.raw(evt=evt)
+            else:
+                img = self.psi.det.calib(evt=evt)
             if img is None:
                 n_empty += 1
                 continue
@@ -349,8 +362,29 @@ class RunDiagnostics:
             exclude = True
         return exclude
 
-#### For command line use ####
-            
+def main():
+    """
+    Perform run analysis, computing powders and tracking statistics.
+    """
+    params = parse_input()
+    os.makedirs(os.path.join(params.outdir, "figs"), exist_ok=True)
+    rd = RunDiagnostics(exp=params.exp,
+                        run=params.run,
+                        det_type=params.det_type)
+    rd.compute_run_stats(max_events=params.max_events, 
+                         mask=params.mask, 
+                         threshold=params.mean_threshold,
+                         gain_mode=params.gain_mode,
+                         raw_img=params.raw_img)
+    rd.save_powders(params.outdir, raw_img=params.raw_img)
+    suffix = ""
+    if params.raw_img:
+        suffix = "_raw"
+    rd.visualize_powder(output=os.path.join(params.outdir, f"figs/powder_r{params.run:04}{suffix}.png"))
+    rd.visualize_stats(output=os.path.join(params.outdir, f"figs/stats_r{params.run:04}{suffix}.png"))
+    if params.gain_mode is not None:
+        rd.visualize_gain_frequency(output=os.path.join(params.outdir, f"figs/gain_freq_r{params.run:04}{suffix}.png"))
+
 def parse_input():
     """
     Parse command line input.
@@ -363,15 +397,10 @@ def parse_input():
     parser.add_argument('-m', '--mask', help='Binary mask for computing trajectories', required=False, type=str)
     parser.add_argument('--max_events', help='Number of images to process, -1 for full run', required=False, default=-1, type=int)
     parser.add_argument('--mean_threshold', help='Exclude images with a mean above this threshold', required=False, type=float)
+    parser.add_argument('--gain_mode', help='Gain mode to track, e.g. AML-L for epix10k2M autoranging low gain', required=False, type=str)
+    parser.add_argument('--raw_img', help="Analyze raw rather than calibrated images", action='store_true')
 
     return parser.parse_args()
 
 if __name__ == '__main__':
-    
-    params = parse_input()
-    rd = RunDiagnostics(exp=params.exp, run=params.run, det_type=params.det_type) 
-    rd.compute_run_stats(max_events=params.max_events, mask=params.mask, threshold=params.mean_threshold) 
-    rd.save_powders(params.outdir)
-    rd.visualize_powder(output=os.path.join(params.outdir, f"powder_r{rd.psi.run:04}.png"))
-    rd.visualize_stats(output=os.path.join(params.outdir, f"stats_r{rd.psi.run:04}.png"))
-
+    main()
