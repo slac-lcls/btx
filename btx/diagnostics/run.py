@@ -358,40 +358,6 @@ class RunDiagnostics:
             exclude = True
         return exclude
 
-def launch_run_analysis(tmp_exe, queue, ncores, exp, run, det_type, outdir, mask=None, 
-                        max_events=None, mean_threshold=None, gain_mode=None, raw_img=False):
-    """
-    Launch run analysis task using iScheduler.
-    
-    Parameters
-    ----------
-    tmp_exe : str
-        name of temporary executable file
-    queue : str 
-        queue to submit job to
-    ncores : int
-        minimum of number of cores and number of stream files
-    For all other parameters, see parse_input definitions below.
-    """
-    script_path = os.path.abspath(__file__)
-    command = f"python {script_path} -e {exp} -r {run} -d {det_type} -o {outdir}"
-    if mask is not None:
-        command += f" -m {mask}"
-    if max_events is not None:
-        command += f" --max_events={max_events}"
-    if mean_threshold is not None:
-        command += f" --mean_threshold={mean_threshold}"
-    if gain_mode is not None:
-        command += f" --gain_mode={gain_mode}"
-    if raw_img:
-        command += f" --raw"
-        
-    js = JobScheduler(tmp_exe, ncores=ncores, jobname=f'ra_{run:04}', queue=queue)
-    js.write_header()
-    js.write_main(f"{command}\n", dependencies=['psana'])
-    #js.clean_up()
-    js.submit()
-    
 def main():
     """
     Perform run analysis, computing powders and tracking statistics.

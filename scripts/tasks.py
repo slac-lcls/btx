@@ -83,7 +83,8 @@ def run_analysis(config):
                       ncores=task.ncores,
                       jobname=f'ra_{setup.run:04}')
     js.write_header()
-    js.write_main(command, dependencies=['psana'])
+    js.write_main(f"{command}\n", dependencies=['psana'])
+    js.clean_up()
     js.submit()
     logger.debug('Run analysis launched!')
     
