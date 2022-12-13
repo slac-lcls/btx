@@ -77,7 +77,7 @@ class RunDiagnostics:
                     
         self.panel_mask = assemble_image_stack_batch(np.ones(self.psi.det.shape()), self.pixel_index_map)
  
-    def save_powders(self, outdir):
+    def save_powders(self, outdir, raw_img=False):
         """
         Save powders to output directory.
 
@@ -85,9 +85,14 @@ class RunDiagnostics:
         ----------
         output : str
             path to directory in which to save powders, optional
+        raw_img : bool
+            if True, save powder files with _raw nomenclature
         """
+        suffix=""
+        if raw_img:
+            suffix = "_raw"
         for key in self.powders_final.keys():
-            np.save(os.path.join(outdir, f"r{self.psi.run:04}_{key}.npy"), self.powders_final[key])
+            np.save(os.path.join(outdir, f"r{self.psi.run:04}_{key}{suffix}.npy"), self.powders_final[key])
 
     def compute_stats(self, img):
         """
@@ -372,11 +377,14 @@ def main():
                          threshold=params.mean_threshold,
                          gain_mode=params.gain_mode,
                          raw_img=params.raw_img)
-    rd.save_powders(params.outdir)
-    rd.visualize_powder(output=os.path.join(params.outdir, f"figs/powder_r{params.run:04}.png"))
-    rd.visualize_stats(output=os.path.join(params.outdir, f"figs/stats_r{params.run:04}.png"))
+    rd.save_powders(params.outdir, raw_img=params.raw_img)
+    suffix = ""
+    if params.raw_img:
+        suffix = "_raw"
+    rd.visualize_powder(output=os.path.join(params.outdir, f"figs/powder_r{params.run:04}{suffix}.png"))
+    rd.visualize_stats(output=os.path.join(params.outdir, f"figs/stats_r{params.run:04}{suffix}.png"))
     if params.gain_mode is not None:
-        rd.visualize_gain_frequency(output=os.path.join(params.outdir, f"figs/gain_freq_r{params.run:04}.png"))
+        rd.visualize_gain_frequency(output=os.path.join(params.outdir, f"figs/gain_freq_r{params.run:04}{suffix}.png"))
 
 def parse_input():
     """

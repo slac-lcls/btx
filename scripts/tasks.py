@@ -78,6 +78,9 @@ def run_analysis(config):
     command += f" -e {setup.exp} -r {setup.run} -d {setup.det_type} -o {taskdir} -m {mask_file}"
     if task.get('gain_mode') is not None:
         command += f" --gain_mode={task.gain_mode}"
+    if task.get('raw_img') is not None:
+        if task.raw_img:
+            command += f" --raw_img"
     js = JobScheduler(os.path.join(".", f'ra_{setup.run:04}.sh'), 
                       queue=setup.queue, 
                       ncores=task.ncores,
