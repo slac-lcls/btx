@@ -28,6 +28,8 @@ class JobScheduler:
         for ppath in possible_paths:
             if os.path.exists(ppath):
                 pythonpath = ppath
+                if self.ncores > 1:
+                    pythonpath = f"{os.path.split(ppath)[0]}/mpirun -n {self.ncores} {ppath}"
 
         return pythonpath            
 
@@ -56,12 +58,12 @@ class JobScheduler:
 
         with open(self.jobfile, 'w') as jfile:
             jfile.write(template.format(**context))
-            if 'SIT_PSDM_DATA' in os.environ:
-                jfile.write(f"\nexport SIT_PSDM_DATA={os.environ['SIT_PSDM_DATA']}\n")
 
     def _write_dependencies(self, dependencies):
         """ Source dependencies."""
         dep_paths = ""
+        if "psana" in dependencies:
+            dep_paths += "source /reg/g/psdm/etc/psconda.sh -py3\n"
         if "crystfel" in dependencies:
             dep_paths += "export PATH=/cds/sw/package/crystfel/crystfel-dev/bin:$PATH\n"
         if "ccp4" in dependencies:
@@ -77,6 +79,8 @@ class JobScheduler:
         
         with open(self.jobfile, 'a') as jfile:
             jfile.write(dep_paths)
+            if 'SIT_PSDM_DATA' in os.environ:
+                jfile.write(f"export SIT_PSDM_DATA={os.environ['SIT_PSDM_DATA']}\n")
 
     def write_main(self, application, dependencies=[]):
         """ Write application and source requested dependencies. """
@@ -90,6 +94,7 @@ class JobScheduler:
     def submit(self):
         """ Submit to queue. """
         os.system(f"sbatch {self.jobfile}")
+        print(f"sbatch {self.jobfile}")
 
     def clean_up(self):
         """ Add a line to delete submission file."""
