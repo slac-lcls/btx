@@ -362,6 +362,148 @@ class RunDiagnostics:
             exclude = True
         return exclude
 
+class PixelTracker:
+
+    """
+    Class for tracking raw, calib, and (optionally) gain setting for a
+    single pixel across a run.
+    """
+    
+    def __init__(self, exp, run, det_type):
+        self.psi = PsanaInterface(exp=exp, run=run, det_type=det_type, track_timestamps=True)
+        self.pixel_index_map = retrieve_pixel_index_map(self.psi.det.geometry(run))
+        self.stats = dict()
+        
+        self.comm = MPI.COMM_WORLD
+        self.rank = self.comm.Get_rank()
+        self.size = self.comm.Get_size() 
+        
+    def find_flattened_index(self, index):
+        """
+        From the input detector index, find the corresponding index in 
+        the flattened detector array.
+
+        Parameters
+        ----------
+        index : tuple, 2d
+            pixel index on the assembled detector image
+
+        Returns
+        -------
+        tuple, 3d
+            corresponding index of the unassembled detector array
+        """
+        pixel_index_map = retrieve_pixel_index_map(self.psi.det.geometry(self.psi.run))
+        mapper = assemble_image_stack_batch(np.zeros(self.psi.det.shape()), pixel_index_map)
+        mapper[index[0], index[1]] = -1
+        mapper = disassemble_image_stack_batch(mapper, pixel_index_map)
+        return tuple([elem[0] for elem in np.where(mapper == -1)])
+    
+    def finalize_stats(self, n_empty):
+        """
+        Gather stats from various ranks into single arrays in self.stats_final.
+        
+        Parameters
+        ----------
+        n_empty : int
+            number of empty images in this rank
+        """
+        self.stats_final = dict()
+        for key in self.stats.keys():
+            if n_empty != 0:
+                self.stats[key] = self.stats[key][:-n_empty]
+            self.stats_final[key] = self.comm.gather(self.stats[key], root=0)
+            if self.rank == 0:
+                self.stats_final[key] = np.hstack(self.stats_final[key])
+                
+    def track_pixel(self, index, max_events=-1, gain_mode=True):
+        """
+        Compute powders and per-image statistics. If a mask is provided, it is 
+        only applied to the stats trajectories, not in computing the powder.
+        
+        Parameters
+        ----------
+        index : tuple, 2d or 3d
+            pixel index on the assembled or unassembled detector image
+        max_events : int
+            number of images to process; if -1, process entire run
+        gain_mode : bool
+            whether to track gain mode statistics
+        """
+        if len(index) == 2:
+            index = self.find_flattened_index(index)
+            print(f"Pixel index on disassembled detector: {index}")
+
+        self.psi.distribute_events(self.rank, self.size, max_events=max_events)
+        start_idx, end_idx = self.psi.counter, self.psi.max_events
+        n_processed, n_empty = 0, 0
+        
+        for key in ['calib', 'raw']:
+            self.stats[key] = np.zeros(end_idx - start_idx)
+        if gain_mode:
+            self.stats['gain'] = np.zeros(end_idx - start_idx).astype(int)
+
+        for idx in np.arange(start_idx, end_idx):
+            evt = self.psi.runner.event(self.psi.times[idx])
+            raw = self.psi.det.raw(evt=evt)
+            calib = self.psi.det.calib(evt=evt)
+            
+            if (calib is None) or (raw is None):
+                n_empty += 1
+                
+            else:
+                self.stats['raw'][n_processed] = raw[index[0], index[1], index[2]]
+                self.stats['calib'][n_processed] = calib[index[0], index[1], index[2]]
+                if gain_mode and self.psi.det_type == 'epix10k2M':
+                    self.stats['gain'][n_processed] = map_pixel_gain_mode_for_raw(self.psi.det, raw)[index[0], index[1], index[2]]
+            
+            n_processed += 1
+            if self.psi.counter + n_empty == self.psi.max_events:
+                break
+        
+        self.index = index
+        self.comm.Barrier()
+        self.finalize_stats(n_empty)
+        print(f"Rank {self.rank}, no. empty images: {n_empty}")
+        
+    def save_traj(self, outdir):
+        """
+        Save trajectories of raw, calib, and gain setting.
+        
+        Parameters:
+        -----------
+        outdir : str
+            output directory
+        """
+        if self.rank == 0:
+            for key in self.stats_final.keys():
+                np.save(os.path.join(outdir, f"p_{self.index[0]}_{self.index[1]}_{self.index[2]}_{key}.npy"), 
+                        self.stats_final[key])
+                
+    def visualize(self, outdir=None):
+        """
+        Plot the raw vs calibrated intensity, colored by gain setting.
+
+        Parameters
+        ----------
+        outdir : str
+            output directory
+        """
+        if self.rank == 0:
+            f, ax1 = plt.subplots(figsize=(5,3.6))
+            if 'gain' in self.stats_final.keys():
+                color = self.stats_final['gain']
+            else:
+                color = 'black'
+            ax1.scatter(self.stats_final['raw'], self.stats_final['calib'], c=color)
+            ax1.set_xlabel("Raw intensity", fontsize=14)
+            ax1.set_ylabel("Calibrated intensity", fontsize=14)
+            ax1.set_title(f"Pixel ({self.index[0]}, {self.index[1]}, {self.index[2]})", fontsize=14)
+        
+            if outdir is not None:
+                f.savefig(os.path.join(outdir, f"p_{self.index[0]}_{self.index[1]}_{self.index[2]}.png"),
+                          bbox_inches='tight', dpi=300)
+
 def main():
     """
     Perform run analysis, computing powders and tracking statistics.

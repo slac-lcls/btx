@@ -535,7 +535,7 @@ def visualize_hits(fname, exp, run, det_type, savepath=None, vmax_ind=3, vmax_po
     indices = np.sort(rng.choice(shape[0], 9, replace=False))
     hits = f['entry_1/data_1/data'][indices]
     
-    if det_type is not 'Rayonix':
+    if det_type != 'Rayonix':
         hits = hits.reshape(hits.shape[0], *psi.det.shape())
         hits = assemble_image_stack_batch(hits, pixel_index_map)
         mask = assemble_image_stack_batch(mask.reshape(psi.det.shape()), pixel_index_map)
