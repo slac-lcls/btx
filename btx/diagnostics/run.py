@@ -227,6 +227,8 @@ class RunDiagnostics:
                 if raw is None:
                     n_empty_raw +=1
                     continue
+                if self.psi.det_type == 'epix10k2M':
+                    raw = raw & 0x3fff # exclude first two bits
                 self.get_gain_statistics(raw, gain_mode)
             else:
                 self.gain_mode = ''
@@ -452,6 +454,8 @@ class PixelTracker:
                 n_empty += 1
                 
             else:
+                if self.psi.det_type == 'epix10k2M':
+                    raw = raw & 0x3fff # exclude first two bits
                 self.stats['raw'][n_processed] = raw[index[0], index[1], index[2]]
                 self.stats['calib'][n_processed] = calib[index[0], index[1], index[2]]
                 if gain_mode and self.psi.det_type == 'epix10k2M':
