@@ -268,7 +268,10 @@ class PsanaInterface:
                     if self.calibrate:
                         images[counter_batch] = self.det.calib(evt=evt)
                     else:
-                        images[counter_batch] = self.det.raw(evt=evt)
+                        raw = self.det.raw(evt=evt)
+                        if self.det_type == 'epix10k2M':
+                            raw = raw & 0x3fff # exclude first two bits
+                        images[counter_batch] = raw
                         
                 if self.track_timestamps:
                     self.get_timestamp(evt.get(EventId))
