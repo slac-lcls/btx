@@ -204,6 +204,8 @@ class RunDiagnostics:
             self.psi.get_timestamp(evt.get(EventId))
             if raw_img:
                 img = self.psi.det.raw(evt=evt)
+                if self.psi.det_type == 'epix10k2M':
+                    img = img & 0x3fff # exclude first two bits for powder calculation
             else:
                 img = self.psi.det.calib(evt=evt)
             if img is None:
@@ -227,8 +229,6 @@ class RunDiagnostics:
                 if raw is None:
                     n_empty_raw +=1
                     continue
-                if self.psi.det_type == 'epix10k2M':
-                    raw = raw & 0x3fff # exclude first two bits
                 self.get_gain_statistics(raw, gain_mode)
             else:
                 self.gain_mode = ''
@@ -455,8 +455,10 @@ class PixelTracker:
                 
             else:
                 if self.psi.det_type == 'epix10k2M':
-                    raw = raw & 0x3fff # exclude first two bits
-                self.stats['raw'][n_processed] = raw[index[0], index[1], index[2]]
+                    raw_bmask = raw & 0x3fff # exclude first two bits
+                else:
+                    raw_bmask = raw
+                self.stats['raw'][n_processed] = raw_bmask[index[0], index[1], index[2]]
                 self.stats['calib'][n_processed] = calib[index[0], index[1], index[2]]
                 if gain_mode and self.psi.det_type == 'epix10k2M':
                     self.stats['gain'][n_processed] = map_pixel_gain_mode_for_raw(self.psi.det, raw)[index[0], index[1], index[2]]
