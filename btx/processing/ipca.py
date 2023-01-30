@@ -249,6 +249,10 @@ class IPCA:
 
         [2] Ross DA, Lim J, Lin RS, Yang MH. Incremental learning for robust visual tracking.
         International journal of computer vision. 2008 May;77(1):125-41.
+
+        [3] Maulik, R., & Mengaldo, G. (2021, November). PyParSVD: A streaming, distributed and
+        randomized singular-value-decomposition library. In 2021 7th International Workshop on
+        Data Analysis and Reduction for Big Scientific Data (DRBSD-7) (pp. 19-25). IEEE.
         """
         _, x = A.shape
         q = self.num_components
