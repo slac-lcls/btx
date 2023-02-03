@@ -1,0 +1,123 @@
+\hypertarget{namespacebtx_1_1misc_1_1metrology}{}\doxysection{btx.\+misc.\+metrology Namespace Reference}
+\label{namespacebtx_1_1misc_1_1metrology}\index{btx.misc.metrology@{btx.misc.metrology}}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+def \mbox{\hyperlink{namespacebtx_1_1misc_1_1metrology_a47ab5173658757a6688658a1d1bf61e9}{retrieve\+\_\+from\+\_\+mrxv}} (det\+\_\+type, out\+\_\+geom, mrxv\+\_\+path=\textquotesingle{}/cds/sw/package/autosfx/mrxv/geometries\textquotesingle{})
+\begin{DoxyCompactList}\small\item\em Fetch latest geom file for this detector from mrxv. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{namespacebtx_1_1misc_1_1metrology_acda4f5a906466bd3dc94209a35c568de}{modify\+\_\+crystfel\+\_\+coffset\+\_\+res}} (\mbox{\hyperlink{namespacebtx_1_1misc_1_1metrology_ab64d7515971644e958fae1cc7761bcba}{input\+\_\+file}}, output\+\_\+file, coffset, res)
+\begin{DoxyCompactList}\small\item\em Overwrite the coffset and res entries in a Cryst\+FEL .geom file. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{namespacebtx_1_1misc_1_1metrology_a7f3321ffe9dfd2c0453bd0968c07dcee}{modify\+\_\+crystfel\+\_\+header}} (\mbox{\hyperlink{namespacebtx_1_1misc_1_1metrology_ab64d7515971644e958fae1cc7761bcba}{input\+\_\+file}}, output\+\_\+file)
+\begin{DoxyCompactList}\small\item\em Modify the header of a psgeom-\/generated Crystfel (.geom) file, specifically 1. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{namespacebtx_1_1misc_1_1metrology_a766e4a9f278241f32d059268495567af}{offset\+\_\+geom}} (\mbox{\hyperlink{namespacebtx_1_1misc_1_1metrology_ab64d7515971644e958fae1cc7761bcba}{input\+\_\+file}}, output\+\_\+file, dx, dy, dz)
+\begin{DoxyCompactList}\small\item\em Modify the geometry in an input geom file by changing the center and coffset distance. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{namespacebtx_1_1misc_1_1metrology_a3cfcfecc20fb938134c12376aaf0e5bb}{generate\+\_\+geom\+\_\+file}} (exp, run, det\+\_\+type, \mbox{\hyperlink{namespacebtx_1_1misc_1_1metrology_ab64d7515971644e958fae1cc7761bcba}{input\+\_\+file}}, output\+\_\+file, \mbox{\hyperlink{namespacebtx_1_1misc_1_1metrology_a670c21553283971ea062d7f28873517d}{det\+\_\+dist}}=None)
+\begin{DoxyCompactList}\small\item\em Generate a Crystfel .geom file from either a psana .data or another Crystfel .geom file and set the coffset field for each panel based on the estimated detector distance\+: coffset \mbox{[}m\mbox{]} = 1e-\/3 $\ast$ (distance -\/ clen) Supplying det\+\_\+dist will override the value pulled from the deployed geometry for this run, which is used to compute the coffset parameter. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{namespacebtx_1_1misc_1_1metrology_a4b35167b11a129182696686710aa4260}{parse\+\_\+input}} ()
+\begin{DoxyCompactList}\small\item\em For command line use \#\#\#\#. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+def \mbox{\hyperlink{namespacebtx_1_1misc_1_1metrology_ae7c6d5e82d8a08525412dd6c2c15eb03}{params}} = \mbox{\hyperlink{namespacebtx_1_1misc_1_1metrology_a4b35167b11a129182696686710aa4260}{parse\+\_\+input}}()
+\item 
+\mbox{\hyperlink{namespacebtx_1_1misc_1_1metrology_a0a6be7dd77e5622452bbd337669aad50}{temp\+\_\+file}} = os.\+path.\+join(os.\+path.\+dirname(params.\+input\+\_\+file), \textquotesingle{}temp.\+geom\textquotesingle{})
+\item 
+\mbox{\hyperlink{namespacebtx_1_1misc_1_1metrology_ab64d7515971644e958fae1cc7761bcba}{input\+\_\+file}}
+\item 
+\mbox{\hyperlink{namespacebtx_1_1misc_1_1metrology_a670c21553283971ea062d7f28873517d}{det\+\_\+dist}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{namespacebtx_1_1misc_1_1metrology_a3cfcfecc20fb938134c12376aaf0e5bb}\label{namespacebtx_1_1misc_1_1metrology_a3cfcfecc20fb938134c12376aaf0e5bb}} 
+\index{btx.misc.metrology@{btx.misc.metrology}!generate\_geom\_file@{generate\_geom\_file}}
+\index{generate\_geom\_file@{generate\_geom\_file}!btx.misc.metrology@{btx.misc.metrology}}
+\doxysubsubsection{\texorpdfstring{generate\_geom\_file()}{generate\_geom\_file()}}
+{\footnotesize\ttfamily def btx.\+misc.\+metrology.\+generate\+\_\+geom\+\_\+file (\begin{DoxyParamCaption}\item[{}]{exp,  }\item[{}]{run,  }\item[{}]{det\+\_\+type,  }\item[{}]{input\+\_\+file,  }\item[{}]{output\+\_\+file,  }\item[{}]{det\+\_\+dist = {\ttfamily None} }\end{DoxyParamCaption})}
+
+
+
+Generate a Crystfel .geom file from either a psana .data or another Crystfel .geom file and set the coffset field for each panel based on the estimated detector distance\+: coffset \mbox{[}m\mbox{]} = 1e-\/3 $\ast$ (distance -\/ clen) Supplying det\+\_\+dist will override the value pulled from the deployed geometry for this run, which is used to compute the coffset parameter. 
+
+\hypertarget{namespacebtx_1_1misc_1_1metrology_autotoc_md102}{}\doxysubsubsection{Parameters}\label{namespacebtx_1_1misc_1_1metrology_autotoc_md102}
+exp \+: str experiment name run \+: int run number det\+\_\+type \+: str detector name input\+\_\+file \+: str input .geom or .data file output\+\_\+file \+: str output .geom file det\+\_\+dist \+: float estimated sample-\/detector distance in mm \mbox{\Hypertarget{namespacebtx_1_1misc_1_1metrology_acda4f5a906466bd3dc94209a35c568de}\label{namespacebtx_1_1misc_1_1metrology_acda4f5a906466bd3dc94209a35c568de}} 
+\index{btx.misc.metrology@{btx.misc.metrology}!modify\_crystfel\_coffset\_res@{modify\_crystfel\_coffset\_res}}
+\index{modify\_crystfel\_coffset\_res@{modify\_crystfel\_coffset\_res}!btx.misc.metrology@{btx.misc.metrology}}
+\doxysubsubsection{\texorpdfstring{modify\_crystfel\_coffset\_res()}{modify\_crystfel\_coffset\_res()}}
+{\footnotesize\ttfamily def btx.\+misc.\+metrology.\+modify\+\_\+crystfel\+\_\+coffset\+\_\+res (\begin{DoxyParamCaption}\item[{}]{input\+\_\+file,  }\item[{}]{output\+\_\+file,  }\item[{}]{coffset,  }\item[{}]{res }\end{DoxyParamCaption})}
+
+
+
+Overwrite the coffset and res entries in a Cryst\+FEL .geom file. 
+
+This is a hack to fix Rayonix geom files generated using the wrong pixel size.\hypertarget{namespacebtx_1_1misc_1_1metrology_autotoc_md99}{}\doxysubsubsection{Parameters}\label{namespacebtx_1_1misc_1_1metrology_autotoc_md99}
+input\+\_\+file \+: str input .geom file output\+\_\+file \+: str output modified .geom file coffset \+: float coffset value in meters res \+: float pixel resolution in um \mbox{\Hypertarget{namespacebtx_1_1misc_1_1metrology_a7f3321ffe9dfd2c0453bd0968c07dcee}\label{namespacebtx_1_1misc_1_1metrology_a7f3321ffe9dfd2c0453bd0968c07dcee}} 
+\index{btx.misc.metrology@{btx.misc.metrology}!modify\_crystfel\_header@{modify\_crystfel\_header}}
+\index{modify\_crystfel\_header@{modify\_crystfel\_header}!btx.misc.metrology@{btx.misc.metrology}}
+\doxysubsubsection{\texorpdfstring{modify\_crystfel\_header()}{modify\_crystfel\_header()}}
+{\footnotesize\ttfamily def btx.\+misc.\+metrology.\+modify\+\_\+crystfel\+\_\+header (\begin{DoxyParamCaption}\item[{}]{input\+\_\+file,  }\item[{}]{output\+\_\+file }\end{DoxyParamCaption})}
+
+
+
+Modify the header of a psgeom-\/generated Crystfel (.geom) file, specifically 1. 
+
+uncommenting lines indicating the mask file and LCLS parameters and 2. adding entries indicating the location of peaks in the cxi files.\hypertarget{namespacebtx_1_1misc_1_1metrology_autotoc_md100}{}\doxysubsubsection{Parameters}\label{namespacebtx_1_1misc_1_1metrology_autotoc_md100}
+input\+\_\+file \+: str input .geom file generated by psgeom output\+\_\+file \+: str output modified .geom file \mbox{\Hypertarget{namespacebtx_1_1misc_1_1metrology_a766e4a9f278241f32d059268495567af}\label{namespacebtx_1_1misc_1_1metrology_a766e4a9f278241f32d059268495567af}} 
+\index{btx.misc.metrology@{btx.misc.metrology}!offset\_geom@{offset\_geom}}
+\index{offset\_geom@{offset\_geom}!btx.misc.metrology@{btx.misc.metrology}}
+\doxysubsubsection{\texorpdfstring{offset\_geom()}{offset\_geom()}}
+{\footnotesize\ttfamily def btx.\+misc.\+metrology.\+offset\+\_\+geom (\begin{DoxyParamCaption}\item[{}]{input\+\_\+file,  }\item[{}]{output\+\_\+file,  }\item[{}]{dx,  }\item[{}]{dy,  }\item[{}]{dz }\end{DoxyParamCaption})}
+
+
+
+Modify the geometry in an input geom file by changing the center and coffset distance. 
+
+Currently the same adjustments are applied to all panels.\hypertarget{namespacebtx_1_1misc_1_1metrology_autotoc_md101}{}\doxysubsubsection{Parameters}\label{namespacebtx_1_1misc_1_1metrology_autotoc_md101}
+input\+\_\+file \+: str input Cryst\+FEL geom file output\+\_\+file \+: str output geom file with updated metrology dx \+: float delta to adjust corner\+\_\+x value by for all panels in pixels dy \+: float delta to adjust corner\+\_\+y value by for all panels in pixels dz \+: float delta to adjust coffset value by for all panels in meters \mbox{\Hypertarget{namespacebtx_1_1misc_1_1metrology_a4b35167b11a129182696686710aa4260}\label{namespacebtx_1_1misc_1_1metrology_a4b35167b11a129182696686710aa4260}} 
+\index{btx.misc.metrology@{btx.misc.metrology}!parse\_input@{parse\_input}}
+\index{parse\_input@{parse\_input}!btx.misc.metrology@{btx.misc.metrology}}
+\doxysubsubsection{\texorpdfstring{parse\_input()}{parse\_input()}}
+{\footnotesize\ttfamily def btx.\+misc.\+metrology.\+parse\+\_\+input (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+For command line use \#\#\#\#. 
+
+Parse command line input. \mbox{\Hypertarget{namespacebtx_1_1misc_1_1metrology_a47ab5173658757a6688658a1d1bf61e9}\label{namespacebtx_1_1misc_1_1metrology_a47ab5173658757a6688658a1d1bf61e9}} 
+\index{btx.misc.metrology@{btx.misc.metrology}!retrieve\_from\_mrxv@{retrieve\_from\_mrxv}}
+\index{retrieve\_from\_mrxv@{retrieve\_from\_mrxv}!btx.misc.metrology@{btx.misc.metrology}}
+\doxysubsubsection{\texorpdfstring{retrieve\_from\_mrxv()}{retrieve\_from\_mrxv()}}
+{\footnotesize\ttfamily def btx.\+misc.\+metrology.\+retrieve\+\_\+from\+\_\+mrxv (\begin{DoxyParamCaption}\item[{}]{det\+\_\+type,  }\item[{}]{out\+\_\+geom,  }\item[{}]{mrxv\+\_\+path = {\ttfamily \textquotesingle{}/cds/sw/package/autosfx/mrxv/geometries\textquotesingle{}} }\end{DoxyParamCaption})}
+
+
+
+Fetch latest geom file for this detector from mrxv. 
+
+Currently assume that the file is in Cryst\+FEL geom format. C\hypertarget{namespacebtx_1_1misc_1_1metrology_autotoc_md98}{}\doxysubsubsection{Parameters}\label{namespacebtx_1_1misc_1_1metrology_autotoc_md98}
+det\+\_\+type \+: str detector name mrxv\+\_\+path \+: str path to mrxv geom folder 
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{namespacebtx_1_1misc_1_1metrology_a670c21553283971ea062d7f28873517d}\label{namespacebtx_1_1misc_1_1metrology_a670c21553283971ea062d7f28873517d}} 
+\index{btx.misc.metrology@{btx.misc.metrology}!det\_dist@{det\_dist}}
+\index{det\_dist@{det\_dist}!btx.misc.metrology@{btx.misc.metrology}}
+\doxysubsubsection{\texorpdfstring{det\_dist}{det\_dist}}
+{\footnotesize\ttfamily btx.\+misc.\+metrology.\+det\+\_\+dist}
+
+\mbox{\Hypertarget{namespacebtx_1_1misc_1_1metrology_ab64d7515971644e958fae1cc7761bcba}\label{namespacebtx_1_1misc_1_1metrology_ab64d7515971644e958fae1cc7761bcba}} 
+\index{btx.misc.metrology@{btx.misc.metrology}!input\_file@{input\_file}}
+\index{input\_file@{input\_file}!btx.misc.metrology@{btx.misc.metrology}}
+\doxysubsubsection{\texorpdfstring{input\_file}{input\_file}}
+{\footnotesize\ttfamily btx.\+misc.\+metrology.\+input\+\_\+file}
+
+\mbox{\Hypertarget{namespacebtx_1_1misc_1_1metrology_ae7c6d5e82d8a08525412dd6c2c15eb03}\label{namespacebtx_1_1misc_1_1metrology_ae7c6d5e82d8a08525412dd6c2c15eb03}} 
+\index{btx.misc.metrology@{btx.misc.metrology}!params@{params}}
+\index{params@{params}!btx.misc.metrology@{btx.misc.metrology}}
+\doxysubsubsection{\texorpdfstring{params}{params}}
+{\footnotesize\ttfamily def btx.\+misc.\+metrology.\+params = \mbox{\hyperlink{namespacebtx_1_1misc_1_1metrology_a4b35167b11a129182696686710aa4260}{parse\+\_\+input}}()}
+
+\mbox{\Hypertarget{namespacebtx_1_1misc_1_1metrology_a0a6be7dd77e5622452bbd337669aad50}\label{namespacebtx_1_1misc_1_1metrology_a0a6be7dd77e5622452bbd337669aad50}} 
+\index{btx.misc.metrology@{btx.misc.metrology}!temp\_file@{temp\_file}}
+\index{temp\_file@{temp\_file}!btx.misc.metrology@{btx.misc.metrology}}
+\doxysubsubsection{\texorpdfstring{temp\_file}{temp\_file}}
+{\footnotesize\ttfamily btx.\+misc.\+metrology.\+temp\+\_\+file = os.\+path.\+join(os.\+path.\+dirname(params.\+input\+\_\+file), \textquotesingle{}temp.\+geom\textquotesingle{})}
+

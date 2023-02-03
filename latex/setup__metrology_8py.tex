@@ -1,0 +1,22 @@
+\hypertarget{setup__metrology_8py}{}\doxysection{dags/setup\+\_\+metrology.py File Reference}
+\label{setup__metrology_8py}\index{dags/setup\_metrology.py@{dags/setup\_metrology.py}}
+\doxysubsection*{Namespaces}
+\begin{DoxyCompactItemize}
+\item 
+namespace \mbox{\hyperlink{namespacesetup__metrology}{setup\+\_\+metrology}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+string \mbox{\hyperlink{namespacesetup__metrology_a5ca26cc4c1b32dd565b818c244702cf4}{setup\+\_\+metrology.\+description}} = \textquotesingle{}BTX setup metrology DAG\textquotesingle{}
+\item 
+\mbox{\hyperlink{namespacesetup__metrology_ac0238af38d954a353a8f2b8302e7ae3e}{setup\+\_\+metrology.\+dag\+\_\+name}} = os.\+path.\+splitext(os.\+path.\+basename(\+\_\+\+\_\+file\+\_\+\+\_\+))\mbox{[}0\mbox{]}
+\item 
+\mbox{\hyperlink{namespacesetup__metrology_af342f04f610d1127ae9e7b73fe0424ce}{setup\+\_\+metrology.\+dag}}
+\item 
+string \mbox{\hyperlink{namespacesetup__metrology_ad1cbcfde8b25c519c97fd4dea829ef7a}{setup\+\_\+metrology.\+task\+\_\+id}} = \textquotesingle{}fetch\+\_\+mask\textquotesingle{}
+\item 
+\mbox{\hyperlink{namespacesetup__metrology_a47ae47fb97c6d67ea905fe12ab06cf9a}{setup\+\_\+metrology.\+fetch\+\_\+mask}} = JIDSlurm\+Operator( task\+\_\+id=task\+\_\+id, dag=dag)
+\item 
+\mbox{\hyperlink{namespacesetup__metrology_a3ef34e40dc410a26119227dc1977274e}{setup\+\_\+metrology.\+fetch\+\_\+geom}} = JIDSlurm\+Operator( task\+\_\+id=task\+\_\+id, dag=dag)
+\end{DoxyCompactItemize}

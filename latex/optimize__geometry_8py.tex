@@ -1,0 +1,24 @@
+\hypertarget{optimize__geometry_8py}{}\doxysection{dags/optimize\+\_\+geometry.py File Reference}
+\label{optimize__geometry_8py}\index{dags/optimize\_geometry.py@{dags/optimize\_geometry.py}}
+\doxysubsection*{Namespaces}
+\begin{DoxyCompactItemize}
+\item 
+namespace \mbox{\hyperlink{namespaceoptimize__geometry}{optimize\+\_\+geometry}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+string \mbox{\hyperlink{namespaceoptimize__geometry_acf94faea1db24dec5b0e4aa6261ef55f}{optimize\+\_\+geometry.\+description}} = \textquotesingle{}BTX optimize geometry DAG\textquotesingle{}
+\item 
+\mbox{\hyperlink{namespaceoptimize__geometry_a418286937c0e4d929aa75ead2d71b14f}{optimize\+\_\+geometry.\+dag\+\_\+name}} = os.\+path.\+splitext(os.\+path.\+basename(\+\_\+\+\_\+file\+\_\+\+\_\+))\mbox{[}0\mbox{]}
+\item 
+\mbox{\hyperlink{namespaceoptimize__geometry_a62a628c3fed59d8ffb8b3e3641b127a3}{optimize\+\_\+geometry.\+dag}}
+\item 
+string \mbox{\hyperlink{namespaceoptimize__geometry_a4222e907016d603c1075cad1bfbc5efa}{optimize\+\_\+geometry.\+task\+\_\+id}} = \textquotesingle{}run\+\_\+analysis\textquotesingle{}
+\item 
+\mbox{\hyperlink{namespaceoptimize__geometry_a705f66e924be045fef0f8f3f0b33c220}{optimize\+\_\+geometry.\+run\+\_\+analysis}} = JIDSlurm\+Operator( task\+\_\+id=task\+\_\+id, dag=dag)
+\item 
+\mbox{\hyperlink{namespaceoptimize__geometry_aa3e83843f96a5bce6db8212bb51ad8df}{optimize\+\_\+geometry.\+opt\+\_\+geom}} = JIDSlurm\+Operator( task\+\_\+id=task\+\_\+id, dag=dag)
+\item 
+\mbox{\hyperlink{namespaceoptimize__geometry_a801de82fdbf02f6e29acf2f4bc1e8f24}{optimize\+\_\+geometry.\+elog\+\_\+display}} = JIDSlurm\+Operator(task\+\_\+id=task\+\_\+id, dag=dag)
+\end{DoxyCompactItemize}

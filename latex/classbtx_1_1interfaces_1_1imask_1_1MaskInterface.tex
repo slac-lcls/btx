@@ -1,0 +1,185 @@
+\hypertarget{classbtx_1_1interfaces_1_1imask_1_1MaskInterface}{}\doxysection{btx.\+interfaces.\+imask.\+Mask\+Interface Class Reference}
+\label{classbtx_1_1interfaces_1_1imask_1_1MaskInterface}\index{btx.interfaces.imask.MaskInterface@{btx.interfaces.imask.MaskInterface}}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+def \mbox{\hyperlink{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_a613fdfed6613483d8c2b968f0b9fa2cc}{\+\_\+\+\_\+init\+\_\+\+\_\+}} (self, \mbox{\hyperlink{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_a3484eb5da4db0cfcee89f2c86d81000b}{exp}}, \mbox{\hyperlink{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_abb0054193b488b6a9c100589b8e930d7}{run}}, \mbox{\hyperlink{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_a8d7a4a27c5ad9108d2c351611b620ee2}{det\+\_\+type}})
+\item 
+def \mbox{\hyperlink{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_a34be72f80e2e75b31f5025365785fed6}{mask\+\_\+border\+\_\+pixels}} (self, n\+\_\+edge)
+\begin{DoxyCompactList}\small\item\em Mask the edge of each panel with a border n\+\_\+edge pixels deep. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_a28f8d9f33374090ec17b8f7a24272056}{generate\+\_\+from\+\_\+psana\+\_\+run}} (self, thresholds, n\+\_\+images=1, n\+\_\+edge=0)
+\begin{DoxyCompactList}\small\item\em Generate a mask by extracting n\+\_\+images random images from the indicated run, thresholding each, and then merging them. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_a00aa3e8e20a4dd92450ce38668f1989a}{retrieve\+\_\+from\+\_\+mrxv}} (self, mrxv\+\_\+path=\textquotesingle{}/cds/sw/package/autosfx/mrxv/masks\textquotesingle{}, dataset=\textquotesingle{}/entry\+\_\+1/data\+\_\+1/\mbox{\hyperlink{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_a55a51468ec69a2760c54eb1a1d754e52}{mask}}\textquotesingle{})
+\begin{DoxyCompactList}\small\item\em Retrieve the latest mask from mrxv. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_ac169f442e1626c1c8221c81845c35f0f}{load\+\_\+mask}} (self, input\+\_\+file, mask\+\_\+format=\textquotesingle{}crystfel\textquotesingle{}, dataset=\textquotesingle{}/entry\+\_\+1/data\+\_\+1/\mbox{\hyperlink{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_a55a51468ec69a2760c54eb1a1d754e52}{mask}}\textquotesingle{})
+\begin{DoxyCompactList}\small\item\em Load input mask and reshape from given format to psana unassembled. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_af888d16d9dfbdbb9a82ae51abacdcf87}{save\+\_\+mask}} (self, output, mask\+\_\+format=\textquotesingle{}psana\textquotesingle{})
+\begin{DoxyCompactList}\small\item\em Save mask to one of four formats\+: psana (.npy), psana\+\_\+assembled (.npy), crystfel (.h5), or cctbx (.pickle). \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_ac2537454186aca2a15a9df471c5fd245}{visualize\+\_\+mask}} (self, output=None)
+\begin{DoxyCompactList}\small\item\em Visualize self.\+mask after assembling into 2d detector format. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_a3484eb5da4db0cfcee89f2c86d81000b}{exp}}
+\item 
+\mbox{\hyperlink{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_abb0054193b488b6a9c100589b8e930d7}{run}}
+\item 
+\mbox{\hyperlink{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_a8d7a4a27c5ad9108d2c351611b620ee2}{det\+\_\+type}}
+\item 
+\mbox{\hyperlink{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_a55a51468ec69a2760c54eb1a1d754e52}{mask}}
+\item 
+\mbox{\hyperlink{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_a9a2a3b03118924f34b45ce74380872ac}{psi}}
+\item 
+\mbox{\hyperlink{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_ac0126cadde94aac7621c4fe447db601f}{pixel\+\_\+index\+\_\+map}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Private Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+def \mbox{\hyperlink{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_aac8130391c05d4d4f1bc037a13a7d36f}{\+\_\+save\+\_\+as\+\_\+hdf5}} (self, output, \mbox{\hyperlink{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_a55a51468ec69a2760c54eb1a1d754e52}{mask}})
+\begin{DoxyCompactList}\small\item\em Save input mask to hdf5 format, reshaped for Cryst\+FEL compatibility. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_ae468350925d5f0340c564c2ceef29d8e}{\+\_\+convert\+\_\+to\+\_\+cctbx}} (self)
+\begin{DoxyCompactList}\small\item\em Remake mask in CCTBX format, by reshaping and converting to flex.\+bool. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_a613fdfed6613483d8c2b968f0b9fa2cc}\label{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_a613fdfed6613483d8c2b968f0b9fa2cc}} 
+\index{btx.interfaces.imask.MaskInterface@{btx.interfaces.imask.MaskInterface}!\_\_init\_\_@{\_\_init\_\_}}
+\index{\_\_init\_\_@{\_\_init\_\_}!btx.interfaces.imask.MaskInterface@{btx.interfaces.imask.MaskInterface}}
+\doxysubsubsection{\texorpdfstring{\_\_init\_\_()}{\_\_init\_\_()}}
+{\footnotesize\ttfamily def btx.\+interfaces.\+imask.\+Mask\+Interface.\+\_\+\+\_\+init\+\_\+\+\_\+ (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{exp,  }\item[{}]{run,  }\item[{}]{det\+\_\+type }\end{DoxyParamCaption})}
+
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_ae468350925d5f0340c564c2ceef29d8e}\label{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_ae468350925d5f0340c564c2ceef29d8e}} 
+\index{btx.interfaces.imask.MaskInterface@{btx.interfaces.imask.MaskInterface}!\_convert\_to\_cctbx@{\_convert\_to\_cctbx}}
+\index{\_convert\_to\_cctbx@{\_convert\_to\_cctbx}!btx.interfaces.imask.MaskInterface@{btx.interfaces.imask.MaskInterface}}
+\doxysubsubsection{\texorpdfstring{\_convert\_to\_cctbx()}{\_convert\_to\_cctbx()}}
+{\footnotesize\ttfamily def btx.\+interfaces.\+imask.\+Mask\+Interface.\+\_\+convert\+\_\+to\+\_\+cctbx (\begin{DoxyParamCaption}\item[{}]{self }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [private]}}
+
+
+
+Remake mask in CCTBX format, by reshaping and converting to flex.\+bool. 
+
+Currently only the Jungfrau and Epix10k detectors are supported.\hypertarget{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_autotoc_md51}{}\doxysubsubsection{Returns}\label{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_autotoc_md51}
+mask \+: list of flex bool objects binary mask in CCTBX format \mbox{\Hypertarget{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_aac8130391c05d4d4f1bc037a13a7d36f}\label{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_aac8130391c05d4d4f1bc037a13a7d36f}} 
+\index{btx.interfaces.imask.MaskInterface@{btx.interfaces.imask.MaskInterface}!\_save\_as\_hdf5@{\_save\_as\_hdf5}}
+\index{\_save\_as\_hdf5@{\_save\_as\_hdf5}!btx.interfaces.imask.MaskInterface@{btx.interfaces.imask.MaskInterface}}
+\doxysubsubsection{\texorpdfstring{\_save\_as\_hdf5()}{\_save\_as\_hdf5()}}
+{\footnotesize\ttfamily def btx.\+interfaces.\+imask.\+Mask\+Interface.\+\_\+save\+\_\+as\+\_\+hdf5 (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{output,  }\item[{}]{mask }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [private]}}
+
+
+
+Save input mask to hdf5 format, reshaped for Cryst\+FEL compatibility. 
+
+Reshaping is based on the looping performed here\+: \href{https://github.com/cctbx/dxtbx/blob/main/src/dxtbx/format/FormatXTCEpix.py\#L46-L57}{\texttt{ https\+://github.\+com/cctbx/dxtbx/blob/main/src/dxtbx/format/\+Format\+XTCEpix.\+py\#\+L46-\/\+L57}}.\hypertarget{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_autotoc_md50}{}\doxysubsubsection{Parameters}\label{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_autotoc_md50}
+output \+: str path to output mask file mask \+: numpy.\+ndarray, shape (n\+\_\+panels $\ast$ n\+\_\+pixels\+\_\+fs, n\+\_\+pixels\+\_\+ss) binary mask \mbox{\Hypertarget{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_a28f8d9f33374090ec17b8f7a24272056}\label{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_a28f8d9f33374090ec17b8f7a24272056}} 
+\index{btx.interfaces.imask.MaskInterface@{btx.interfaces.imask.MaskInterface}!generate\_from\_psana\_run@{generate\_from\_psana\_run}}
+\index{generate\_from\_psana\_run@{generate\_from\_psana\_run}!btx.interfaces.imask.MaskInterface@{btx.interfaces.imask.MaskInterface}}
+\doxysubsubsection{\texorpdfstring{generate\_from\_psana\_run()}{generate\_from\_psana\_run()}}
+{\footnotesize\ttfamily def btx.\+interfaces.\+imask.\+Mask\+Interface.\+generate\+\_\+from\+\_\+psana\+\_\+run (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{thresholds,  }\item[{}]{n\+\_\+images = {\ttfamily 1},  }\item[{}]{n\+\_\+edge = {\ttfamily 0} }\end{DoxyParamCaption})}
+
+
+
+Generate a mask by extracting n\+\_\+images random images from the indicated run, thresholding each, and then merging them. 
+
+A value of 0 indicates a bad pixel. If n\+\_\+edge is supplied, the border pixels of each panel will be masked as well.\hypertarget{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_autotoc_md47}{}\doxysubsubsection{Parameters}\label{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_autotoc_md47}
+thresholds \+: tuple, 2d (lower, upper) thresholds for pixel value n\+\_\+images \+: int number of images to threshold n\+\_\+edge \+: int depth of border in pixels to mask for each panel \mbox{\Hypertarget{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_ac169f442e1626c1c8221c81845c35f0f}\label{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_ac169f442e1626c1c8221c81845c35f0f}} 
+\index{btx.interfaces.imask.MaskInterface@{btx.interfaces.imask.MaskInterface}!load\_mask@{load\_mask}}
+\index{load\_mask@{load\_mask}!btx.interfaces.imask.MaskInterface@{btx.interfaces.imask.MaskInterface}}
+\doxysubsubsection{\texorpdfstring{load\_mask()}{load\_mask()}}
+{\footnotesize\ttfamily def btx.\+interfaces.\+imask.\+Mask\+Interface.\+load\+\_\+mask (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{input\+\_\+file,  }\item[{}]{mask\+\_\+format = {\ttfamily \textquotesingle{}crystfel\textquotesingle{}},  }\item[{}]{dataset = {\ttfamily \textquotesingle{}/entry\+\_\+1/data\+\_\+1/\mbox{\hyperlink{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_a55a51468ec69a2760c54eb1a1d754e52}{mask}}\textquotesingle{}} }\end{DoxyParamCaption})}
+
+
+
+Load input mask and reshape from given format to psana unassembled. 
+
+If self.\+masks is None, store to class variable. Otherwise create a combined mask by multipying this and current self.\+mask.\hypertarget{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_autotoc_md49}{}\doxysubsubsection{Parameters}\label{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_autotoc_md49}
+input\+\_\+file \+: str path to input mask mask\+\_\+format \+: str, default=\textquotesingle{}crystfel\textquotesingle{} input style -\/ psana, psana\+\_\+assembled, crystfel, or cctbx dataset \+: str internal path to dataset, only relevant for mask\+\_\+format=\textquotesingle{}crystfel\textquotesingle{} \mbox{\Hypertarget{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_a34be72f80e2e75b31f5025365785fed6}\label{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_a34be72f80e2e75b31f5025365785fed6}} 
+\index{btx.interfaces.imask.MaskInterface@{btx.interfaces.imask.MaskInterface}!mask\_border\_pixels@{mask\_border\_pixels}}
+\index{mask\_border\_pixels@{mask\_border\_pixels}!btx.interfaces.imask.MaskInterface@{btx.interfaces.imask.MaskInterface}}
+\doxysubsubsection{\texorpdfstring{mask\_border\_pixels()}{mask\_border\_pixels()}}
+{\footnotesize\ttfamily def btx.\+interfaces.\+imask.\+Mask\+Interface.\+mask\+\_\+border\+\_\+pixels (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{n\+\_\+edge }\end{DoxyParamCaption})}
+
+
+
+Mask the edge of each panel with a border n\+\_\+edge pixels deep. 
+
+\hypertarget{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_autotoc_md46}{}\doxysubsubsection{Parameters}\label{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_autotoc_md46}
+n\+\_\+edge \+: int number of pixels along each panel edge to mask \mbox{\Hypertarget{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_a00aa3e8e20a4dd92450ce38668f1989a}\label{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_a00aa3e8e20a4dd92450ce38668f1989a}} 
+\index{btx.interfaces.imask.MaskInterface@{btx.interfaces.imask.MaskInterface}!retrieve\_from\_mrxv@{retrieve\_from\_mrxv}}
+\index{retrieve\_from\_mrxv@{retrieve\_from\_mrxv}!btx.interfaces.imask.MaskInterface@{btx.interfaces.imask.MaskInterface}}
+\doxysubsubsection{\texorpdfstring{retrieve\_from\_mrxv()}{retrieve\_from\_mrxv()}}
+{\footnotesize\ttfamily def btx.\+interfaces.\+imask.\+Mask\+Interface.\+retrieve\+\_\+from\+\_\+mrxv (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{mrxv\+\_\+path = {\ttfamily \textquotesingle{}/cds/sw/package/autosfx/mrxv/masks\textquotesingle{}},  }\item[{}]{dataset = {\ttfamily \textquotesingle{}/entry\+\_\+1/data\+\_\+1/\mbox{\hyperlink{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_a55a51468ec69a2760c54eb1a1d754e52}{mask}}\textquotesingle{}} }\end{DoxyParamCaption})}
+
+
+
+Retrieve the latest mask from mrxv. 
+
+\hypertarget{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_autotoc_md48}{}\doxysubsubsection{Parameters}\label{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_autotoc_md48}
+dataset \+: str internal path to dataset, only relevant for mask\+\_\+format=\textquotesingle{}crystfel\textquotesingle{} \mbox{\Hypertarget{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_af888d16d9dfbdbb9a82ae51abacdcf87}\label{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_af888d16d9dfbdbb9a82ae51abacdcf87}} 
+\index{btx.interfaces.imask.MaskInterface@{btx.interfaces.imask.MaskInterface}!save\_mask@{save\_mask}}
+\index{save\_mask@{save\_mask}!btx.interfaces.imask.MaskInterface@{btx.interfaces.imask.MaskInterface}}
+\doxysubsubsection{\texorpdfstring{save\_mask()}{save\_mask()}}
+{\footnotesize\ttfamily def btx.\+interfaces.\+imask.\+Mask\+Interface.\+save\+\_\+mask (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{output,  }\item[{}]{mask\+\_\+format = {\ttfamily \textquotesingle{}psana\textquotesingle{}} }\end{DoxyParamCaption})}
+
+
+
+Save mask to one of four formats\+: psana (.npy), psana\+\_\+assembled (.npy), crystfel (.h5), or cctbx (.pickle). 
+
+\hypertarget{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_autotoc_md52}{}\doxysubsubsection{Parameters}\label{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_autotoc_md52}
+output \+: str path to output mask file mask\+\_\+format \+: str output style -\/ psana, psana\+\_\+assembled, crystfel, or cctbx \mbox{\Hypertarget{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_ac2537454186aca2a15a9df471c5fd245}\label{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_ac2537454186aca2a15a9df471c5fd245}} 
+\index{btx.interfaces.imask.MaskInterface@{btx.interfaces.imask.MaskInterface}!visualize\_mask@{visualize\_mask}}
+\index{visualize\_mask@{visualize\_mask}!btx.interfaces.imask.MaskInterface@{btx.interfaces.imask.MaskInterface}}
+\doxysubsubsection{\texorpdfstring{visualize\_mask()}{visualize\_mask()}}
+{\footnotesize\ttfamily def btx.\+interfaces.\+imask.\+Mask\+Interface.\+visualize\+\_\+mask (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{output = {\ttfamily None} }\end{DoxyParamCaption})}
+
+
+
+Visualize self.\+mask after assembling into 2d detector format. 
+
+\hypertarget{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_autotoc_md53}{}\doxysubsubsection{Parameters}\label{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_autotoc_md53}
+output \+: str, default\+: None if provided, save mask to this path 
+
+\doxysubsection{Member Data Documentation}
+\mbox{\Hypertarget{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_a8d7a4a27c5ad9108d2c351611b620ee2}\label{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_a8d7a4a27c5ad9108d2c351611b620ee2}} 
+\index{btx.interfaces.imask.MaskInterface@{btx.interfaces.imask.MaskInterface}!det\_type@{det\_type}}
+\index{det\_type@{det\_type}!btx.interfaces.imask.MaskInterface@{btx.interfaces.imask.MaskInterface}}
+\doxysubsubsection{\texorpdfstring{det\_type}{det\_type}}
+{\footnotesize\ttfamily btx.\+interfaces.\+imask.\+Mask\+Interface.\+det\+\_\+type}
+
+\mbox{\Hypertarget{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_a3484eb5da4db0cfcee89f2c86d81000b}\label{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_a3484eb5da4db0cfcee89f2c86d81000b}} 
+\index{btx.interfaces.imask.MaskInterface@{btx.interfaces.imask.MaskInterface}!exp@{exp}}
+\index{exp@{exp}!btx.interfaces.imask.MaskInterface@{btx.interfaces.imask.MaskInterface}}
+\doxysubsubsection{\texorpdfstring{exp}{exp}}
+{\footnotesize\ttfamily btx.\+interfaces.\+imask.\+Mask\+Interface.\+exp}
+
+\mbox{\Hypertarget{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_a55a51468ec69a2760c54eb1a1d754e52}\label{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_a55a51468ec69a2760c54eb1a1d754e52}} 
+\index{btx.interfaces.imask.MaskInterface@{btx.interfaces.imask.MaskInterface}!mask@{mask}}
+\index{mask@{mask}!btx.interfaces.imask.MaskInterface@{btx.interfaces.imask.MaskInterface}}
+\doxysubsubsection{\texorpdfstring{mask}{mask}}
+{\footnotesize\ttfamily btx.\+interfaces.\+imask.\+Mask\+Interface.\+mask}
+
+\mbox{\Hypertarget{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_ac0126cadde94aac7621c4fe447db601f}\label{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_ac0126cadde94aac7621c4fe447db601f}} 
+\index{btx.interfaces.imask.MaskInterface@{btx.interfaces.imask.MaskInterface}!pixel\_index\_map@{pixel\_index\_map}}
+\index{pixel\_index\_map@{pixel\_index\_map}!btx.interfaces.imask.MaskInterface@{btx.interfaces.imask.MaskInterface}}
+\doxysubsubsection{\texorpdfstring{pixel\_index\_map}{pixel\_index\_map}}
+{\footnotesize\ttfamily btx.\+interfaces.\+imask.\+Mask\+Interface.\+pixel\+\_\+index\+\_\+map}
+
+\mbox{\Hypertarget{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_a9a2a3b03118924f34b45ce74380872ac}\label{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_a9a2a3b03118924f34b45ce74380872ac}} 
+\index{btx.interfaces.imask.MaskInterface@{btx.interfaces.imask.MaskInterface}!psi@{psi}}
+\index{psi@{psi}!btx.interfaces.imask.MaskInterface@{btx.interfaces.imask.MaskInterface}}
+\doxysubsubsection{\texorpdfstring{psi}{psi}}
+{\footnotesize\ttfamily btx.\+interfaces.\+imask.\+Mask\+Interface.\+psi}
+
+\mbox{\Hypertarget{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_abb0054193b488b6a9c100589b8e930d7}\label{classbtx_1_1interfaces_1_1imask_1_1MaskInterface_abb0054193b488b6a9c100589b8e930d7}} 
+\index{btx.interfaces.imask.MaskInterface@{btx.interfaces.imask.MaskInterface}!run@{run}}
+\index{run@{run}!btx.interfaces.imask.MaskInterface@{btx.interfaces.imask.MaskInterface}}
+\doxysubsubsection{\texorpdfstring{run}{run}}
+{\footnotesize\ttfamily btx.\+interfaces.\+imask.\+Mask\+Interface.\+run}
+
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+btx/interfaces/\mbox{\hyperlink{imask_8py}{imask.\+py}}\end{DoxyCompactItemize}

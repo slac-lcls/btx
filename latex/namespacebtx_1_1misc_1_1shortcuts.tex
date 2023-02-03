@@ -1,0 +1,71 @@
+\hypertarget{namespacebtx_1_1misc_1_1shortcuts}{}\doxysection{btx.\+misc.\+shortcuts Namespace Reference}
+\label{namespacebtx_1_1misc_1_1shortcuts}\index{btx.misc.shortcuts@{btx.misc.shortcuts}}
+
+
+Utility classes and functions for accessing YAML files, checking for file existence and fetching the latest files.  
+
+
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+class \mbox{\hyperlink{classbtx_1_1misc_1_1shortcuts_1_1AttrDict}{Attr\+Dict}}
+\begin{DoxyCompactList}\small\item\em Nested Attribute Dictionary. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+def \mbox{\hyperlink{namespacebtx_1_1misc_1_1shortcuts_a04543aefbb89daf8348d63989b08c0c4}{fetch\+\_\+latest}} (fnames, run)
+\begin{DoxyCompactList}\small\item\em Fetch the most recently created (in terms of run numbers) file. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{namespacebtx_1_1misc_1_1shortcuts_ac3ca5b5766ab31d00151b113850a8b70}{check\+\_\+file\+\_\+existence}} (fname, timeout, frequency=15)
+\begin{DoxyCompactList}\small\item\em Pause until a given file exists, exiting if the waiting period exceeds timeout. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Utility classes and functions for accessing YAML files, checking for file existence and fetching the latest files. 
+
+Classes\+: \mbox{\hyperlink{classbtx_1_1misc_1_1shortcuts_1_1AttrDict}{Attr\+Dict}}
+
+Functions\+: fetch\+\_\+latest check\+\_\+file\+\_\+existence 
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{namespacebtx_1_1misc_1_1shortcuts_ac3ca5b5766ab31d00151b113850a8b70}\label{namespacebtx_1_1misc_1_1shortcuts_ac3ca5b5766ab31d00151b113850a8b70}} 
+\index{btx.misc.shortcuts@{btx.misc.shortcuts}!check\_file\_existence@{check\_file\_existence}}
+\index{check\_file\_existence@{check\_file\_existence}!btx.misc.shortcuts@{btx.misc.shortcuts}}
+\doxysubsubsection{\texorpdfstring{check\_file\_existence()}{check\_file\_existence()}}
+{\footnotesize\ttfamily def btx.\+misc.\+shortcuts.\+check\+\_\+file\+\_\+existence (\begin{DoxyParamCaption}\item[{}]{fname,  }\item[{}]{timeout,  }\item[{}]{frequency = {\ttfamily 15} }\end{DoxyParamCaption})}
+
+
+
+Pause until a given file exists, exiting if the waiting period exceeds timeout. 
+
+\hypertarget{namespacebtx_1_1misc_1_1shortcuts_autotoc_md123}{}\doxysubsubsection{Parameters}\label{namespacebtx_1_1misc_1_1shortcuts_autotoc_md123}
+
+\begin{DoxyParams}{Parameters}
+{\em fname} & (str) name of file whose existence to check for \\
+\hline
+{\em timeout} & (float) permitted waiting period in seconds \\
+\hline
+{\em frequency} & (float) frequency with which to check in seconds \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{namespacebtx_1_1misc_1_1shortcuts_a04543aefbb89daf8348d63989b08c0c4}\label{namespacebtx_1_1misc_1_1shortcuts_a04543aefbb89daf8348d63989b08c0c4}} 
+\index{btx.misc.shortcuts@{btx.misc.shortcuts}!fetch\_latest@{fetch\_latest}}
+\index{fetch\_latest@{fetch\_latest}!btx.misc.shortcuts@{btx.misc.shortcuts}}
+\doxysubsubsection{\texorpdfstring{fetch\_latest()}{fetch\_latest()}}
+{\footnotesize\ttfamily def btx.\+misc.\+shortcuts.\+fetch\+\_\+latest (\begin{DoxyParamCaption}\item[{}]{fnames,  }\item[{}]{run }\end{DoxyParamCaption})}
+
+
+
+Fetch the most recently created (in terms of run numbers) file. 
+
+Here we assume that files are named /\{base\+\_\+path\}/r\{run\+:04\}.$\ast$ .\hypertarget{namespacebtx_1_1misc_1_1shortcuts_autotoc_md121}{}\doxysubsubsection{Parameters}\label{namespacebtx_1_1misc_1_1shortcuts_autotoc_md121}
+
+\begin{DoxyParams}{Parameters}
+{\em fnames} & (str) glob-\/expandable string pointing to geom or mask files \\
+\hline
+{\em run} & (int) run number\\
+\hline
+\end{DoxyParams}
+\hypertarget{namespacebtx_1_1misc_1_1shortcuts_autotoc_md122}{}\doxysubsubsection{Returns}\label{namespacebtx_1_1misc_1_1shortcuts_autotoc_md122}
+\begin{DoxyReturn}{Returns}
+fname (str) filename of relevant geom or mask file 
+\end{DoxyReturn}

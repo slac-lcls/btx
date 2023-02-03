@@ -1,0 +1,37 @@
+\hypertarget{imtz_8py}{}\doxysection{btx/interfaces/imtz.py File Reference}
+\label{imtz_8py}\index{btx/interfaces/imtz.py@{btx/interfaces/imtz.py}}
+\doxysubsection*{Namespaces}
+\begin{DoxyCompactItemize}
+\item 
+namespace \mbox{\hyperlink{namespacebtx}{btx}}
+\item 
+namespace \mbox{\hyperlink{namespacebtx_1_1interfaces}{btx.\+interfaces}}
+\item 
+namespace \mbox{\hyperlink{namespacebtx_1_1interfaces_1_1imtz}{btx.\+interfaces.\+imtz}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+def \mbox{\hyperlink{namespacebtx_1_1interfaces_1_1imtz_a3a4aae8c1166e81ad3dede115862d0b7}{btx.\+interfaces.\+imtz.\+write\+\_\+create\+\_\+xscale}} (out\+\_\+hkl, cell, sg\+\_\+number=1, exe=\char`\"{}create-\/xscale\char`\"{})
+\begin{DoxyCompactList}\small\item\em Write a create-\/xscale file for converting an hkl file from Cryst\+FEL to XDS format. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{namespacebtx_1_1interfaces_1_1imtz_ab371d0472979c318f398912e874649de}{btx.\+interfaces.\+imtz.\+write\+\_\+xds\+\_\+inp}} (hklfile, res\+\_\+range=None, anomalous=True, inp\+\_\+path=\char`\"{}.\char`\"{})
+\begin{DoxyCompactList}\small\item\em Write the input file required for xdsconv, which outputs temp.\+hkl, F2\+MTZ.\+INP, and XDSCONV.\+LP files. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{namespacebtx_1_1interfaces_1_1imtz_add69351a9e9b527d51eb6a061a85e02d}{btx.\+interfaces.\+imtz.\+write\+\_\+anomalous\+\_\+f2mtz}} (cell, sg\+\_\+number=1, fname=\char`\"{}F2\+MTZ.\+INP\char`\"{})
+\begin{DoxyCompactList}\small\item\em Write an F2\+MTZ.\+INP file specific for anomalous data. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{namespacebtx_1_1interfaces_1_1imtz_ab5e338d78a70e5ef834c8911fb114ee7}{btx.\+interfaces.\+imtz.\+f2mtz\+\_\+command}} (outmtz)
+\begin{DoxyCompactList}\small\item\em Return command to convert from an XDS-\/formatted hkl to an mtz file. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{namespacebtx_1_1interfaces_1_1imtz_acde8d7cfa473d7295361b11bd48dd593}{btx.\+interfaces.\+imtz.\+run\+\_\+dimple}} (mtz, pdb, outdir, queue=\textquotesingle{}ffbh3q\textquotesingle{}, ncores=16, anomalous=False)
+\begin{DoxyCompactList}\small\item\em Run dimple to solve the structure\+: \href{http://ccp4.github.io/dimple/}{\texttt{ http\+://ccp4.\+github.\+io/dimple/}}. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{namespacebtx_1_1interfaces_1_1imtz_aae4b1877f1bd058f68410fc4c1d28a89}{btx.\+interfaces.\+imtz.\+parse\+\_\+input}} ()
+\begin{DoxyCompactList}\small\item\em Parse command line input. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+def \mbox{\hyperlink{namespacebtx_1_1interfaces_1_1imtz_a96ad7c92b5503185d06fd3a964def4b2}{btx.\+interfaces.\+imtz.\+params}} = parse\+\_\+input()
+\item 
+\mbox{\hyperlink{namespacebtx_1_1interfaces_1_1imtz_a9179e99c3ea806d52cc5fbd013e38e05}{btx.\+interfaces.\+imtz.\+queue}}
+\item 
+\mbox{\hyperlink{namespacebtx_1_1interfaces_1_1imtz_ace21312a3df0eb8bf558991c514124d0}{btx.\+interfaces.\+imtz.\+ncores}}
+\item 
+\mbox{\hyperlink{namespacebtx_1_1interfaces_1_1imtz_a2c9df78f7ad0d3ac3d09c38cde4da59e}{btx.\+interfaces.\+imtz.\+anomalous}}
+\end{DoxyCompactItemize}

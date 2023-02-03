@@ -1,0 +1,30 @@
+\hypertarget{process__sfx_8py}{}\doxysection{dags/process\+\_\+sfx.py File Reference}
+\label{process__sfx_8py}\index{dags/process\_sfx.py@{dags/process\_sfx.py}}
+\doxysubsection*{Namespaces}
+\begin{DoxyCompactItemize}
+\item 
+namespace \mbox{\hyperlink{namespaceprocess__sfx}{process\+\_\+sfx}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+string \mbox{\hyperlink{namespaceprocess__sfx_a834ea994b6467a74c066b31522a09e10}{process\+\_\+sfx.\+description}} = \textquotesingle{}BTX process SFX DAG\textquotesingle{}
+\item 
+\mbox{\hyperlink{namespaceprocess__sfx_aed21a3e5939b55118020998d96a3d45d}{process\+\_\+sfx.\+dag\+\_\+name}} = os.\+path.\+splitext(os.\+path.\+basename(\+\_\+\+\_\+file\+\_\+\+\_\+))\mbox{[}0\mbox{]}
+\item 
+\mbox{\hyperlink{namespaceprocess__sfx_a465cb9d7263d345bbd714882f7eb1ccc}{process\+\_\+sfx.\+dag}}
+\item 
+string \mbox{\hyperlink{namespaceprocess__sfx_a5eaa405d3c0ecea264f9cc25d2dfcb5f}{process\+\_\+sfx.\+task\+\_\+id}} = \textquotesingle{}find\+\_\+peaks\textquotesingle{}
+\item 
+\mbox{\hyperlink{namespaceprocess__sfx_ac5bedb76d0bfcef973efe83637f8035a}{process\+\_\+sfx.\+find\+\_\+peaks}} = JIDSlurm\+Operator( task\+\_\+id=task\+\_\+id, dag=dag)
+\item 
+\mbox{\hyperlink{namespaceprocess__sfx_a946497ac069e204ea31e10046329bf30}{process\+\_\+sfx.\+index}} = JIDSlurm\+Operator( task\+\_\+id=task\+\_\+id, dag=dag)
+\item 
+\mbox{\hyperlink{namespaceprocess__sfx_ae4b4375728a55af0ebe330043da5edb1}{process\+\_\+sfx.\+stream\+\_\+analysis}} = JIDSlurm\+Operator( task\+\_\+id=task\+\_\+id, dag=dag)
+\item 
+\mbox{\hyperlink{namespaceprocess__sfx_a94d059549ed6c16af200d82e76323b27}{process\+\_\+sfx.\+merge}} = JIDSlurm\+Operator( task\+\_\+id=task\+\_\+id, dag=dag)
+\item 
+\mbox{\hyperlink{namespaceprocess__sfx_aab275491f725cebe86be7bb4d613dbbc}{process\+\_\+sfx.\+solve}} = JIDSlurm\+Operator( task\+\_\+id=task\+\_\+id, dag=dag)
+\item 
+\mbox{\hyperlink{namespaceprocess__sfx_aa3f8aa6a9d1635f972cc318f7fd1c5e1}{process\+\_\+sfx.\+elog\+\_\+display}} = JIDSlurm\+Operator(task\+\_\+id=task\+\_\+id, dag=dag)
+\end{DoxyCompactItemize}

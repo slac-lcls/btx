@@ -1,0 +1,161 @@
+\hypertarget{classbtx_1_1interfaces_1_1ischeduler_1_1JobScheduler}{}\doxysection{btx.\+interfaces.\+ischeduler.\+Job\+Scheduler Class Reference}
+\label{classbtx_1_1interfaces_1_1ischeduler_1_1JobScheduler}\index{btx.interfaces.ischeduler.JobScheduler@{btx.interfaces.ischeduler.JobScheduler}}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+def \mbox{\hyperlink{classbtx_1_1interfaces_1_1ischeduler_1_1JobScheduler_ad8ffe8af1e1e3bc7a5430c697c352989}{\+\_\+\+\_\+init\+\_\+\+\_\+}} (self, \mbox{\hyperlink{classbtx_1_1interfaces_1_1ischeduler_1_1JobScheduler_a4affa83a97e597bd83c4de9e23ca17a4}{jobfile}}, \mbox{\hyperlink{classbtx_1_1interfaces_1_1ischeduler_1_1JobScheduler_af9dba53c5d4a53a6d52348302fbc5908}{logdir}}=\textquotesingle{}./\textquotesingle{}, \mbox{\hyperlink{classbtx_1_1interfaces_1_1ischeduler_1_1JobScheduler_affa3e4ff1061db34860c9d2fc58ee19c}{jobname}}=\textquotesingle{}btx\textquotesingle{}, \mbox{\hyperlink{classbtx_1_1interfaces_1_1ischeduler_1_1JobScheduler_ad49f74061e742bffcc1d1f3a8bd07307}{queue}}=\textquotesingle{}ffbh3q\textquotesingle{}, \mbox{\hyperlink{classbtx_1_1interfaces_1_1ischeduler_1_1JobScheduler_a08dfe1e1b2546fc18e228c34648ac75a}{ncores}}=1, \mbox{\hyperlink{classbtx_1_1interfaces_1_1ischeduler_1_1JobScheduler_a2a4b9b512adc48331c8ce5decac48302}{time}}=\textquotesingle{}0\+:30\+:00\textquotesingle{})
+\item 
+def \mbox{\hyperlink{classbtx_1_1interfaces_1_1ischeduler_1_1JobScheduler_adc8250d367a46bdde4f79884ec22508f}{write\+\_\+header}} (self)
+\begin{DoxyCompactList}\small\item\em Write resource specification to submission script. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{classbtx_1_1interfaces_1_1ischeduler_1_1JobScheduler_a5292e581a9bf1d5c25e332b760f92fb5}{write\+\_\+main}} (self, application, dependencies=\mbox{[}$\,$\mbox{]})
+\begin{DoxyCompactList}\small\item\em Write application and source requested dependencies. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{classbtx_1_1interfaces_1_1ischeduler_1_1JobScheduler_a92bfc811d759598497953114204ccee9}{submit}} (self)
+\begin{DoxyCompactList}\small\item\em Submit to queue. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{classbtx_1_1interfaces_1_1ischeduler_1_1JobScheduler_a24cfbc90234938fe6b777f8d9b5a9fd2}{clean\+\_\+up}} (self)
+\begin{DoxyCompactList}\small\item\em Add a line to delete submission file. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classbtx_1_1interfaces_1_1ischeduler_1_1JobScheduler_af608b1a9bc9cbeaf31f280de17b46df9}{manager}}
+\item 
+\mbox{\hyperlink{classbtx_1_1interfaces_1_1ischeduler_1_1JobScheduler_a4affa83a97e597bd83c4de9e23ca17a4}{jobfile}}
+\item 
+\mbox{\hyperlink{classbtx_1_1interfaces_1_1ischeduler_1_1JobScheduler_af9dba53c5d4a53a6d52348302fbc5908}{logdir}}
+\item 
+\mbox{\hyperlink{classbtx_1_1interfaces_1_1ischeduler_1_1JobScheduler_affa3e4ff1061db34860c9d2fc58ee19c}{jobname}}
+\item 
+\mbox{\hyperlink{classbtx_1_1interfaces_1_1ischeduler_1_1JobScheduler_ad49f74061e742bffcc1d1f3a8bd07307}{queue}}
+\item 
+\mbox{\hyperlink{classbtx_1_1interfaces_1_1ischeduler_1_1JobScheduler_a08dfe1e1b2546fc18e228c34648ac75a}{ncores}}
+\item 
+\mbox{\hyperlink{classbtx_1_1interfaces_1_1ischeduler_1_1JobScheduler_a2a4b9b512adc48331c8ce5decac48302}{time}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Private Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+def \mbox{\hyperlink{classbtx_1_1interfaces_1_1ischeduler_1_1JobScheduler_a145b89380ed6b3df33124bdde9fe8cbd}{\+\_\+find\+\_\+python\+\_\+path}} (self)
+\begin{DoxyCompactList}\small\item\em Determine the relevant python path. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{classbtx_1_1interfaces_1_1ischeduler_1_1JobScheduler_ac0e714c55450ea36185cfea6e7660519}{\+\_\+write\+\_\+dependencies}} (self, dependencies)
+\begin{DoxyCompactList}\small\item\em Source dependencies. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classbtx_1_1interfaces_1_1ischeduler_1_1JobScheduler_ad8ffe8af1e1e3bc7a5430c697c352989}\label{classbtx_1_1interfaces_1_1ischeduler_1_1JobScheduler_ad8ffe8af1e1e3bc7a5430c697c352989}} 
+\index{btx.interfaces.ischeduler.JobScheduler@{btx.interfaces.ischeduler.JobScheduler}!\_\_init\_\_@{\_\_init\_\_}}
+\index{\_\_init\_\_@{\_\_init\_\_}!btx.interfaces.ischeduler.JobScheduler@{btx.interfaces.ischeduler.JobScheduler}}
+\doxysubsubsection{\texorpdfstring{\_\_init\_\_()}{\_\_init\_\_()}}
+{\footnotesize\ttfamily def btx.\+interfaces.\+ischeduler.\+Job\+Scheduler.\+\_\+\+\_\+init\+\_\+\+\_\+ (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{jobfile,  }\item[{}]{logdir = {\ttfamily \textquotesingle{}./\textquotesingle{}},  }\item[{}]{jobname = {\ttfamily \textquotesingle{}btx\textquotesingle{}},  }\item[{}]{queue = {\ttfamily \textquotesingle{}ffbh3q\textquotesingle{}},  }\item[{}]{ncores = {\ttfamily 1},  }\item[{}]{time = {\ttfamily \textquotesingle{}0\+:30\+:00\textquotesingle{}} }\end{DoxyParamCaption})}
+
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classbtx_1_1interfaces_1_1ischeduler_1_1JobScheduler_a145b89380ed6b3df33124bdde9fe8cbd}\label{classbtx_1_1interfaces_1_1ischeduler_1_1JobScheduler_a145b89380ed6b3df33124bdde9fe8cbd}} 
+\index{btx.interfaces.ischeduler.JobScheduler@{btx.interfaces.ischeduler.JobScheduler}!\_find\_python\_path@{\_find\_python\_path}}
+\index{\_find\_python\_path@{\_find\_python\_path}!btx.interfaces.ischeduler.JobScheduler@{btx.interfaces.ischeduler.JobScheduler}}
+\doxysubsubsection{\texorpdfstring{\_find\_python\_path()}{\_find\_python\_path()}}
+{\footnotesize\ttfamily def btx.\+interfaces.\+ischeduler.\+Job\+Scheduler.\+\_\+find\+\_\+python\+\_\+path (\begin{DoxyParamCaption}\item[{}]{self }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [private]}}
+
+
+
+Determine the relevant python path. 
+
+\mbox{\Hypertarget{classbtx_1_1interfaces_1_1ischeduler_1_1JobScheduler_ac0e714c55450ea36185cfea6e7660519}\label{classbtx_1_1interfaces_1_1ischeduler_1_1JobScheduler_ac0e714c55450ea36185cfea6e7660519}} 
+\index{btx.interfaces.ischeduler.JobScheduler@{btx.interfaces.ischeduler.JobScheduler}!\_write\_dependencies@{\_write\_dependencies}}
+\index{\_write\_dependencies@{\_write\_dependencies}!btx.interfaces.ischeduler.JobScheduler@{btx.interfaces.ischeduler.JobScheduler}}
+\doxysubsubsection{\texorpdfstring{\_write\_dependencies()}{\_write\_dependencies()}}
+{\footnotesize\ttfamily def btx.\+interfaces.\+ischeduler.\+Job\+Scheduler.\+\_\+write\+\_\+dependencies (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{dependencies }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [private]}}
+
+
+
+Source dependencies. 
+
+\mbox{\Hypertarget{classbtx_1_1interfaces_1_1ischeduler_1_1JobScheduler_a24cfbc90234938fe6b777f8d9b5a9fd2}\label{classbtx_1_1interfaces_1_1ischeduler_1_1JobScheduler_a24cfbc90234938fe6b777f8d9b5a9fd2}} 
+\index{btx.interfaces.ischeduler.JobScheduler@{btx.interfaces.ischeduler.JobScheduler}!clean\_up@{clean\_up}}
+\index{clean\_up@{clean\_up}!btx.interfaces.ischeduler.JobScheduler@{btx.interfaces.ischeduler.JobScheduler}}
+\doxysubsubsection{\texorpdfstring{clean\_up()}{clean\_up()}}
+{\footnotesize\ttfamily def btx.\+interfaces.\+ischeduler.\+Job\+Scheduler.\+clean\+\_\+up (\begin{DoxyParamCaption}\item[{}]{self }\end{DoxyParamCaption})}
+
+
+
+Add a line to delete submission file. 
+
+\mbox{\Hypertarget{classbtx_1_1interfaces_1_1ischeduler_1_1JobScheduler_a92bfc811d759598497953114204ccee9}\label{classbtx_1_1interfaces_1_1ischeduler_1_1JobScheduler_a92bfc811d759598497953114204ccee9}} 
+\index{btx.interfaces.ischeduler.JobScheduler@{btx.interfaces.ischeduler.JobScheduler}!submit@{submit}}
+\index{submit@{submit}!btx.interfaces.ischeduler.JobScheduler@{btx.interfaces.ischeduler.JobScheduler}}
+\doxysubsubsection{\texorpdfstring{submit()}{submit()}}
+{\footnotesize\ttfamily def btx.\+interfaces.\+ischeduler.\+Job\+Scheduler.\+submit (\begin{DoxyParamCaption}\item[{}]{self }\end{DoxyParamCaption})}
+
+
+
+Submit to queue. 
+
+\mbox{\Hypertarget{classbtx_1_1interfaces_1_1ischeduler_1_1JobScheduler_adc8250d367a46bdde4f79884ec22508f}\label{classbtx_1_1interfaces_1_1ischeduler_1_1JobScheduler_adc8250d367a46bdde4f79884ec22508f}} 
+\index{btx.interfaces.ischeduler.JobScheduler@{btx.interfaces.ischeduler.JobScheduler}!write\_header@{write\_header}}
+\index{write\_header@{write\_header}!btx.interfaces.ischeduler.JobScheduler@{btx.interfaces.ischeduler.JobScheduler}}
+\doxysubsubsection{\texorpdfstring{write\_header()}{write\_header()}}
+{\footnotesize\ttfamily def btx.\+interfaces.\+ischeduler.\+Job\+Scheduler.\+write\+\_\+header (\begin{DoxyParamCaption}\item[{}]{self }\end{DoxyParamCaption})}
+
+
+
+Write resource specification to submission script. 
+
+\mbox{\Hypertarget{classbtx_1_1interfaces_1_1ischeduler_1_1JobScheduler_a5292e581a9bf1d5c25e332b760f92fb5}\label{classbtx_1_1interfaces_1_1ischeduler_1_1JobScheduler_a5292e581a9bf1d5c25e332b760f92fb5}} 
+\index{btx.interfaces.ischeduler.JobScheduler@{btx.interfaces.ischeduler.JobScheduler}!write\_main@{write\_main}}
+\index{write\_main@{write\_main}!btx.interfaces.ischeduler.JobScheduler@{btx.interfaces.ischeduler.JobScheduler}}
+\doxysubsubsection{\texorpdfstring{write\_main()}{write\_main()}}
+{\footnotesize\ttfamily def btx.\+interfaces.\+ischeduler.\+Job\+Scheduler.\+write\+\_\+main (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{application,  }\item[{}]{dependencies = {\ttfamily \mbox{[}\mbox{]}} }\end{DoxyParamCaption})}
+
+
+
+Write application and source requested dependencies. 
+
+
+
+\doxysubsection{Member Data Documentation}
+\mbox{\Hypertarget{classbtx_1_1interfaces_1_1ischeduler_1_1JobScheduler_a4affa83a97e597bd83c4de9e23ca17a4}\label{classbtx_1_1interfaces_1_1ischeduler_1_1JobScheduler_a4affa83a97e597bd83c4de9e23ca17a4}} 
+\index{btx.interfaces.ischeduler.JobScheduler@{btx.interfaces.ischeduler.JobScheduler}!jobfile@{jobfile}}
+\index{jobfile@{jobfile}!btx.interfaces.ischeduler.JobScheduler@{btx.interfaces.ischeduler.JobScheduler}}
+\doxysubsubsection{\texorpdfstring{jobfile}{jobfile}}
+{\footnotesize\ttfamily btx.\+interfaces.\+ischeduler.\+Job\+Scheduler.\+jobfile}
+
+\mbox{\Hypertarget{classbtx_1_1interfaces_1_1ischeduler_1_1JobScheduler_affa3e4ff1061db34860c9d2fc58ee19c}\label{classbtx_1_1interfaces_1_1ischeduler_1_1JobScheduler_affa3e4ff1061db34860c9d2fc58ee19c}} 
+\index{btx.interfaces.ischeduler.JobScheduler@{btx.interfaces.ischeduler.JobScheduler}!jobname@{jobname}}
+\index{jobname@{jobname}!btx.interfaces.ischeduler.JobScheduler@{btx.interfaces.ischeduler.JobScheduler}}
+\doxysubsubsection{\texorpdfstring{jobname}{jobname}}
+{\footnotesize\ttfamily btx.\+interfaces.\+ischeduler.\+Job\+Scheduler.\+jobname}
+
+\mbox{\Hypertarget{classbtx_1_1interfaces_1_1ischeduler_1_1JobScheduler_af9dba53c5d4a53a6d52348302fbc5908}\label{classbtx_1_1interfaces_1_1ischeduler_1_1JobScheduler_af9dba53c5d4a53a6d52348302fbc5908}} 
+\index{btx.interfaces.ischeduler.JobScheduler@{btx.interfaces.ischeduler.JobScheduler}!logdir@{logdir}}
+\index{logdir@{logdir}!btx.interfaces.ischeduler.JobScheduler@{btx.interfaces.ischeduler.JobScheduler}}
+\doxysubsubsection{\texorpdfstring{logdir}{logdir}}
+{\footnotesize\ttfamily btx.\+interfaces.\+ischeduler.\+Job\+Scheduler.\+logdir}
+
+\mbox{\Hypertarget{classbtx_1_1interfaces_1_1ischeduler_1_1JobScheduler_af608b1a9bc9cbeaf31f280de17b46df9}\label{classbtx_1_1interfaces_1_1ischeduler_1_1JobScheduler_af608b1a9bc9cbeaf31f280de17b46df9}} 
+\index{btx.interfaces.ischeduler.JobScheduler@{btx.interfaces.ischeduler.JobScheduler}!manager@{manager}}
+\index{manager@{manager}!btx.interfaces.ischeduler.JobScheduler@{btx.interfaces.ischeduler.JobScheduler}}
+\doxysubsubsection{\texorpdfstring{manager}{manager}}
+{\footnotesize\ttfamily btx.\+interfaces.\+ischeduler.\+Job\+Scheduler.\+manager}
+
+\mbox{\Hypertarget{classbtx_1_1interfaces_1_1ischeduler_1_1JobScheduler_a08dfe1e1b2546fc18e228c34648ac75a}\label{classbtx_1_1interfaces_1_1ischeduler_1_1JobScheduler_a08dfe1e1b2546fc18e228c34648ac75a}} 
+\index{btx.interfaces.ischeduler.JobScheduler@{btx.interfaces.ischeduler.JobScheduler}!ncores@{ncores}}
+\index{ncores@{ncores}!btx.interfaces.ischeduler.JobScheduler@{btx.interfaces.ischeduler.JobScheduler}}
+\doxysubsubsection{\texorpdfstring{ncores}{ncores}}
+{\footnotesize\ttfamily btx.\+interfaces.\+ischeduler.\+Job\+Scheduler.\+ncores}
+
+\mbox{\Hypertarget{classbtx_1_1interfaces_1_1ischeduler_1_1JobScheduler_ad49f74061e742bffcc1d1f3a8bd07307}\label{classbtx_1_1interfaces_1_1ischeduler_1_1JobScheduler_ad49f74061e742bffcc1d1f3a8bd07307}} 
+\index{btx.interfaces.ischeduler.JobScheduler@{btx.interfaces.ischeduler.JobScheduler}!queue@{queue}}
+\index{queue@{queue}!btx.interfaces.ischeduler.JobScheduler@{btx.interfaces.ischeduler.JobScheduler}}
+\doxysubsubsection{\texorpdfstring{queue}{queue}}
+{\footnotesize\ttfamily btx.\+interfaces.\+ischeduler.\+Job\+Scheduler.\+queue}
+
+\mbox{\Hypertarget{classbtx_1_1interfaces_1_1ischeduler_1_1JobScheduler_a2a4b9b512adc48331c8ce5decac48302}\label{classbtx_1_1interfaces_1_1ischeduler_1_1JobScheduler_a2a4b9b512adc48331c8ce5decac48302}} 
+\index{btx.interfaces.ischeduler.JobScheduler@{btx.interfaces.ischeduler.JobScheduler}!time@{time}}
+\index{time@{time}!btx.interfaces.ischeduler.JobScheduler@{btx.interfaces.ischeduler.JobScheduler}}
+\doxysubsubsection{\texorpdfstring{time}{time}}
+{\footnotesize\ttfamily btx.\+interfaces.\+ischeduler.\+Job\+Scheduler.\+time}
+
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+btx/interfaces/\mbox{\hyperlink{ischeduler_8py}{ischeduler.\+py}}\end{DoxyCompactItemize}

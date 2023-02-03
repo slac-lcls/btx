@@ -1,0 +1,58 @@
+\hypertarget{namespaceestimate__cell}{}\doxysection{estimate\+\_\+cell Namespace Reference}
+\label{namespaceestimate__cell}\index{estimate\_cell@{estimate\_cell}}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+string \mbox{\hyperlink{namespaceestimate__cell_a44f0eaee04de1a703fa02faca061a7ab}{description}} = \textquotesingle{}BTX index and determine cell DAG\textquotesingle{}
+\item 
+\mbox{\hyperlink{namespaceestimate__cell_a9123b23a3ad6bd089b2f0b7c6f75b352}{dag\+\_\+name}} = os.\+path.\+splitext(os.\+path.\+basename(\+\_\+\+\_\+file\+\_\+\+\_\+))\mbox{[}0\mbox{]}
+\item 
+\mbox{\hyperlink{namespaceestimate__cell_a069e9f3b760d6f28b21324665403bf3a}{dag}}
+\item 
+string \mbox{\hyperlink{namespaceestimate__cell_af42762cb2e1b4daa1cc053f038266581}{task\+\_\+id}} = \textquotesingle{}\mbox{\hyperlink{namespaceestimate__cell_a6e013829e45dee9267fb9e650ef878b9}{determine\+\_\+cell}}\textquotesingle{}
+\item 
+\mbox{\hyperlink{namespaceestimate__cell_a6e013829e45dee9267fb9e650ef878b9}{determine\+\_\+cell}} = \mbox{\hyperlink{classplugins_1_1jid_1_1JIDSlurmOperator}{JIDSlurm\+Operator}}( \mbox{\hyperlink{namespaceestimate__cell_af42762cb2e1b4daa1cc053f038266581}{task\+\_\+id}}=\mbox{\hyperlink{namespaceestimate__cell_af42762cb2e1b4daa1cc053f038266581}{task\+\_\+id}}, \mbox{\hyperlink{namespaceestimate__cell_a069e9f3b760d6f28b21324665403bf3a}{dag}}=\mbox{\hyperlink{namespaceestimate__cell_a069e9f3b760d6f28b21324665403bf3a}{dag}})
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{namespaceestimate__cell_a069e9f3b760d6f28b21324665403bf3a}\label{namespaceestimate__cell_a069e9f3b760d6f28b21324665403bf3a}} 
+\index{estimate\_cell@{estimate\_cell}!dag@{dag}}
+\index{dag@{dag}!estimate\_cell@{estimate\_cell}}
+\doxysubsubsection{\texorpdfstring{dag}{dag}}
+{\footnotesize\ttfamily estimate\+\_\+cell.\+dag}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 =  DAG(}
+\DoxyCodeLine{2     dag\_name,}
+\DoxyCodeLine{3     start\_date=datetime( 2022,4,1 ),}
+\DoxyCodeLine{4     schedule\_interval=\textcolor{keywordtype}{None},}
+\DoxyCodeLine{5     description=description,}
+\DoxyCodeLine{6   )}
+
+\end{DoxyCode}
+\mbox{\Hypertarget{namespaceestimate__cell_a9123b23a3ad6bd089b2f0b7c6f75b352}\label{namespaceestimate__cell_a9123b23a3ad6bd089b2f0b7c6f75b352}} 
+\index{estimate\_cell@{estimate\_cell}!dag\_name@{dag\_name}}
+\index{dag\_name@{dag\_name}!estimate\_cell@{estimate\_cell}}
+\doxysubsubsection{\texorpdfstring{dag\_name}{dag\_name}}
+{\footnotesize\ttfamily estimate\+\_\+cell.\+dag\+\_\+name = os.\+path.\+splitext(os.\+path.\+basename(\+\_\+\+\_\+file\+\_\+\+\_\+))\mbox{[}0\mbox{]}}
+
+\mbox{\Hypertarget{namespaceestimate__cell_a44f0eaee04de1a703fa02faca061a7ab}\label{namespaceestimate__cell_a44f0eaee04de1a703fa02faca061a7ab}} 
+\index{estimate\_cell@{estimate\_cell}!description@{description}}
+\index{description@{description}!estimate\_cell@{estimate\_cell}}
+\doxysubsubsection{\texorpdfstring{description}{description}}
+{\footnotesize\ttfamily string estimate\+\_\+cell.\+description = \textquotesingle{}BTX index and determine cell DAG\textquotesingle{}}
+
+\mbox{\Hypertarget{namespaceestimate__cell_a6e013829e45dee9267fb9e650ef878b9}\label{namespaceestimate__cell_a6e013829e45dee9267fb9e650ef878b9}} 
+\index{estimate\_cell@{estimate\_cell}!determine\_cell@{determine\_cell}}
+\index{determine\_cell@{determine\_cell}!estimate\_cell@{estimate\_cell}}
+\doxysubsubsection{\texorpdfstring{determine\_cell}{determine\_cell}}
+{\footnotesize\ttfamily estimate\+\_\+cell.\+determine\+\_\+cell = \mbox{\hyperlink{classplugins_1_1jid_1_1JIDSlurmOperator}{JIDSlurm\+Operator}}( \mbox{\hyperlink{namespaceestimate__cell_af42762cb2e1b4daa1cc053f038266581}{task\+\_\+id}}=\mbox{\hyperlink{namespaceestimate__cell_af42762cb2e1b4daa1cc053f038266581}{task\+\_\+id}}, \mbox{\hyperlink{namespaceestimate__cell_a069e9f3b760d6f28b21324665403bf3a}{dag}}=\mbox{\hyperlink{namespaceestimate__cell_a069e9f3b760d6f28b21324665403bf3a}{dag}})}
+
+\mbox{\Hypertarget{namespaceestimate__cell_af42762cb2e1b4daa1cc053f038266581}\label{namespaceestimate__cell_af42762cb2e1b4daa1cc053f038266581}} 
+\index{estimate\_cell@{estimate\_cell}!task\_id@{task\_id}}
+\index{task\_id@{task\_id}!estimate\_cell@{estimate\_cell}}
+\doxysubsubsection{\texorpdfstring{task\_id}{task\_id}}
+{\footnotesize\ttfamily string estimate\+\_\+cell.\+task\+\_\+id = \textquotesingle{}\mbox{\hyperlink{namespaceestimate__cell_a6e013829e45dee9267fb9e650ef878b9}{determine\+\_\+cell}}\textquotesingle{}}
+

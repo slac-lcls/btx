@@ -1,0 +1,187 @@
+\hypertarget{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate}{}\doxysection{btx.\+diagnostics.\+ag\+\_\+behenate.\+Ag\+Behenate Class Reference}
+\label{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate}\index{btx.diagnostics.ag\_behenate.AgBehenate@{btx.diagnostics.ag\_behenate.AgBehenate}}
+
+
+Class for optimizing geometry (distance to detector and center) from a silver behenate powder, leveraging the fact that the peaks are equidistant in q-\/space.  
+
+
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+def \mbox{\hyperlink{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_aa3bb00f4798c38843a2bf690cf9ae151}{\+\_\+\+\_\+init\+\_\+\+\_\+}} (self, \mbox{\hyperlink{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_ae94deae7497150c0ccfd0ea3f143fb59}{powder}}, \mbox{\hyperlink{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_a3f83e9e6f05876d12641871a4f505d7d}{mask}}, \mbox{\hyperlink{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_ab3f713ba2a7fe91a260628a34ee60b7c}{pixel\+\_\+size}}, \mbox{\hyperlink{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_a22e6468c0fc277c5dd8e18e55d3e5de4}{wavelength}})
+\begin{DoxyCompactList}\small\item\em Instantiate object. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_a6645cc4db0d80f57fa09ff268aca1a82}{ideal\+\_\+rings}} (self, q\+Peaks)
+\begin{DoxyCompactList}\small\item\em Scan over and score various inter-\/peak distances in q-\/space, based on the equidistance of peaks in q-\/space for silver behenate powder. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_a249e50ad0bfa4e3c6b01e32dbbebc372}{detector\+\_\+distance}} (self, est\+\_\+q0)
+\begin{DoxyCompactList}\small\item\em Estimate the sample-\/detector distance, based on the fact that the first diffraction ring for silver behenate is at 0.\+1076/\+Angstrom. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_ae6d40ea2f8a5fe64b4dde562922fd9b3}{opt\+\_\+distance}} (self, distance\+\_\+i=None, plot=None, vmax=None)
+\begin{DoxyCompactList}\small\item\em Optimize the sample-\/detector distance based on the powder image. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_adc011a030860f7425936685df74b9d07}{opt\+\_\+center}} (self, peaks\+\_\+observed, num\+\_\+circle\+\_\+points=200)
+\begin{DoxyCompactList}\small\item\em Optimize the detector center by fitting circles to pixels predicted to fall in the powder rings. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_a0bef7927cff6520ddfbd58a2c701872b}{opt\+\_\+geom}} (self, distance\+\_\+i, n\+\_\+iterations=5, n\+\_\+peaks=3, threshold=1e6, center\+\_\+i=None, plot=None, vmax=None)
+\begin{DoxyCompactList}\small\item\em Optimize the detector geometry, sequentially refining the distance and center in an iterative fashion. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_a2c76d5a054ca61520a4ac9bece4a25da}{visualize\+\_\+results}} (self, image, \mbox{\hyperlink{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_a3f83e9e6f05876d12641871a4f505d7d}{mask}}=None, vmax=None, center=None, peaks\+\_\+predicted=None, peaks\+\_\+observed=None, scores=None, Dq=None, radialprofile=None, qprofile=None, plot=\textquotesingle{}\textquotesingle{})
+\begin{DoxyCompactList}\small\item\em Visualize fit, plotting (1) the residuals for the delta q scan, (2) the observed and predicted peaks in the radial intensity profile, and (3) the powder image. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_a167721f97f0038ccb82e86962bd9b4dd}{q0}}
+\item 
+\mbox{\hyperlink{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_acea8de92b3ce3f2bdee2668645b912df}{delta\+\_\+qs}}
+\item 
+\mbox{\hyperlink{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_ae94deae7497150c0ccfd0ea3f143fb59}{powder}}
+\item 
+\mbox{\hyperlink{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_a3f83e9e6f05876d12641871a4f505d7d}{mask}}
+\item 
+\mbox{\hyperlink{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_ab3f713ba2a7fe91a260628a34ee60b7c}{pixel\+\_\+size}}
+\item 
+\mbox{\hyperlink{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_a22e6468c0fc277c5dd8e18e55d3e5de4}{wavelength}}
+\item 
+\mbox{\hyperlink{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_ac15ba325bdab3c0b66a87f75ed582fef}{npeaks}}
+\item 
+\mbox{\hyperlink{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_aab34419085b7fe281ae3968b0630ca2b}{scores\+\_\+std}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Class for optimizing geometry (distance to detector and center) from a silver behenate powder, leveraging the fact that the peaks are equidistant in q-\/space. 
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_aa3bb00f4798c38843a2bf690cf9ae151}\label{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_aa3bb00f4798c38843a2bf690cf9ae151}} 
+\index{btx.diagnostics.ag\_behenate.AgBehenate@{btx.diagnostics.ag\_behenate.AgBehenate}!\_\_init\_\_@{\_\_init\_\_}}
+\index{\_\_init\_\_@{\_\_init\_\_}!btx.diagnostics.ag\_behenate.AgBehenate@{btx.diagnostics.ag\_behenate.AgBehenate}}
+\doxysubsubsection{\texorpdfstring{\_\_init\_\_()}{\_\_init\_\_()}}
+{\footnotesize\ttfamily def btx.\+diagnostics.\+ag\+\_\+behenate.\+Ag\+Behenate.\+\_\+\+\_\+init\+\_\+\+\_\+ (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{powder,  }\item[{}]{mask,  }\item[{}]{pixel\+\_\+size,  }\item[{}]{wavelength }\end{DoxyParamCaption})}
+
+
+
+Instantiate object. 
+
+\hypertarget{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_autotoc_md0}{}\doxysubsubsection{Parameters}\label{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_autotoc_md0}
+powder \+: numpy.\+ndarray, 2d powder diffraction image, in shape of assembled detector mask \+: numpy.\+ndarray, 2d binary mask in shape of powder image pixel\+\_\+size \+: float detector pixel size in mm wavelength \+: float beam wavelength in Angstrom 
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_a249e50ad0bfa4e3c6b01e32dbbebc372}\label{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_a249e50ad0bfa4e3c6b01e32dbbebc372}} 
+\index{btx.diagnostics.ag\_behenate.AgBehenate@{btx.diagnostics.ag\_behenate.AgBehenate}!detector\_distance@{detector\_distance}}
+\index{detector\_distance@{detector\_distance}!btx.diagnostics.ag\_behenate.AgBehenate@{btx.diagnostics.ag\_behenate.AgBehenate}}
+\doxysubsubsection{\texorpdfstring{detector\_distance()}{detector\_distance()}}
+{\footnotesize\ttfamily def btx.\+diagnostics.\+ag\+\_\+behenate.\+Ag\+Behenate.\+detector\+\_\+distance (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{est\+\_\+q0 }\end{DoxyParamCaption})}
+
+
+
+Estimate the sample-\/detector distance, based on the fact that the first diffraction ring for silver behenate is at 0.\+1076/\+Angstrom. 
+
+\hypertarget{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_autotoc_md3}{}\doxysubsubsection{Parameters}\label{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_autotoc_md3}
+est\+\_\+q0 \+: float predicted q-\/position of first ring based on the best fit q-\/spacing in Angstrom\hypertarget{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_autotoc_md4}{}\doxysubsubsection{Returns}\label{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_autotoc_md4}
+distance \+: float refined detector distance in mm \mbox{\Hypertarget{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_a6645cc4db0d80f57fa09ff268aca1a82}\label{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_a6645cc4db0d80f57fa09ff268aca1a82}} 
+\index{btx.diagnostics.ag\_behenate.AgBehenate@{btx.diagnostics.ag\_behenate.AgBehenate}!ideal\_rings@{ideal\_rings}}
+\index{ideal\_rings@{ideal\_rings}!btx.diagnostics.ag\_behenate.AgBehenate@{btx.diagnostics.ag\_behenate.AgBehenate}}
+\doxysubsubsection{\texorpdfstring{ideal\_rings()}{ideal\_rings()}}
+{\footnotesize\ttfamily def btx.\+diagnostics.\+ag\+\_\+behenate.\+Ag\+Behenate.\+ideal\+\_\+rings (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{q\+Peaks }\end{DoxyParamCaption})}
+
+
+
+Scan over and score various inter-\/peak distances in q-\/space, based on the equidistance of peaks in q-\/space for silver behenate powder. 
+
+\hypertarget{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_autotoc_md1}{}\doxysubsubsection{Parameters}\label{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_autotoc_md1}
+q\+Peaks \+: numpy.\+ndarray, 1d positions of powder peaks in q-\/space (inverse Angstrom)\hypertarget{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_autotoc_md2}{}\doxysubsubsection{Returns}\label{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_autotoc_md2}
+rings \+: numpy.\+ndarray, 1d predicted positions of peaks based on the best fit q-\/spacing scores \+: numpy.\+ndarray, 1d residual associated with each q-\/spacing, ordered as self.\+delta\+\_\+qs \mbox{\Hypertarget{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_adc011a030860f7425936685df74b9d07}\label{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_adc011a030860f7425936685df74b9d07}} 
+\index{btx.diagnostics.ag\_behenate.AgBehenate@{btx.diagnostics.ag\_behenate.AgBehenate}!opt\_center@{opt\_center}}
+\index{opt\_center@{opt\_center}!btx.diagnostics.ag\_behenate.AgBehenate@{btx.diagnostics.ag\_behenate.AgBehenate}}
+\doxysubsubsection{\texorpdfstring{opt\_center()}{opt\_center()}}
+{\footnotesize\ttfamily def btx.\+diagnostics.\+ag\+\_\+behenate.\+Ag\+Behenate.\+opt\+\_\+center (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{peaks\+\_\+observed,  }\item[{}]{num\+\_\+circle\+\_\+points = {\ttfamily 200} }\end{DoxyParamCaption})}
+
+
+
+Optimize the detector center by fitting circles to pixels predicted to fall in the powder rings. 
+
+\hypertarget{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_autotoc_md7}{}\doxysubsubsection{Parameters}\label{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_autotoc_md7}
+peaks\+\_\+observed \+: numpy.\+ndarray, 1d radii of detected powder peaks in pixels num\+\_\+circle\+\_\+points \+: int number of points per powder ring to use for fitting \mbox{\Hypertarget{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_ae6d40ea2f8a5fe64b4dde562922fd9b3}\label{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_ae6d40ea2f8a5fe64b4dde562922fd9b3}} 
+\index{btx.diagnostics.ag\_behenate.AgBehenate@{btx.diagnostics.ag\_behenate.AgBehenate}!opt\_distance@{opt\_distance}}
+\index{opt\_distance@{opt\_distance}!btx.diagnostics.ag\_behenate.AgBehenate@{btx.diagnostics.ag\_behenate.AgBehenate}}
+\doxysubsubsection{\texorpdfstring{opt\_distance()}{opt\_distance()}}
+{\footnotesize\ttfamily def btx.\+diagnostics.\+ag\+\_\+behenate.\+Ag\+Behenate.\+opt\+\_\+distance (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{distance\+\_\+i = {\ttfamily None},  }\item[{}]{plot = {\ttfamily None},  }\item[{}]{vmax = {\ttfamily None} }\end{DoxyParamCaption})}
+
+
+
+Optimize the sample-\/detector distance based on the powder image. 
+
+\hypertarget{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_autotoc_md5}{}\doxysubsubsection{Parameters}\label{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_autotoc_md5}
+distance\+\_\+i \+: float initial estimated distance in mm plot \+: str or None output path for figure; if \textquotesingle{}\textquotesingle{}, plot but don\textquotesingle{}t save; if None, don\textquotesingle{}t plot vmax \+: float vmax value for powder plot\hypertarget{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_autotoc_md6}{}\doxysubsubsection{Returns}\label{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_autotoc_md6}
+peaks\+\_\+observed \+: numpy.\+ndarray, 1d radii of detected powder peaks in pixels peak\+\_\+heights \+: numpy.\+ndarray, 1d intensities associated with peaks\+\_\+observed \mbox{\Hypertarget{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_a0bef7927cff6520ddfbd58a2c701872b}\label{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_a0bef7927cff6520ddfbd58a2c701872b}} 
+\index{btx.diagnostics.ag\_behenate.AgBehenate@{btx.diagnostics.ag\_behenate.AgBehenate}!opt\_geom@{opt\_geom}}
+\index{opt\_geom@{opt\_geom}!btx.diagnostics.ag\_behenate.AgBehenate@{btx.diagnostics.ag\_behenate.AgBehenate}}
+\doxysubsubsection{\texorpdfstring{opt\_geom()}{opt\_geom()}}
+{\footnotesize\ttfamily def btx.\+diagnostics.\+ag\+\_\+behenate.\+Ag\+Behenate.\+opt\+\_\+geom (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{distance\+\_\+i,  }\item[{}]{n\+\_\+iterations = {\ttfamily 5},  }\item[{}]{n\+\_\+peaks = {\ttfamily 3},  }\item[{}]{threshold = {\ttfamily 1e6},  }\item[{}]{center\+\_\+i = {\ttfamily None},  }\item[{}]{plot = {\ttfamily None},  }\item[{}]{vmax = {\ttfamily None} }\end{DoxyParamCaption})}
+
+
+
+Optimize the detector geometry, sequentially refining the distance and center in an iterative fashion. 
+
+\hypertarget{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_autotoc_md8}{}\doxysubsubsection{Parameters}\label{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_autotoc_md8}
+distance\+\_\+i \+: float initial estimate of the sample-\/detector distance in mm n\+\_\+iterations \+: int number of refinement steps n\+\_\+peaks \+: int number of observed peaks to use for center fitting threshold \+: float pixels above this intensity in powder get set to 0; None for no thresholding. center\+\_\+i \+: tuple, 2d initial estimate of detector center in pixels plot \+: str or None if a legitimate path, save plot; if empty str, display plot; if None, don\textquotesingle{}t plot vmax \+: float vmax value for powder plot \mbox{\Hypertarget{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_a2c76d5a054ca61520a4ac9bece4a25da}\label{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_a2c76d5a054ca61520a4ac9bece4a25da}} 
+\index{btx.diagnostics.ag\_behenate.AgBehenate@{btx.diagnostics.ag\_behenate.AgBehenate}!visualize\_results@{visualize\_results}}
+\index{visualize\_results@{visualize\_results}!btx.diagnostics.ag\_behenate.AgBehenate@{btx.diagnostics.ag\_behenate.AgBehenate}}
+\doxysubsubsection{\texorpdfstring{visualize\_results()}{visualize\_results()}}
+{\footnotesize\ttfamily def btx.\+diagnostics.\+ag\+\_\+behenate.\+Ag\+Behenate.\+visualize\+\_\+results (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{image,  }\item[{}]{mask = {\ttfamily None},  }\item[{}]{vmax = {\ttfamily None},  }\item[{}]{center = {\ttfamily None},  }\item[{}]{peaks\+\_\+predicted = {\ttfamily None},  }\item[{}]{peaks\+\_\+observed = {\ttfamily None},  }\item[{}]{scores = {\ttfamily None},  }\item[{}]{Dq = {\ttfamily None},  }\item[{}]{radialprofile = {\ttfamily None},  }\item[{}]{qprofile = {\ttfamily None},  }\item[{}]{plot = {\ttfamily \textquotesingle{}\textquotesingle{}} }\end{DoxyParamCaption})}
+
+
+
+Visualize fit, plotting (1) the residuals for the delta q scan, (2) the observed and predicted peaks in the radial intensity profile, and (3) the powder image. 
+
+
+
+\doxysubsection{Member Data Documentation}
+\mbox{\Hypertarget{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_acea8de92b3ce3f2bdee2668645b912df}\label{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_acea8de92b3ce3f2bdee2668645b912df}} 
+\index{btx.diagnostics.ag\_behenate.AgBehenate@{btx.diagnostics.ag\_behenate.AgBehenate}!delta\_qs@{delta\_qs}}
+\index{delta\_qs@{delta\_qs}!btx.diagnostics.ag\_behenate.AgBehenate@{btx.diagnostics.ag\_behenate.AgBehenate}}
+\doxysubsubsection{\texorpdfstring{delta\_qs}{delta\_qs}}
+{\footnotesize\ttfamily btx.\+diagnostics.\+ag\+\_\+behenate.\+Ag\+Behenate.\+delta\+\_\+qs}
+
+\mbox{\Hypertarget{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_a3f83e9e6f05876d12641871a4f505d7d}\label{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_a3f83e9e6f05876d12641871a4f505d7d}} 
+\index{btx.diagnostics.ag\_behenate.AgBehenate@{btx.diagnostics.ag\_behenate.AgBehenate}!mask@{mask}}
+\index{mask@{mask}!btx.diagnostics.ag\_behenate.AgBehenate@{btx.diagnostics.ag\_behenate.AgBehenate}}
+\doxysubsubsection{\texorpdfstring{mask}{mask}}
+{\footnotesize\ttfamily btx.\+diagnostics.\+ag\+\_\+behenate.\+Ag\+Behenate.\+mask}
+
+\mbox{\Hypertarget{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_ac15ba325bdab3c0b66a87f75ed582fef}\label{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_ac15ba325bdab3c0b66a87f75ed582fef}} 
+\index{btx.diagnostics.ag\_behenate.AgBehenate@{btx.diagnostics.ag\_behenate.AgBehenate}!npeaks@{npeaks}}
+\index{npeaks@{npeaks}!btx.diagnostics.ag\_behenate.AgBehenate@{btx.diagnostics.ag\_behenate.AgBehenate}}
+\doxysubsubsection{\texorpdfstring{npeaks}{npeaks}}
+{\footnotesize\ttfamily btx.\+diagnostics.\+ag\+\_\+behenate.\+Ag\+Behenate.\+npeaks}
+
+\mbox{\Hypertarget{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_ab3f713ba2a7fe91a260628a34ee60b7c}\label{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_ab3f713ba2a7fe91a260628a34ee60b7c}} 
+\index{btx.diagnostics.ag\_behenate.AgBehenate@{btx.diagnostics.ag\_behenate.AgBehenate}!pixel\_size@{pixel\_size}}
+\index{pixel\_size@{pixel\_size}!btx.diagnostics.ag\_behenate.AgBehenate@{btx.diagnostics.ag\_behenate.AgBehenate}}
+\doxysubsubsection{\texorpdfstring{pixel\_size}{pixel\_size}}
+{\footnotesize\ttfamily btx.\+diagnostics.\+ag\+\_\+behenate.\+Ag\+Behenate.\+pixel\+\_\+size}
+
+\mbox{\Hypertarget{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_ae94deae7497150c0ccfd0ea3f143fb59}\label{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_ae94deae7497150c0ccfd0ea3f143fb59}} 
+\index{btx.diagnostics.ag\_behenate.AgBehenate@{btx.diagnostics.ag\_behenate.AgBehenate}!powder@{powder}}
+\index{powder@{powder}!btx.diagnostics.ag\_behenate.AgBehenate@{btx.diagnostics.ag\_behenate.AgBehenate}}
+\doxysubsubsection{\texorpdfstring{powder}{powder}}
+{\footnotesize\ttfamily btx.\+diagnostics.\+ag\+\_\+behenate.\+Ag\+Behenate.\+powder}
+
+\mbox{\Hypertarget{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_a167721f97f0038ccb82e86962bd9b4dd}\label{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_a167721f97f0038ccb82e86962bd9b4dd}} 
+\index{btx.diagnostics.ag\_behenate.AgBehenate@{btx.diagnostics.ag\_behenate.AgBehenate}!q0@{q0}}
+\index{q0@{q0}!btx.diagnostics.ag\_behenate.AgBehenate@{btx.diagnostics.ag\_behenate.AgBehenate}}
+\doxysubsubsection{\texorpdfstring{q0}{q0}}
+{\footnotesize\ttfamily btx.\+diagnostics.\+ag\+\_\+behenate.\+Ag\+Behenate.\+q0}
+
+\mbox{\Hypertarget{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_aab34419085b7fe281ae3968b0630ca2b}\label{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_aab34419085b7fe281ae3968b0630ca2b}} 
+\index{btx.diagnostics.ag\_behenate.AgBehenate@{btx.diagnostics.ag\_behenate.AgBehenate}!scores\_std@{scores\_std}}
+\index{scores\_std@{scores\_std}!btx.diagnostics.ag\_behenate.AgBehenate@{btx.diagnostics.ag\_behenate.AgBehenate}}
+\doxysubsubsection{\texorpdfstring{scores\_std}{scores\_std}}
+{\footnotesize\ttfamily btx.\+diagnostics.\+ag\+\_\+behenate.\+Ag\+Behenate.\+scores\+\_\+std}
+
+\mbox{\Hypertarget{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_a22e6468c0fc277c5dd8e18e55d3e5de4}\label{classbtx_1_1diagnostics_1_1ag__behenate_1_1AgBehenate_a22e6468c0fc277c5dd8e18e55d3e5de4}} 
+\index{btx.diagnostics.ag\_behenate.AgBehenate@{btx.diagnostics.ag\_behenate.AgBehenate}!wavelength@{wavelength}}
+\index{wavelength@{wavelength}!btx.diagnostics.ag\_behenate.AgBehenate@{btx.diagnostics.ag\_behenate.AgBehenate}}
+\doxysubsubsection{\texorpdfstring{wavelength}{wavelength}}
+{\footnotesize\ttfamily btx.\+diagnostics.\+ag\+\_\+behenate.\+Ag\+Behenate.\+wavelength}
+
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+btx/diagnostics/\mbox{\hyperlink{ag__behenate_8py}{ag\+\_\+behenate.\+py}}\end{DoxyCompactItemize}

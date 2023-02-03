@@ -1,0 +1,70 @@
+\hypertarget{namespacebtx_1_1interfaces_1_1imask}{}\doxysection{btx.\+interfaces.\+imask Namespace Reference}
+\label{namespacebtx_1_1interfaces_1_1imask}\index{btx.interfaces.imask@{btx.interfaces.imask}}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+class \mbox{\hyperlink{classbtx_1_1interfaces_1_1imask_1_1MaskInterface}{Mask\+Interface}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+def \mbox{\hyperlink{namespacebtx_1_1interfaces_1_1imask_a4e99866845fe057f64dcfa7b7d924815}{unstack\+\_\+asics}} (image, det\+\_\+type, dtype=\textquotesingle{}double\textquotesingle{})
+\begin{DoxyCompactList}\small\item\em Unstack the asics and convert to CCTBX data type -\/ specifically, a list of flex.\+double or flex.\+bool objects. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{namespacebtx_1_1interfaces_1_1imask_a5a75894252e6af7293a7dcd2715d898a}{stack\+\_\+asics}} (image, det\+\_\+type)
+\begin{DoxyCompactList}\small\item\em Stack the asics to reshape from CCTBX to psana (unassembled) conventions. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{namespacebtx_1_1interfaces_1_1imask_a6fd9a925b21b1a0b9a3dbe149379342b}{load\+\_\+cctbx\+\_\+mask}} (input\+\_\+file)
+\begin{DoxyCompactList}\small\item\em Load a CCTBX mask, converting from a list of flex.\+bools to a numpy array. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{namespacebtx_1_1interfaces_1_1imask_adb46387ecc9994067cacd24c3ca19511}{load\+\_\+crystfel\+\_\+mask}} (input\+\_\+file, dataset=\textquotesingle{}/entry\+\_\+1/data\+\_\+1/mask\textquotesingle{}, reshape=True)
+\begin{DoxyCompactList}\small\item\em Load a Cryst\+FEL compatible mask from the input h5 file and optionally reshape to the unassembled detector shape. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{namespacebtx_1_1interfaces_1_1imask_a6fd9a925b21b1a0b9a3dbe149379342b}\label{namespacebtx_1_1interfaces_1_1imask_a6fd9a925b21b1a0b9a3dbe149379342b}} 
+\index{btx.interfaces.imask@{btx.interfaces.imask}!load\_cctbx\_mask@{load\_cctbx\_mask}}
+\index{load\_cctbx\_mask@{load\_cctbx\_mask}!btx.interfaces.imask@{btx.interfaces.imask}}
+\doxysubsubsection{\texorpdfstring{load\_cctbx\_mask()}{load\_cctbx\_mask()}}
+{\footnotesize\ttfamily def btx.\+interfaces.\+imask.\+load\+\_\+cctbx\+\_\+mask (\begin{DoxyParamCaption}\item[{}]{input\+\_\+file }\end{DoxyParamCaption})}
+
+
+
+Load a CCTBX mask, converting from a list of flex.\+bools to a numpy array. 
+
+\hypertarget{namespacebtx_1_1interfaces_1_1imask_autotoc_md42}{}\doxysubsubsection{Parameters}\label{namespacebtx_1_1interfaces_1_1imask_autotoc_md42}
+input\+\_\+file \+: str path to CCTBX mask in pickle format\hypertarget{namespacebtx_1_1interfaces_1_1imask_autotoc_md43}{}\doxysubsubsection{Returns}\label{namespacebtx_1_1interfaces_1_1imask_autotoc_md43}
+mask \+: numpy.\+ndarray, CCTBX-\/compatible shape binary mask \mbox{\Hypertarget{namespacebtx_1_1interfaces_1_1imask_adb46387ecc9994067cacd24c3ca19511}\label{namespacebtx_1_1interfaces_1_1imask_adb46387ecc9994067cacd24c3ca19511}} 
+\index{btx.interfaces.imask@{btx.interfaces.imask}!load\_crystfel\_mask@{load\_crystfel\_mask}}
+\index{load\_crystfel\_mask@{load\_crystfel\_mask}!btx.interfaces.imask@{btx.interfaces.imask}}
+\doxysubsubsection{\texorpdfstring{load\_crystfel\_mask()}{load\_crystfel\_mask()}}
+{\footnotesize\ttfamily def btx.\+interfaces.\+imask.\+load\+\_\+crystfel\+\_\+mask (\begin{DoxyParamCaption}\item[{}]{input\+\_\+file,  }\item[{}]{dataset = {\ttfamily \textquotesingle{}/entry\+\_\+1/data\+\_\+1/mask\textquotesingle{}},  }\item[{}]{reshape = {\ttfamily True} }\end{DoxyParamCaption})}
+
+
+
+Load a Cryst\+FEL compatible mask from the input h5 file and optionally reshape to the unassembled detector shape. 
+
+Currently only Jungfrau4M and epix10k2M detectors are supported for reshape=True.\hypertarget{namespacebtx_1_1interfaces_1_1imask_autotoc_md44}{}\doxysubsubsection{Parameters}\label{namespacebtx_1_1interfaces_1_1imask_autotoc_md44}
+input\+\_\+file \+: str path to h5 file containing mask dataset \+: str internal path to dataset, default is psocake compatible reshape \+: bool if True, reshape to unassembled psana detector shape\hypertarget{namespacebtx_1_1interfaces_1_1imask_autotoc_md45}{}\doxysubsubsection{Returns}\label{namespacebtx_1_1interfaces_1_1imask_autotoc_md45}
+mask \+: numpy.\+ndarray, shape depends on reshape flag binary mask. if not reshape, shape is (n\+\_\+panels $\ast$ n\+\_\+pixels\+\_\+fs, n\+\_\+pixels\+\_\+ss) if reshape, shape is (n\+\_\+panels, n\+\_\+pixels\+\_\+fs, n\+\_\+pixels\+\_\+ss) \mbox{\Hypertarget{namespacebtx_1_1interfaces_1_1imask_a5a75894252e6af7293a7dcd2715d898a}\label{namespacebtx_1_1interfaces_1_1imask_a5a75894252e6af7293a7dcd2715d898a}} 
+\index{btx.interfaces.imask@{btx.interfaces.imask}!stack\_asics@{stack\_asics}}
+\index{stack\_asics@{stack\_asics}!btx.interfaces.imask@{btx.interfaces.imask}}
+\doxysubsubsection{\texorpdfstring{stack\_asics()}{stack\_asics()}}
+{\footnotesize\ttfamily def btx.\+interfaces.\+imask.\+stack\+\_\+asics (\begin{DoxyParamCaption}\item[{}]{image,  }\item[{}]{det\+\_\+type }\end{DoxyParamCaption})}
+
+
+
+Stack the asics to reshape from CCTBX to psana (unassembled) conventions. 
+
+For the epix10k2M, for example, the shape is updated from (64,176,192) -\/\texorpdfstring{$>$}{>} (16,352,384). This reverses the code here\+: \href{https://github.com/cctbx/dxtbx/blob/main/src/dxtbx/format/FormatXTCEpix.py\#L46-L57}{\texttt{ https\+://github.\+com/cctbx/dxtbx/blob/main/src/dxtbx/format/\+Format\+XTCEpix.\+py\#\+L46-\/\+L57}}.\hypertarget{namespacebtx_1_1interfaces_1_1imask_autotoc_md40}{}\doxysubsubsection{Parameters}\label{namespacebtx_1_1interfaces_1_1imask_autotoc_md40}
+image \+: numpy.\+ndarray, shape (n\+\_\+asics, n\+\_\+asics\+\_\+pixels\+\_\+fs, n\+\_\+asics\+\_\+pixels\+\_\+ss) image in unstacked asics format det\+\_\+type \+: str epix10k2M or jungfrau4M\hypertarget{namespacebtx_1_1interfaces_1_1imask_autotoc_md41}{}\doxysubsubsection{Returns}\label{namespacebtx_1_1interfaces_1_1imask_autotoc_md41}
+reshaped\+\_\+image \+: numpy.\+ndarray, shape (n\+\_\+panels, n\+\_\+pixels\+\_\+fs, n\+\_\+pixels\+\_\+ss) image in unassembled psana format \mbox{\Hypertarget{namespacebtx_1_1interfaces_1_1imask_a4e99866845fe057f64dcfa7b7d924815}\label{namespacebtx_1_1interfaces_1_1imask_a4e99866845fe057f64dcfa7b7d924815}} 
+\index{btx.interfaces.imask@{btx.interfaces.imask}!unstack\_asics@{unstack\_asics}}
+\index{unstack\_asics@{unstack\_asics}!btx.interfaces.imask@{btx.interfaces.imask}}
+\doxysubsubsection{\texorpdfstring{unstack\_asics()}{unstack\_asics()}}
+{\footnotesize\ttfamily def btx.\+interfaces.\+imask.\+unstack\+\_\+asics (\begin{DoxyParamCaption}\item[{}]{image,  }\item[{}]{det\+\_\+type,  }\item[{}]{dtype = {\ttfamily \textquotesingle{}double\textquotesingle{}} }\end{DoxyParamCaption})}
+
+
+
+Unstack the asics and convert to CCTBX data type -\/ specifically, a list of flex.\+double or flex.\+bool objects. 
+
+For the epix10k2M, for example, the shape is updated from (16,352,384) -\/\texorpdfstring{$>$}{>} (64,176,192). This mimics the code here\+: \href{https://github.com/cctbx/dxtbx/blob/main/src/dxtbx/format/FormatXTCEpix.py\#L46-L57}{\texttt{ https\+://github.\+com/cctbx/dxtbx/blob/main/src/dxtbx/format/\+Format\+XTCEpix.\+py\#\+L46-\/\+L57}}.\hypertarget{namespacebtx_1_1interfaces_1_1imask_autotoc_md38}{}\doxysubsubsection{Parameters}\label{namespacebtx_1_1interfaces_1_1imask_autotoc_md38}
+image \+: numpy.\+ndarray, shape (n\+\_\+panels, n\+\_\+pixels\+\_\+fs, n\+\_\+pixels\+\_\+ss) image in unassembled psana format det\+\_\+type \+: str epix10k2M or jungfrau4M dtype \+: str return data type, double or (for masks) bool\hypertarget{namespacebtx_1_1interfaces_1_1imask_autotoc_md39}{}\doxysubsubsection{Returns}\label{namespacebtx_1_1interfaces_1_1imask_autotoc_md39}
+reshaped\+\_\+image \+: list of flex.\+bool or flex.\+double arrays list of unstacked asics data 

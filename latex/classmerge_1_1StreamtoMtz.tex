@@ -1,0 +1,246 @@
+\hypertarget{classmerge_1_1StreamtoMtz}{}\doxysection{merge.\+Streamto\+Mtz Class Reference}
+\label{classmerge_1_1StreamtoMtz}\index{merge.StreamtoMtz@{merge.StreamtoMtz}}
+
+
+Wrapper for calling various Cryst\+FEL functions for generating a mtz file from a stream file and reporting statistics.  
+
+
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+def \mbox{\hyperlink{classmerge_1_1StreamtoMtz_a4a699e3e1bcdceaf4630ad42137686ce}{\+\_\+\+\_\+init\+\_\+\+\_\+}} (self, input\+\_\+stream, \mbox{\hyperlink{classmerge_1_1StreamtoMtz_a0f6ebd79cc9dbe574307f2f60217919e}{symmetry}}, \mbox{\hyperlink{classmerge_1_1StreamtoMtz_a5a3c748cbe573bca96cf336eb9434226}{taskdir}}, \mbox{\hyperlink{classmerge_1_1StreamtoMtz_a92da3f1224227e364a663379de16553d}{cell}}, \mbox{\hyperlink{classmerge_1_1StreamtoMtz_a083113cc1b4bccb771216d06abc00602}{ncores}}=16, \mbox{\hyperlink{classmerge_1_1StreamtoMtz_a378627a97ad03c07751cdf9a5de064dd}{queue}}=\textquotesingle{}ffbh3q\textquotesingle{}, tmp\+\_\+exe=None, \mbox{\hyperlink{classmerge_1_1StreamtoMtz_affe4758bd266c7d4d40ca9c8ce19a6be}{mtz\+\_\+dir}}=None, \mbox{\hyperlink{classmerge_1_1StreamtoMtz_a318c3295b192c7e2483ceb0368fab263}{anomalous}}=False)
+\item 
+def \mbox{\hyperlink{classmerge_1_1StreamtoMtz_a767b0698e23492a8ad54d64fd257a4fc}{cmd\+\_\+partialator}} (self, \mbox{\hyperlink{namespacemerge_ace6a58f4e62ae85b1ec8214f8b8568dd}{iterations}}=1, \mbox{\hyperlink{namespacemerge_a5f4a72a7cb9645323d170b89508a24fe}{model}}=\textquotesingle{}unity\textquotesingle{}, \mbox{\hyperlink{namespacemerge_a44de5c5e37ce866ebdcaeb12f6bf624e}{min\+\_\+res}}=None, \mbox{\hyperlink{namespacemerge_a77643c8628e7682461101fa373ff20d8}{push\+\_\+res}}=None, \mbox{\hyperlink{namespacemerge_a876d5ec34da9bcd914dfa9572c00f933}{max\+\_\+adu}}=None)
+\begin{DoxyCompactList}\small\item\em Write command to merge reflection data using Cryst\+FEL\textquotesingle{}s partialator. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{classmerge_1_1StreamtoMtz_afaa33c42e221937d9e3b33bbdcf79f6e}{cmd\+\_\+compare\+\_\+hkl}} (self, \mbox{\hyperlink{namespacemerge_a8b1c2fd57a042454b2abaeee944c7d87}{foms}}=\mbox{[}\textquotesingle{}CCstar\textquotesingle{}, \textquotesingle{}Rsplit\textquotesingle{}\mbox{]}, \mbox{\hyperlink{namespacemerge_a26cc38987f6db607837b846fede5b200}{nshells}}=10, \mbox{\hyperlink{namespacemerge_a24bbf6e98f14e047748d176253565bd0}{highres}}=None)
+\begin{DoxyCompactList}\small\item\em Run compare\+\_\+hkl on half-\/sets to compute the dataset\textquotesingle{}s figures of merit. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{classmerge_1_1StreamtoMtz_a8ca0d6568ed6c5f18ad2ee07f5201ee9}{cmd\+\_\+report}} (self, \mbox{\hyperlink{namespacemerge_a8b1c2fd57a042454b2abaeee944c7d87}{foms}}=\mbox{[}\textquotesingle{}CCstar\textquotesingle{}, \textquotesingle{}Rsplit\textquotesingle{}\mbox{]}, \mbox{\hyperlink{namespacemerge_a26cc38987f6db607837b846fede5b200}{nshells}}=10)
+\begin{DoxyCompactList}\small\item\em Append a line to the executable to report and plot the results. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{classmerge_1_1StreamtoMtz_ab0b09b0aaffe68eb3d87152550e6a6d9}{cmd\+\_\+hkl\+\_\+to\+\_\+mtz}} (self, \mbox{\hyperlink{namespacemerge_a21ed1c19618e66be4f7973422ac0abc8}{space\+\_\+group}}=1, \mbox{\hyperlink{namespacemerge_a24bbf6e98f14e047748d176253565bd0}{highres}}=None, xds\+\_\+style=False)
+\begin{DoxyCompactList}\small\item\em Convert hkl to mtz format using Cryst\+FEL\textquotesingle{}s get\+\_\+hkl tool\+: \href{https://www.desy.de/~twhite/crystfel/manual-get_hkl.html}{\texttt{ https\+://www.\+desy.\+de/$\sim$twhite/crystfel/manual-\/get\+\_\+hkl.\+html}} if anomalous and xds\+\_\+style are False. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{classmerge_1_1StreamtoMtz_acae59213b071b0bb0347e3a8aff9b31f}{launch}} (self)
+\begin{DoxyCompactList}\small\item\em Write an indexing executable for submission to slurm. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{classmerge_1_1StreamtoMtz_abd16e806e8b1bc112ce7d057c3719275}{report}} (self, \mbox{\hyperlink{namespacemerge_a8b1c2fd57a042454b2abaeee944c7d87}{foms}}=\mbox{[}\textquotesingle{}CCstar\textquotesingle{}, \textquotesingle{}Rsplit\textquotesingle{}\mbox{]}, \mbox{\hyperlink{namespacemerge_a26cc38987f6db607837b846fede5b200}{nshells}}=10, \mbox{\hyperlink{namespacemerge_a18c6296485496b9271012a29b2bc2a15}{update\+\_\+url}}=None)
+\begin{DoxyCompactList}\small\item\em Summarize results\+: plot figures of merit and optionally report to elog. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classmerge_1_1StreamtoMtz_aec4e077d08183fa4f94a3a6c2bb1e8b0}{stream}}
+\item 
+\mbox{\hyperlink{classmerge_1_1StreamtoMtz_a0f6ebd79cc9dbe574307f2f60217919e}{symmetry}}
+\item 
+\mbox{\hyperlink{classmerge_1_1StreamtoMtz_a5a3c748cbe573bca96cf336eb9434226}{taskdir}}
+\item 
+\mbox{\hyperlink{classmerge_1_1StreamtoMtz_a92da3f1224227e364a663379de16553d}{cell}}
+\item 
+\mbox{\hyperlink{classmerge_1_1StreamtoMtz_a083113cc1b4bccb771216d06abc00602}{ncores}}
+\item 
+\mbox{\hyperlink{classmerge_1_1StreamtoMtz_a378627a97ad03c07751cdf9a5de064dd}{queue}}
+\item 
+\mbox{\hyperlink{classmerge_1_1StreamtoMtz_affe4758bd266c7d4d40ca9c8ce19a6be}{mtz\+\_\+dir}}
+\item 
+\mbox{\hyperlink{classmerge_1_1StreamtoMtz_a318c3295b192c7e2483ceb0368fab263}{anomalous}}
+\item 
+\mbox{\hyperlink{classmerge_1_1StreamtoMtz_af6092e09cfe5828b42597bed25479908}{hkl\+\_\+dir}}
+\item 
+\mbox{\hyperlink{classmerge_1_1StreamtoMtz_ad848a8fa30d846863b7fe81c649f87b4}{fig\+\_\+dir}}
+\item 
+\mbox{\hyperlink{classmerge_1_1StreamtoMtz_a3f2214536a468d6fc0df1da97dbc958a}{js}}
+\item 
+\mbox{\hyperlink{classmerge_1_1StreamtoMtz_a87a644c900e07e0cebfc29775aac4e22}{script\+\_\+path}}
+\item 
+\mbox{\hyperlink{classmerge_1_1StreamtoMtz_a27b6c76f74d6b6c4745fcc5f3709f5a3}{prefix}}
+\item 
+\mbox{\hyperlink{classmerge_1_1StreamtoMtz_a01df5d98e34d4c7408a8d73d9db1efca}{outhkl}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Private Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+def \mbox{\hyperlink{classmerge_1_1StreamtoMtz_a557054059ee1b97c2d8c6f88ea6e390f}{\+\_\+set\+\_\+up}} (self, tmp\+\_\+exe)
+\begin{DoxyCompactList}\small\item\em Retrieve number of processors to run partialator and the temporary file to which to write the command to sbatch. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Wrapper for calling various Cryst\+FEL functions for generating a mtz file from a stream file and reporting statistics. 
+
+The output files, including hkl, mtz, dat, and figures, inherit nomenclature from the input stream file. 
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classmerge_1_1StreamtoMtz_a4a699e3e1bcdceaf4630ad42137686ce}\label{classmerge_1_1StreamtoMtz_a4a699e3e1bcdceaf4630ad42137686ce}} 
+\index{merge.StreamtoMtz@{merge.StreamtoMtz}!\_\_init\_\_@{\_\_init\_\_}}
+\index{\_\_init\_\_@{\_\_init\_\_}!merge.StreamtoMtz@{merge.StreamtoMtz}}
+\doxysubsubsection{\texorpdfstring{\_\_init\_\_()}{\_\_init\_\_()}}
+{\footnotesize\ttfamily def merge.\+Streamto\+Mtz.\+\_\+\+\_\+init\+\_\+\+\_\+ (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{input\+\_\+stream,  }\item[{}]{symmetry,  }\item[{}]{taskdir,  }\item[{}]{cell,  }\item[{}]{ncores = {\ttfamily 16},  }\item[{}]{queue = {\ttfamily \textquotesingle{}ffbh3q\textquotesingle{}},  }\item[{}]{tmp\+\_\+exe = {\ttfamily None},  }\item[{}]{mtz\+\_\+dir = {\ttfamily None},  }\item[{}]{anomalous = {\ttfamily False} }\end{DoxyParamCaption})}
+
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classmerge_1_1StreamtoMtz_a557054059ee1b97c2d8c6f88ea6e390f}\label{classmerge_1_1StreamtoMtz_a557054059ee1b97c2d8c6f88ea6e390f}} 
+\index{merge.StreamtoMtz@{merge.StreamtoMtz}!\_set\_up@{\_set\_up}}
+\index{\_set\_up@{\_set\_up}!merge.StreamtoMtz@{merge.StreamtoMtz}}
+\doxysubsubsection{\texorpdfstring{\_set\_up()}{\_set\_up()}}
+{\footnotesize\ttfamily def merge.\+Streamto\+Mtz.\+\_\+set\+\_\+up (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{tmp\+\_\+exe }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [private]}}
+
+
+
+Retrieve number of processors to run partialator and the temporary file to which to write the command to sbatch. 
+
+\hypertarget{classmerge_1_1StreamtoMtz_autotoc_md136}{}\doxysubsubsection{Parameters}\label{classmerge_1_1StreamtoMtz_autotoc_md136}
+tmp\+\_\+exe \+: str path to job submission file \mbox{\Hypertarget{classmerge_1_1StreamtoMtz_afaa33c42e221937d9e3b33bbdcf79f6e}\label{classmerge_1_1StreamtoMtz_afaa33c42e221937d9e3b33bbdcf79f6e}} 
+\index{merge.StreamtoMtz@{merge.StreamtoMtz}!cmd\_compare\_hkl@{cmd\_compare\_hkl}}
+\index{cmd\_compare\_hkl@{cmd\_compare\_hkl}!merge.StreamtoMtz@{merge.StreamtoMtz}}
+\doxysubsubsection{\texorpdfstring{cmd\_compare\_hkl()}{cmd\_compare\_hkl()}}
+{\footnotesize\ttfamily def merge.\+Streamto\+Mtz.\+cmd\+\_\+compare\+\_\+hkl (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{foms = {\ttfamily \mbox{[}\textquotesingle{}CCstar\textquotesingle{},\textquotesingle{}Rsplit\textquotesingle{}\mbox{]}},  }\item[{}]{nshells = {\ttfamily 10},  }\item[{}]{highres = {\ttfamily None} }\end{DoxyParamCaption})}
+
+
+
+Run compare\+\_\+hkl on half-\/sets to compute the dataset\textquotesingle{}s figures of merit. 
+
+\hypertarget{classmerge_1_1StreamtoMtz_autotoc_md138}{}\doxysubsubsection{Parameters}\label{classmerge_1_1StreamtoMtz_autotoc_md138}
+foms \+: list of str figures of merit to compute nshells \+: int number of resolution shells highres \+: float high-\/resolution cut-\/off \mbox{\Hypertarget{classmerge_1_1StreamtoMtz_ab0b09b0aaffe68eb3d87152550e6a6d9}\label{classmerge_1_1StreamtoMtz_ab0b09b0aaffe68eb3d87152550e6a6d9}} 
+\index{merge.StreamtoMtz@{merge.StreamtoMtz}!cmd\_hkl\_to\_mtz@{cmd\_hkl\_to\_mtz}}
+\index{cmd\_hkl\_to\_mtz@{cmd\_hkl\_to\_mtz}!merge.StreamtoMtz@{merge.StreamtoMtz}}
+\doxysubsubsection{\texorpdfstring{cmd\_hkl\_to\_mtz()}{cmd\_hkl\_to\_mtz()}}
+{\footnotesize\ttfamily def merge.\+Streamto\+Mtz.\+cmd\+\_\+hkl\+\_\+to\+\_\+mtz (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{space\+\_\+group = {\ttfamily 1},  }\item[{}]{highres = {\ttfamily None},  }\item[{}]{xds\+\_\+style = {\ttfamily False} }\end{DoxyParamCaption})}
+
+
+
+Convert hkl to mtz format using Cryst\+FEL\textquotesingle{}s get\+\_\+hkl tool\+: \href{https://www.desy.de/~twhite/crystfel/manual-get_hkl.html}{\texttt{ https\+://www.\+desy.\+de/$\sim$twhite/crystfel/manual-\/get\+\_\+hkl.\+html}} if anomalous and xds\+\_\+style are False. 
+
+Otherwise, convert to mtz using a combination of xdsconv and f2mtz.\hypertarget{classmerge_1_1StreamtoMtz_autotoc_md140}{}\doxysubsubsection{Parameters}\label{classmerge_1_1StreamtoMtz_autotoc_md140}
+space\+\_\+group \+: int space group number highres \+: float high-\/resolution cut-\/off in Angstroms xds\+\_\+style \+: bool if True, use xdsconv/f2mtz regardless of anomalous status \mbox{\Hypertarget{classmerge_1_1StreamtoMtz_a767b0698e23492a8ad54d64fd257a4fc}\label{classmerge_1_1StreamtoMtz_a767b0698e23492a8ad54d64fd257a4fc}} 
+\index{merge.StreamtoMtz@{merge.StreamtoMtz}!cmd\_partialator@{cmd\_partialator}}
+\index{cmd\_partialator@{cmd\_partialator}!merge.StreamtoMtz@{merge.StreamtoMtz}}
+\doxysubsubsection{\texorpdfstring{cmd\_partialator()}{cmd\_partialator()}}
+{\footnotesize\ttfamily def merge.\+Streamto\+Mtz.\+cmd\+\_\+partialator (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{iterations = {\ttfamily 1},  }\item[{}]{model = {\ttfamily \textquotesingle{}unity\textquotesingle{}},  }\item[{}]{min\+\_\+res = {\ttfamily None},  }\item[{}]{push\+\_\+res = {\ttfamily None},  }\item[{}]{max\+\_\+adu = {\ttfamily None} }\end{DoxyParamCaption})}
+
+
+
+Write command to merge reflection data using Cryst\+FEL\textquotesingle{}s partialator. 
+
+\href{https://www.desy.de/~twhite/crystfel/manual-partialator.html}{\texttt{ https\+://www.\+desy.\+de/$\sim$twhite/crystfel/manual-\/partialator.\+html}}. By default scaling and post-\/refinement are performed. This generates a .mtz file from a .stream file.\hypertarget{classmerge_1_1StreamtoMtz_autotoc_md137}{}\doxysubsubsection{Parameters}\label{classmerge_1_1StreamtoMtz_autotoc_md137}
+iterations \+: int number of cycles of scaling and post refinement model \+: str partiality model, unity or xsphere min\+\_\+res \+: float resolution threshold for merging crystals in Angstrom push\+\_\+res \+: float resolution threshold for merging reflections, up to push\+\_\+res better than crystal\textquotesingle{}s min\+\_\+res max\+\_\+adu \+: float intensity threshold for excluding saturated peaks \mbox{\Hypertarget{classmerge_1_1StreamtoMtz_a8ca0d6568ed6c5f18ad2ee07f5201ee9}\label{classmerge_1_1StreamtoMtz_a8ca0d6568ed6c5f18ad2ee07f5201ee9}} 
+\index{merge.StreamtoMtz@{merge.StreamtoMtz}!cmd\_report@{cmd\_report}}
+\index{cmd\_report@{cmd\_report}!merge.StreamtoMtz@{merge.StreamtoMtz}}
+\doxysubsubsection{\texorpdfstring{cmd\_report()}{cmd\_report()}}
+{\footnotesize\ttfamily def merge.\+Streamto\+Mtz.\+cmd\+\_\+report (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{foms = {\ttfamily \mbox{[}\textquotesingle{}CCstar\textquotesingle{},\textquotesingle{}Rsplit\textquotesingle{}\mbox{]}},  }\item[{}]{nshells = {\ttfamily 10} }\end{DoxyParamCaption})}
+
+
+
+Append a line to the executable to report and plot the results. 
+
+\hypertarget{classmerge_1_1StreamtoMtz_autotoc_md139}{}\doxysubsubsection{Parameters}\label{classmerge_1_1StreamtoMtz_autotoc_md139}
+foms \+: list of str figures of merit to compute nshells \+: int number of resolution shells ~\newline
+ \mbox{\Hypertarget{classmerge_1_1StreamtoMtz_acae59213b071b0bb0347e3a8aff9b31f}\label{classmerge_1_1StreamtoMtz_acae59213b071b0bb0347e3a8aff9b31f}} 
+\index{merge.StreamtoMtz@{merge.StreamtoMtz}!launch@{launch}}
+\index{launch@{launch}!merge.StreamtoMtz@{merge.StreamtoMtz}}
+\doxysubsubsection{\texorpdfstring{launch()}{launch()}}
+{\footnotesize\ttfamily def merge.\+Streamto\+Mtz.\+launch (\begin{DoxyParamCaption}\item[{}]{self }\end{DoxyParamCaption})}
+
+
+
+Write an indexing executable for submission to slurm. 
+
+\mbox{\Hypertarget{classmerge_1_1StreamtoMtz_abd16e806e8b1bc112ce7d057c3719275}\label{classmerge_1_1StreamtoMtz_abd16e806e8b1bc112ce7d057c3719275}} 
+\index{merge.StreamtoMtz@{merge.StreamtoMtz}!report@{report}}
+\index{report@{report}!merge.StreamtoMtz@{merge.StreamtoMtz}}
+\doxysubsubsection{\texorpdfstring{report()}{report()}}
+{\footnotesize\ttfamily def merge.\+Streamto\+Mtz.\+report (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{foms = {\ttfamily \mbox{[}\textquotesingle{}CCstar\textquotesingle{},\textquotesingle{}Rsplit\textquotesingle{}\mbox{]}},  }\item[{}]{nshells = {\ttfamily 10},  }\item[{}]{update\+\_\+url = {\ttfamily None} }\end{DoxyParamCaption})}
+
+
+
+Summarize results\+: plot figures of merit and optionally report to elog. 
+
+Transfer the mtz file to a new folder.\hypertarget{classmerge_1_1StreamtoMtz_autotoc_md141}{}\doxysubsubsection{Parameters}\label{classmerge_1_1StreamtoMtz_autotoc_md141}
+foms \+: list of str figures of merit to compute nshells \+: int number of shells used to compute figure(s) of merit update\+\_\+url \+: str elog URL for posting progress update 
+
+\doxysubsection{Member Data Documentation}
+\mbox{\Hypertarget{classmerge_1_1StreamtoMtz_a318c3295b192c7e2483ceb0368fab263}\label{classmerge_1_1StreamtoMtz_a318c3295b192c7e2483ceb0368fab263}} 
+\index{merge.StreamtoMtz@{merge.StreamtoMtz}!anomalous@{anomalous}}
+\index{anomalous@{anomalous}!merge.StreamtoMtz@{merge.StreamtoMtz}}
+\doxysubsubsection{\texorpdfstring{anomalous}{anomalous}}
+{\footnotesize\ttfamily merge.\+Streamto\+Mtz.\+anomalous}
+
+\mbox{\Hypertarget{classmerge_1_1StreamtoMtz_a92da3f1224227e364a663379de16553d}\label{classmerge_1_1StreamtoMtz_a92da3f1224227e364a663379de16553d}} 
+\index{merge.StreamtoMtz@{merge.StreamtoMtz}!cell@{cell}}
+\index{cell@{cell}!merge.StreamtoMtz@{merge.StreamtoMtz}}
+\doxysubsubsection{\texorpdfstring{cell}{cell}}
+{\footnotesize\ttfamily merge.\+Streamto\+Mtz.\+cell}
+
+\mbox{\Hypertarget{classmerge_1_1StreamtoMtz_ad848a8fa30d846863b7fe81c649f87b4}\label{classmerge_1_1StreamtoMtz_ad848a8fa30d846863b7fe81c649f87b4}} 
+\index{merge.StreamtoMtz@{merge.StreamtoMtz}!fig\_dir@{fig\_dir}}
+\index{fig\_dir@{fig\_dir}!merge.StreamtoMtz@{merge.StreamtoMtz}}
+\doxysubsubsection{\texorpdfstring{fig\_dir}{fig\_dir}}
+{\footnotesize\ttfamily merge.\+Streamto\+Mtz.\+fig\+\_\+dir}
+
+\mbox{\Hypertarget{classmerge_1_1StreamtoMtz_af6092e09cfe5828b42597bed25479908}\label{classmerge_1_1StreamtoMtz_af6092e09cfe5828b42597bed25479908}} 
+\index{merge.StreamtoMtz@{merge.StreamtoMtz}!hkl\_dir@{hkl\_dir}}
+\index{hkl\_dir@{hkl\_dir}!merge.StreamtoMtz@{merge.StreamtoMtz}}
+\doxysubsubsection{\texorpdfstring{hkl\_dir}{hkl\_dir}}
+{\footnotesize\ttfamily merge.\+Streamto\+Mtz.\+hkl\+\_\+dir}
+
+\mbox{\Hypertarget{classmerge_1_1StreamtoMtz_a3f2214536a468d6fc0df1da97dbc958a}\label{classmerge_1_1StreamtoMtz_a3f2214536a468d6fc0df1da97dbc958a}} 
+\index{merge.StreamtoMtz@{merge.StreamtoMtz}!js@{js}}
+\index{js@{js}!merge.StreamtoMtz@{merge.StreamtoMtz}}
+\doxysubsubsection{\texorpdfstring{js}{js}}
+{\footnotesize\ttfamily merge.\+Streamto\+Mtz.\+js}
+
+\mbox{\Hypertarget{classmerge_1_1StreamtoMtz_affe4758bd266c7d4d40ca9c8ce19a6be}\label{classmerge_1_1StreamtoMtz_affe4758bd266c7d4d40ca9c8ce19a6be}} 
+\index{merge.StreamtoMtz@{merge.StreamtoMtz}!mtz\_dir@{mtz\_dir}}
+\index{mtz\_dir@{mtz\_dir}!merge.StreamtoMtz@{merge.StreamtoMtz}}
+\doxysubsubsection{\texorpdfstring{mtz\_dir}{mtz\_dir}}
+{\footnotesize\ttfamily merge.\+Streamto\+Mtz.\+mtz\+\_\+dir}
+
+\mbox{\Hypertarget{classmerge_1_1StreamtoMtz_a083113cc1b4bccb771216d06abc00602}\label{classmerge_1_1StreamtoMtz_a083113cc1b4bccb771216d06abc00602}} 
+\index{merge.StreamtoMtz@{merge.StreamtoMtz}!ncores@{ncores}}
+\index{ncores@{ncores}!merge.StreamtoMtz@{merge.StreamtoMtz}}
+\doxysubsubsection{\texorpdfstring{ncores}{ncores}}
+{\footnotesize\ttfamily merge.\+Streamto\+Mtz.\+ncores}
+
+\mbox{\Hypertarget{classmerge_1_1StreamtoMtz_a01df5d98e34d4c7408a8d73d9db1efca}\label{classmerge_1_1StreamtoMtz_a01df5d98e34d4c7408a8d73d9db1efca}} 
+\index{merge.StreamtoMtz@{merge.StreamtoMtz}!outhkl@{outhkl}}
+\index{outhkl@{outhkl}!merge.StreamtoMtz@{merge.StreamtoMtz}}
+\doxysubsubsection{\texorpdfstring{outhkl}{outhkl}}
+{\footnotesize\ttfamily merge.\+Streamto\+Mtz.\+outhkl}
+
+\mbox{\Hypertarget{classmerge_1_1StreamtoMtz_a27b6c76f74d6b6c4745fcc5f3709f5a3}\label{classmerge_1_1StreamtoMtz_a27b6c76f74d6b6c4745fcc5f3709f5a3}} 
+\index{merge.StreamtoMtz@{merge.StreamtoMtz}!prefix@{prefix}}
+\index{prefix@{prefix}!merge.StreamtoMtz@{merge.StreamtoMtz}}
+\doxysubsubsection{\texorpdfstring{prefix}{prefix}}
+{\footnotesize\ttfamily merge.\+Streamto\+Mtz.\+prefix}
+
+\mbox{\Hypertarget{classmerge_1_1StreamtoMtz_a378627a97ad03c07751cdf9a5de064dd}\label{classmerge_1_1StreamtoMtz_a378627a97ad03c07751cdf9a5de064dd}} 
+\index{merge.StreamtoMtz@{merge.StreamtoMtz}!queue@{queue}}
+\index{queue@{queue}!merge.StreamtoMtz@{merge.StreamtoMtz}}
+\doxysubsubsection{\texorpdfstring{queue}{queue}}
+{\footnotesize\ttfamily merge.\+Streamto\+Mtz.\+queue}
+
+\mbox{\Hypertarget{classmerge_1_1StreamtoMtz_a87a644c900e07e0cebfc29775aac4e22}\label{classmerge_1_1StreamtoMtz_a87a644c900e07e0cebfc29775aac4e22}} 
+\index{merge.StreamtoMtz@{merge.StreamtoMtz}!script\_path@{script\_path}}
+\index{script\_path@{script\_path}!merge.StreamtoMtz@{merge.StreamtoMtz}}
+\doxysubsubsection{\texorpdfstring{script\_path}{script\_path}}
+{\footnotesize\ttfamily merge.\+Streamto\+Mtz.\+script\+\_\+path}
+
+\mbox{\Hypertarget{classmerge_1_1StreamtoMtz_aec4e077d08183fa4f94a3a6c2bb1e8b0}\label{classmerge_1_1StreamtoMtz_aec4e077d08183fa4f94a3a6c2bb1e8b0}} 
+\index{merge.StreamtoMtz@{merge.StreamtoMtz}!stream@{stream}}
+\index{stream@{stream}!merge.StreamtoMtz@{merge.StreamtoMtz}}
+\doxysubsubsection{\texorpdfstring{stream}{stream}}
+{\footnotesize\ttfamily merge.\+Streamto\+Mtz.\+stream}
+
+\mbox{\Hypertarget{classmerge_1_1StreamtoMtz_a0f6ebd79cc9dbe574307f2f60217919e}\label{classmerge_1_1StreamtoMtz_a0f6ebd79cc9dbe574307f2f60217919e}} 
+\index{merge.StreamtoMtz@{merge.StreamtoMtz}!symmetry@{symmetry}}
+\index{symmetry@{symmetry}!merge.StreamtoMtz@{merge.StreamtoMtz}}
+\doxysubsubsection{\texorpdfstring{symmetry}{symmetry}}
+{\footnotesize\ttfamily merge.\+Streamto\+Mtz.\+symmetry}
+
+\mbox{\Hypertarget{classmerge_1_1StreamtoMtz_a5a3c748cbe573bca96cf336eb9434226}\label{classmerge_1_1StreamtoMtz_a5a3c748cbe573bca96cf336eb9434226}} 
+\index{merge.StreamtoMtz@{merge.StreamtoMtz}!taskdir@{taskdir}}
+\index{taskdir@{taskdir}!merge.StreamtoMtz@{merge.StreamtoMtz}}
+\doxysubsubsection{\texorpdfstring{taskdir}{taskdir}}
+{\footnotesize\ttfamily merge.\+Streamto\+Mtz.\+taskdir}
+
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+btx/processing/\mbox{\hyperlink{btx_2processing_2merge_8py}{merge.\+py}}\end{DoxyCompactItemize}

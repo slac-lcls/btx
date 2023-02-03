@@ -1,0 +1,56 @@
+\hypertarget{namespacebtx_1_1interfaces_1_1ipsana}{}\doxysection{btx.\+interfaces.\+ipsana Namespace Reference}
+\label{namespacebtx_1_1interfaces_1_1ipsana}\index{btx.interfaces.ipsana@{btx.interfaces.ipsana}}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+class \mbox{\hyperlink{classbtx_1_1interfaces_1_1ipsana_1_1PsanaInterface}{Psana\+Interface}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+def \mbox{\hyperlink{namespacebtx_1_1interfaces_1_1ipsana_a1aee10f469f1813c0dc29a77c64572a6}{retrieve\+\_\+pixel\+\_\+index\+\_\+map}} (geom)
+\begin{DoxyCompactList}\small\item\em Retrieve a pixel index map that specifies the relative arrangement of pixels on an LCLS detector. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{namespacebtx_1_1interfaces_1_1ipsana_a1e991ecff6ee6d375907e070e15a4bfc}{assemble\+\_\+image\+\_\+stack\+\_\+batch}} (image\+\_\+stack, pixel\+\_\+index\+\_\+map)
+\begin{DoxyCompactList}\small\item\em Assemble the image stack to obtain a 2D pattern according to the index map. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{namespacebtx_1_1interfaces_1_1ipsana_a6fb6d1c08d6c4442cd850c0bf7c25e1b}{disassemble\+\_\+image\+\_\+stack\+\_\+batch}} (images, pixel\+\_\+index\+\_\+map)
+\begin{DoxyCompactList}\small\item\em Diassemble a series of 2D diffraction patterns into their consituent panels. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{namespacebtx_1_1interfaces_1_1ipsana_a1e991ecff6ee6d375907e070e15a4bfc}\label{namespacebtx_1_1interfaces_1_1ipsana_a1e991ecff6ee6d375907e070e15a4bfc}} 
+\index{btx.interfaces.ipsana@{btx.interfaces.ipsana}!assemble\_image\_stack\_batch@{assemble\_image\_stack\_batch}}
+\index{assemble\_image\_stack\_batch@{assemble\_image\_stack\_batch}!btx.interfaces.ipsana@{btx.interfaces.ipsana}}
+\doxysubsubsection{\texorpdfstring{assemble\_image\_stack\_batch()}{assemble\_image\_stack\_batch()}}
+{\footnotesize\ttfamily def btx.\+interfaces.\+ipsana.\+assemble\+\_\+image\+\_\+stack\+\_\+batch (\begin{DoxyParamCaption}\item[{}]{image\+\_\+stack,  }\item[{}]{pixel\+\_\+index\+\_\+map }\end{DoxyParamCaption})}
+
+
+
+Assemble the image stack to obtain a 2D pattern according to the index map. 
+
+Either a batch or a single image can be provided. Modified from skopi.\hypertarget{namespacebtx_1_1interfaces_1_1ipsana_autotoc_md62}{}\doxysubsubsection{Parameters}\label{namespacebtx_1_1interfaces_1_1ipsana_autotoc_md62}
+image\+\_\+stack \+: numpy.\+ndarray, 3d or 4d stack of images, shape (n\+\_\+images, n\+\_\+panels, fs\+\_\+panel\+\_\+shape, ss\+\_\+panel\+\_\+shape) or (n\+\_\+panels, fs\+\_\+panel\+\_\+shape, ss\+\_\+panel\+\_\+shape) pixel\+\_\+index\+\_\+map \+: numpy.\+ndarray, 4d pixel coordinates, shape (n\+\_\+panels, fs\+\_\+panel\+\_\+shape, ss\+\_\+panel\+\_\+shape, 2)\hypertarget{namespacebtx_1_1interfaces_1_1ipsana_autotoc_md63}{}\doxysubsubsection{Returns}\label{namespacebtx_1_1interfaces_1_1ipsana_autotoc_md63}
+images \+: numpy.\+ndarray, 3d stack of assembled images, shape (n\+\_\+images, fs\+\_\+panel\+\_\+shape, ss\+\_\+panel\+\_\+shape) of shape (fs\+\_\+panel\+\_\+shape, ss\+\_\+panel\+\_\+shape) if ony one image provided \mbox{\Hypertarget{namespacebtx_1_1interfaces_1_1ipsana_a6fb6d1c08d6c4442cd850c0bf7c25e1b}\label{namespacebtx_1_1interfaces_1_1ipsana_a6fb6d1c08d6c4442cd850c0bf7c25e1b}} 
+\index{btx.interfaces.ipsana@{btx.interfaces.ipsana}!disassemble\_image\_stack\_batch@{disassemble\_image\_stack\_batch}}
+\index{disassemble\_image\_stack\_batch@{disassemble\_image\_stack\_batch}!btx.interfaces.ipsana@{btx.interfaces.ipsana}}
+\doxysubsubsection{\texorpdfstring{disassemble\_image\_stack\_batch()}{disassemble\_image\_stack\_batch()}}
+{\footnotesize\ttfamily def btx.\+interfaces.\+ipsana.\+disassemble\+\_\+image\+\_\+stack\+\_\+batch (\begin{DoxyParamCaption}\item[{}]{images,  }\item[{}]{pixel\+\_\+index\+\_\+map }\end{DoxyParamCaption})}
+
+
+
+Diassemble a series of 2D diffraction patterns into their consituent panels. 
+
+Function modified from skopi.\hypertarget{namespacebtx_1_1interfaces_1_1ipsana_autotoc_md64}{}\doxysubsubsection{Parameters}\label{namespacebtx_1_1interfaces_1_1ipsana_autotoc_md64}
+images \+: numpy.\+ndarray, 3d stack of assembled images, shape (n\+\_\+images, fs\+\_\+panel\+\_\+shape, ss\+\_\+panel\+\_\+shape) of shape (fs\+\_\+panel\+\_\+shape, ss\+\_\+panel\+\_\+shape) if ony one image provided pixel\+\_\+index\+\_\+map \+: numpy.\+ndarray, 4d pixel coordinates, shape (n\+\_\+panels, fs\+\_\+panel\+\_\+shape, ss\+\_\+panel\+\_\+shape, 2)\hypertarget{namespacebtx_1_1interfaces_1_1ipsana_autotoc_md65}{}\doxysubsubsection{Returns}\label{namespacebtx_1_1interfaces_1_1ipsana_autotoc_md65}
+image\+\_\+stack\+\_\+batch \+: numpy.\+ndarray, 3d or 4d stack of images, shape (n\+\_\+images, n\+\_\+panels, fs\+\_\+panel\+\_\+shape, ss\+\_\+panel\+\_\+shape) or (n\+\_\+panels, fs\+\_\+panel\+\_\+shape, ss\+\_\+panel\+\_\+shape) \mbox{\Hypertarget{namespacebtx_1_1interfaces_1_1ipsana_a1aee10f469f1813c0dc29a77c64572a6}\label{namespacebtx_1_1interfaces_1_1ipsana_a1aee10f469f1813c0dc29a77c64572a6}} 
+\index{btx.interfaces.ipsana@{btx.interfaces.ipsana}!retrieve\_pixel\_index\_map@{retrieve\_pixel\_index\_map}}
+\index{retrieve\_pixel\_index\_map@{retrieve\_pixel\_index\_map}!btx.interfaces.ipsana@{btx.interfaces.ipsana}}
+\doxysubsubsection{\texorpdfstring{retrieve\_pixel\_index\_map()}{retrieve\_pixel\_index\_map()}}
+{\footnotesize\ttfamily def btx.\+interfaces.\+ipsana.\+retrieve\+\_\+pixel\+\_\+index\+\_\+map (\begin{DoxyParamCaption}\item[{}]{geom }\end{DoxyParamCaption})}
+
+
+
+Retrieve a pixel index map that specifies the relative arrangement of pixels on an LCLS detector. 
+
+\hypertarget{namespacebtx_1_1interfaces_1_1ipsana_autotoc_md60}{}\doxysubsubsection{Parameters}\label{namespacebtx_1_1interfaces_1_1ipsana_autotoc_md60}
+geom \+: string or Geometry\+Access Object if str, full path to a psana $\ast$-\/end.data file else, a PSCalib.\+Geometry\+Access.\+Geometry\+Access object\hypertarget{namespacebtx_1_1interfaces_1_1ipsana_autotoc_md61}{}\doxysubsubsection{Returns}\label{namespacebtx_1_1interfaces_1_1ipsana_autotoc_md61}
+pixel\+\_\+index\+\_\+map \+: numpy.\+ndarray, 4d pixel coordinates, shape (n\+\_\+panels, fs\+\_\+panel\+\_\+shape, ss\+\_\+panel\+\_\+shape, 2) 

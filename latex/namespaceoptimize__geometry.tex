@@ -1,0 +1,74 @@
+\hypertarget{namespaceoptimize__geometry}{}\doxysection{optimize\+\_\+geometry Namespace Reference}
+\label{namespaceoptimize__geometry}\index{optimize\_geometry@{optimize\_geometry}}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+string \mbox{\hyperlink{namespaceoptimize__geometry_acf94faea1db24dec5b0e4aa6261ef55f}{description}} = \textquotesingle{}BTX optimize geometry DAG\textquotesingle{}
+\item 
+\mbox{\hyperlink{namespaceoptimize__geometry_a418286937c0e4d929aa75ead2d71b14f}{dag\+\_\+name}} = os.\+path.\+splitext(os.\+path.\+basename(\+\_\+\+\_\+file\+\_\+\+\_\+))\mbox{[}0\mbox{]}
+\item 
+\mbox{\hyperlink{namespaceoptimize__geometry_a62a628c3fed59d8ffb8b3e3641b127a3}{dag}}
+\item 
+string \mbox{\hyperlink{namespaceoptimize__geometry_a4222e907016d603c1075cad1bfbc5efa}{task\+\_\+id}} = \textquotesingle{}\mbox{\hyperlink{namespaceoptimize__geometry_a705f66e924be045fef0f8f3f0b33c220}{run\+\_\+analysis}}\textquotesingle{}
+\item 
+\mbox{\hyperlink{namespaceoptimize__geometry_a705f66e924be045fef0f8f3f0b33c220}{run\+\_\+analysis}} = \mbox{\hyperlink{classplugins_1_1jid_1_1JIDSlurmOperator}{JIDSlurm\+Operator}}( \mbox{\hyperlink{namespaceoptimize__geometry_a4222e907016d603c1075cad1bfbc5efa}{task\+\_\+id}}=\mbox{\hyperlink{namespaceoptimize__geometry_a4222e907016d603c1075cad1bfbc5efa}{task\+\_\+id}}, \mbox{\hyperlink{namespaceoptimize__geometry_a62a628c3fed59d8ffb8b3e3641b127a3}{dag}}=\mbox{\hyperlink{namespaceoptimize__geometry_a62a628c3fed59d8ffb8b3e3641b127a3}{dag}})
+\item 
+\mbox{\hyperlink{namespaceoptimize__geometry_aa3e83843f96a5bce6db8212bb51ad8df}{opt\+\_\+geom}} = \mbox{\hyperlink{classplugins_1_1jid_1_1JIDSlurmOperator}{JIDSlurm\+Operator}}( \mbox{\hyperlink{namespaceoptimize__geometry_a4222e907016d603c1075cad1bfbc5efa}{task\+\_\+id}}=\mbox{\hyperlink{namespaceoptimize__geometry_a4222e907016d603c1075cad1bfbc5efa}{task\+\_\+id}}, \mbox{\hyperlink{namespaceoptimize__geometry_a62a628c3fed59d8ffb8b3e3641b127a3}{dag}}=\mbox{\hyperlink{namespaceoptimize__geometry_a62a628c3fed59d8ffb8b3e3641b127a3}{dag}})
+\item 
+\mbox{\hyperlink{namespaceoptimize__geometry_a801de82fdbf02f6e29acf2f4bc1e8f24}{elog\+\_\+display}} = \mbox{\hyperlink{classplugins_1_1jid_1_1JIDSlurmOperator}{JIDSlurm\+Operator}}(\mbox{\hyperlink{namespaceoptimize__geometry_a4222e907016d603c1075cad1bfbc5efa}{task\+\_\+id}}=\mbox{\hyperlink{namespaceoptimize__geometry_a4222e907016d603c1075cad1bfbc5efa}{task\+\_\+id}}, \mbox{\hyperlink{namespaceoptimize__geometry_a62a628c3fed59d8ffb8b3e3641b127a3}{dag}}=\mbox{\hyperlink{namespaceoptimize__geometry_a62a628c3fed59d8ffb8b3e3641b127a3}{dag}})
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{namespaceoptimize__geometry_a62a628c3fed59d8ffb8b3e3641b127a3}\label{namespaceoptimize__geometry_a62a628c3fed59d8ffb8b3e3641b127a3}} 
+\index{optimize\_geometry@{optimize\_geometry}!dag@{dag}}
+\index{dag@{dag}!optimize\_geometry@{optimize\_geometry}}
+\doxysubsubsection{\texorpdfstring{dag}{dag}}
+{\footnotesize\ttfamily optimize\+\_\+geometry.\+dag}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 =  DAG(}
+\DoxyCodeLine{2     dag\_name,}
+\DoxyCodeLine{3     start\_date=datetime( 2022,4,1 ),}
+\DoxyCodeLine{4     schedule\_interval=\textcolor{keywordtype}{None},}
+\DoxyCodeLine{5     description=description,}
+\DoxyCodeLine{6   )}
+
+\end{DoxyCode}
+\mbox{\Hypertarget{namespaceoptimize__geometry_a418286937c0e4d929aa75ead2d71b14f}\label{namespaceoptimize__geometry_a418286937c0e4d929aa75ead2d71b14f}} 
+\index{optimize\_geometry@{optimize\_geometry}!dag\_name@{dag\_name}}
+\index{dag\_name@{dag\_name}!optimize\_geometry@{optimize\_geometry}}
+\doxysubsubsection{\texorpdfstring{dag\_name}{dag\_name}}
+{\footnotesize\ttfamily optimize\+\_\+geometry.\+dag\+\_\+name = os.\+path.\+splitext(os.\+path.\+basename(\+\_\+\+\_\+file\+\_\+\+\_\+))\mbox{[}0\mbox{]}}
+
+\mbox{\Hypertarget{namespaceoptimize__geometry_acf94faea1db24dec5b0e4aa6261ef55f}\label{namespaceoptimize__geometry_acf94faea1db24dec5b0e4aa6261ef55f}} 
+\index{optimize\_geometry@{optimize\_geometry}!description@{description}}
+\index{description@{description}!optimize\_geometry@{optimize\_geometry}}
+\doxysubsubsection{\texorpdfstring{description}{description}}
+{\footnotesize\ttfamily string optimize\+\_\+geometry.\+description = \textquotesingle{}BTX optimize geometry DAG\textquotesingle{}}
+
+\mbox{\Hypertarget{namespaceoptimize__geometry_a801de82fdbf02f6e29acf2f4bc1e8f24}\label{namespaceoptimize__geometry_a801de82fdbf02f6e29acf2f4bc1e8f24}} 
+\index{optimize\_geometry@{optimize\_geometry}!elog\_display@{elog\_display}}
+\index{elog\_display@{elog\_display}!optimize\_geometry@{optimize\_geometry}}
+\doxysubsubsection{\texorpdfstring{elog\_display}{elog\_display}}
+{\footnotesize\ttfamily optimize\+\_\+geometry.\+elog\+\_\+display = \mbox{\hyperlink{classplugins_1_1jid_1_1JIDSlurmOperator}{JIDSlurm\+Operator}}(\mbox{\hyperlink{namespaceoptimize__geometry_a4222e907016d603c1075cad1bfbc5efa}{task\+\_\+id}}=\mbox{\hyperlink{namespaceoptimize__geometry_a4222e907016d603c1075cad1bfbc5efa}{task\+\_\+id}}, \mbox{\hyperlink{namespaceoptimize__geometry_a62a628c3fed59d8ffb8b3e3641b127a3}{dag}}=\mbox{\hyperlink{namespaceoptimize__geometry_a62a628c3fed59d8ffb8b3e3641b127a3}{dag}})}
+
+\mbox{\Hypertarget{namespaceoptimize__geometry_aa3e83843f96a5bce6db8212bb51ad8df}\label{namespaceoptimize__geometry_aa3e83843f96a5bce6db8212bb51ad8df}} 
+\index{optimize\_geometry@{optimize\_geometry}!opt\_geom@{opt\_geom}}
+\index{opt\_geom@{opt\_geom}!optimize\_geometry@{optimize\_geometry}}
+\doxysubsubsection{\texorpdfstring{opt\_geom}{opt\_geom}}
+{\footnotesize\ttfamily optimize\+\_\+geometry.\+opt\+\_\+geom = \mbox{\hyperlink{classplugins_1_1jid_1_1JIDSlurmOperator}{JIDSlurm\+Operator}}( \mbox{\hyperlink{namespaceoptimize__geometry_a4222e907016d603c1075cad1bfbc5efa}{task\+\_\+id}}=\mbox{\hyperlink{namespaceoptimize__geometry_a4222e907016d603c1075cad1bfbc5efa}{task\+\_\+id}}, \mbox{\hyperlink{namespaceoptimize__geometry_a62a628c3fed59d8ffb8b3e3641b127a3}{dag}}=\mbox{\hyperlink{namespaceoptimize__geometry_a62a628c3fed59d8ffb8b3e3641b127a3}{dag}})}
+
+\mbox{\Hypertarget{namespaceoptimize__geometry_a705f66e924be045fef0f8f3f0b33c220}\label{namespaceoptimize__geometry_a705f66e924be045fef0f8f3f0b33c220}} 
+\index{optimize\_geometry@{optimize\_geometry}!run\_analysis@{run\_analysis}}
+\index{run\_analysis@{run\_analysis}!optimize\_geometry@{optimize\_geometry}}
+\doxysubsubsection{\texorpdfstring{run\_analysis}{run\_analysis}}
+{\footnotesize\ttfamily optimize\+\_\+geometry.\+run\+\_\+analysis = \mbox{\hyperlink{classplugins_1_1jid_1_1JIDSlurmOperator}{JIDSlurm\+Operator}}( \mbox{\hyperlink{namespaceoptimize__geometry_a4222e907016d603c1075cad1bfbc5efa}{task\+\_\+id}}=\mbox{\hyperlink{namespaceoptimize__geometry_a4222e907016d603c1075cad1bfbc5efa}{task\+\_\+id}}, \mbox{\hyperlink{namespaceoptimize__geometry_a62a628c3fed59d8ffb8b3e3641b127a3}{dag}}=\mbox{\hyperlink{namespaceoptimize__geometry_a62a628c3fed59d8ffb8b3e3641b127a3}{dag}})}
+
+\mbox{\Hypertarget{namespaceoptimize__geometry_a4222e907016d603c1075cad1bfbc5efa}\label{namespaceoptimize__geometry_a4222e907016d603c1075cad1bfbc5efa}} 
+\index{optimize\_geometry@{optimize\_geometry}!task\_id@{task\_id}}
+\index{task\_id@{task\_id}!optimize\_geometry@{optimize\_geometry}}
+\doxysubsubsection{\texorpdfstring{task\_id}{task\_id}}
+{\footnotesize\ttfamily string optimize\+\_\+geometry.\+task\+\_\+id = \textquotesingle{}\mbox{\hyperlink{namespaceoptimize__geometry_a705f66e924be045fef0f8f3f0b33c220}{run\+\_\+analysis}}\textquotesingle{}}
+

@@ -1,0 +1,31 @@
+Miscellaneous functions for aiding analysis during LCLS experiments.\hypertarget{md_README_autotoc_md158}{}\doxysection{Contributing}\label{md_README_autotoc_md158}
+This repository is the centralized location to discuss and share calibration files, documentation, scripts and code for SFX analysis.
+
+See \href{https://github.com/lcls-users/btx/discussions}{\texttt{ Discussions}} above for a forum experience. Contribute or check \href{https://github.com/lcls-users/btx/wiki}{\texttt{ Wiki}} above for tutorials and tips, shared experience, etc.
+
+For contributing code and script, please don\textquotesingle{}t push to the main branch directly. Rather, work in a specific branch for the task at hand, and make a pull request (PR) so it can be safely merged into the main branch after the person you assign as a reviewer does the code review (if necessary).
+
+More importantly, have fun! If you have any questions, feel free to post a new issue or just reach out directly to someone else on the team.\hypertarget{md_README_autotoc_md159}{}\doxysection{Etiquette}\label{md_README_autotoc_md159}
+Before you start working on contribution, please make sure your local main branch is up-\/to-\/date. Create a new branch from it, add or edit, then push a pull request.
+
+To create your local repository (from this Git\+Hub hosted remote repository)\+: 
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\$ git clone git@github.com:lcls-\/users/btx.git}
+
+\end{DoxyCode}
+ To update your local main branch\+: 
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\$ git checkout main}
+\DoxyCodeLine{\$ git pull}
+
+\end{DoxyCode}
+ Now you can create a new branch that will be up to date with the current (remote) main branch\+: 
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\$ git checkout -\/b my-\/new-\/branch}
+\DoxyCodeLine{\$ ... do stuff ..}
+\DoxyCodeLine{\$ git add <the files that you have been working on>}
+\DoxyCodeLine{\$ git commit -\/m "{}Hey everyone, I have been working on those files to do this and that"{}}
+\DoxyCodeLine{\$ git push origin my-\/new-\/branch}
+
+\end{DoxyCode}
+ At this point, checkout the repo on Git\+Hub and create a Pull Request (like \href{https://github.com/apeck12/btx/pull/11}{\texttt{ this one}}). Once merged, the main branch will be updated with your work! 

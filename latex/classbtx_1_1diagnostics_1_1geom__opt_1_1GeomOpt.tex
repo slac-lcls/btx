@@ -1,0 +1,167 @@
+\hypertarget{classbtx_1_1diagnostics_1_1geom__opt_1_1GeomOpt}{}\doxysection{btx.\+diagnostics.\+geom\+\_\+opt.\+Geom\+Opt Class Reference}
+\label{classbtx_1_1diagnostics_1_1geom__opt_1_1GeomOpt}\index{btx.diagnostics.geom\_opt.GeomOpt@{btx.diagnostics.geom\_opt.GeomOpt}}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+def \mbox{\hyperlink{classbtx_1_1diagnostics_1_1geom__opt_1_1GeomOpt_a86c1d6733fa81370558712065bbbbe0a}{\+\_\+\+\_\+init\+\_\+\+\_\+}} (self, exp, run, det\+\_\+type)
+\item 
+def \mbox{\hyperlink{classbtx_1_1diagnostics_1_1geom__opt_1_1GeomOpt_adb8600da0a2aa75e58ee6a9b6161a313}{distribute\+\_\+scan}} (self, \mbox{\hyperlink{classbtx_1_1diagnostics_1_1geom__opt_1_1GeomOpt_a002f68504ffdfdaf262a57b0385dc12f}{scan}})
+\begin{DoxyCompactList}\small\item\em Distribute the scan across all ranks. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{classbtx_1_1diagnostics_1_1geom__opt_1_1GeomOpt_ae23a1b67888128896bb57894efc98294}{opt\+\_\+geom}} (self, powder, mask=None, \mbox{\hyperlink{classbtx_1_1diagnostics_1_1geom__opt_1_1GeomOpt_acec657bb36b42a8e478909ddddbdfb93}{center}}=None, \mbox{\hyperlink{classbtx_1_1diagnostics_1_1geom__opt_1_1GeomOpt_a2ef474b4ec3c88ec373811940ed51105}{distance}}=None, n\+\_\+iterations=5, n\+\_\+peaks=\mbox{[}3\mbox{]}, threshold=1e6, deltas=True, plot=None, plot\+\_\+final\+\_\+only=False)
+\begin{DoxyCompactList}\small\item\em Estimate the sample-\/detector distance based on the properties of the powder diffraction image. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{classbtx_1_1diagnostics_1_1geom__opt_1_1GeomOpt_a4633dc1e16eb00a316c39db1c0273d4f}{finalize}} (self)
+\begin{DoxyCompactList}\small\item\em Compute the final score based on how many standard deviations the minimum is from the mean in the inter-\/ring spacing analysis. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{classbtx_1_1diagnostics_1_1geom__opt_1_1GeomOpt_ac804a0a6d27c74aa6a66041ee857d9c0}{deploy\+\_\+geometry}} (self, outdir)
+\begin{DoxyCompactList}\small\item\em Write new geometry files (.geom and .data for Cryst\+FEL and psana respectively) with the optimized center and distance. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{classbtx_1_1diagnostics_1_1geom__opt_1_1GeomOpt_a9f8a6acd1ddb4dbdef64153cad172269}{report}} (self, update\+\_\+url)
+\begin{DoxyCompactList}\small\item\em Post summary to elog. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classbtx_1_1diagnostics_1_1geom__opt_1_1GeomOpt_a6f62e39f655ef93049cb86876f4ba8ad}{diagnostics}}
+\item 
+\mbox{\hyperlink{classbtx_1_1diagnostics_1_1geom__opt_1_1GeomOpt_acec657bb36b42a8e478909ddddbdfb93}{center}}
+\item 
+\mbox{\hyperlink{classbtx_1_1diagnostics_1_1geom__opt_1_1GeomOpt_a2ef474b4ec3c88ec373811940ed51105}{distance}}
+\item 
+\mbox{\hyperlink{classbtx_1_1diagnostics_1_1geom__opt_1_1GeomOpt_a3a328bb8396327c98e30098bc2caf215}{edge\+\_\+resolution}}
+\item 
+\mbox{\hyperlink{classbtx_1_1diagnostics_1_1geom__opt_1_1GeomOpt_ac1e10c93e140c6c9cbc674454458ec7c}{comm}}
+\item 
+\mbox{\hyperlink{classbtx_1_1diagnostics_1_1geom__opt_1_1GeomOpt_a4ca8691e4a6ac5eeabbfc129b2342206}{rank}}
+\item 
+\mbox{\hyperlink{classbtx_1_1diagnostics_1_1geom__opt_1_1GeomOpt_a941d5e27c49ca195790ddc5a8053471f}{size}}
+\item 
+\mbox{\hyperlink{classbtx_1_1diagnostics_1_1geom__opt_1_1GeomOpt_a031f86b09eb36ec3bf0187d01850c645}{img\+\_\+shape}}
+\item 
+\mbox{\hyperlink{classbtx_1_1diagnostics_1_1geom__opt_1_1GeomOpt_a002f68504ffdfdaf262a57b0385dc12f}{scan}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classbtx_1_1diagnostics_1_1geom__opt_1_1GeomOpt_a86c1d6733fa81370558712065bbbbe0a}\label{classbtx_1_1diagnostics_1_1geom__opt_1_1GeomOpt_a86c1d6733fa81370558712065bbbbe0a}} 
+\index{btx.diagnostics.geom\_opt.GeomOpt@{btx.diagnostics.geom\_opt.GeomOpt}!\_\_init\_\_@{\_\_init\_\_}}
+\index{\_\_init\_\_@{\_\_init\_\_}!btx.diagnostics.geom\_opt.GeomOpt@{btx.diagnostics.geom\_opt.GeomOpt}}
+\doxysubsubsection{\texorpdfstring{\_\_init\_\_()}{\_\_init\_\_()}}
+{\footnotesize\ttfamily def btx.\+diagnostics.\+geom\+\_\+opt.\+Geom\+Opt.\+\_\+\+\_\+init\+\_\+\+\_\+ (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{exp,  }\item[{}]{run,  }\item[{}]{det\+\_\+type }\end{DoxyParamCaption})}
+
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classbtx_1_1diagnostics_1_1geom__opt_1_1GeomOpt_ac804a0a6d27c74aa6a66041ee857d9c0}\label{classbtx_1_1diagnostics_1_1geom__opt_1_1GeomOpt_ac804a0a6d27c74aa6a66041ee857d9c0}} 
+\index{btx.diagnostics.geom\_opt.GeomOpt@{btx.diagnostics.geom\_opt.GeomOpt}!deploy\_geometry@{deploy\_geometry}}
+\index{deploy\_geometry@{deploy\_geometry}!btx.diagnostics.geom\_opt.GeomOpt@{btx.diagnostics.geom\_opt.GeomOpt}}
+\doxysubsubsection{\texorpdfstring{deploy\_geometry()}{deploy\_geometry()}}
+{\footnotesize\ttfamily def btx.\+diagnostics.\+geom\+\_\+opt.\+Geom\+Opt.\+deploy\+\_\+geometry (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{outdir }\end{DoxyParamCaption})}
+
+
+
+Write new geometry files (.geom and .data for Cryst\+FEL and psana respectively) with the optimized center and distance. 
+
+\hypertarget{classbtx_1_1diagnostics_1_1geom__opt_1_1GeomOpt_autotoc_md12}{}\doxysubsubsection{Parameters}\label{classbtx_1_1diagnostics_1_1geom__opt_1_1GeomOpt_autotoc_md12}
+center \+: tuple optimized center (cx, cy) in pixels distance \+: float optimized sample-\/detector distance in mm outdir \+: str path to output directory \mbox{\Hypertarget{classbtx_1_1diagnostics_1_1geom__opt_1_1GeomOpt_adb8600da0a2aa75e58ee6a9b6161a313}\label{classbtx_1_1diagnostics_1_1geom__opt_1_1GeomOpt_adb8600da0a2aa75e58ee6a9b6161a313}} 
+\index{btx.diagnostics.geom\_opt.GeomOpt@{btx.diagnostics.geom\_opt.GeomOpt}!distribute\_scan@{distribute\_scan}}
+\index{distribute\_scan@{distribute\_scan}!btx.diagnostics.geom\_opt.GeomOpt@{btx.diagnostics.geom\_opt.GeomOpt}}
+\doxysubsubsection{\texorpdfstring{distribute\_scan()}{distribute\_scan()}}
+{\footnotesize\ttfamily def btx.\+diagnostics.\+geom\+\_\+opt.\+Geom\+Opt.\+distribute\+\_\+scan (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{scan }\end{DoxyParamCaption})}
+
+
+
+Distribute the scan across all ranks. 
+
+\hypertarget{classbtx_1_1diagnostics_1_1geom__opt_1_1GeomOpt_autotoc_md9}{}\doxysubsubsection{Parameters}\label{classbtx_1_1diagnostics_1_1geom__opt_1_1GeomOpt_autotoc_md9}
+scan \+: list of tuples parameters (n\+\_\+peak, center, distance) for initial estimates \mbox{\Hypertarget{classbtx_1_1diagnostics_1_1geom__opt_1_1GeomOpt_a4633dc1e16eb00a316c39db1c0273d4f}\label{classbtx_1_1diagnostics_1_1geom__opt_1_1GeomOpt_a4633dc1e16eb00a316c39db1c0273d4f}} 
+\index{btx.diagnostics.geom\_opt.GeomOpt@{btx.diagnostics.geom\_opt.GeomOpt}!finalize@{finalize}}
+\index{finalize@{finalize}!btx.diagnostics.geom\_opt.GeomOpt@{btx.diagnostics.geom\_opt.GeomOpt}}
+\doxysubsubsection{\texorpdfstring{finalize()}{finalize()}}
+{\footnotesize\ttfamily def btx.\+diagnostics.\+geom\+\_\+opt.\+Geom\+Opt.\+finalize (\begin{DoxyParamCaption}\item[{}]{self }\end{DoxyParamCaption})}
+
+
+
+Compute the final score based on how many standard deviations the minimum is from the mean in the inter-\/ring spacing analysis. 
+
+Also store the optimal distance, center, and edge resolution. \mbox{\Hypertarget{classbtx_1_1diagnostics_1_1geom__opt_1_1GeomOpt_ae23a1b67888128896bb57894efc98294}\label{classbtx_1_1diagnostics_1_1geom__opt_1_1GeomOpt_ae23a1b67888128896bb57894efc98294}} 
+\index{btx.diagnostics.geom\_opt.GeomOpt@{btx.diagnostics.geom\_opt.GeomOpt}!opt\_geom@{opt\_geom}}
+\index{opt\_geom@{opt\_geom}!btx.diagnostics.geom\_opt.GeomOpt@{btx.diagnostics.geom\_opt.GeomOpt}}
+\doxysubsubsection{\texorpdfstring{opt\_geom()}{opt\_geom()}}
+{\footnotesize\ttfamily def btx.\+diagnostics.\+geom\+\_\+opt.\+Geom\+Opt.\+opt\+\_\+geom (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{powder,  }\item[{}]{mask = {\ttfamily None},  }\item[{}]{center = {\ttfamily None},  }\item[{}]{distance = {\ttfamily None},  }\item[{}]{n\+\_\+iterations = {\ttfamily 5},  }\item[{}]{n\+\_\+peaks = {\ttfamily \mbox{[}3\mbox{]}},  }\item[{}]{threshold = {\ttfamily 1e6},  }\item[{}]{deltas = {\ttfamily True},  }\item[{}]{plot = {\ttfamily None},  }\item[{}]{plot\+\_\+final\+\_\+only = {\ttfamily False} }\end{DoxyParamCaption})}
+
+
+
+Estimate the sample-\/detector distance based on the properties of the powder diffraction image. 
+
+Currently only implemented for silver behenate.\hypertarget{classbtx_1_1diagnostics_1_1geom__opt_1_1GeomOpt_autotoc_md10}{}\doxysubsubsection{Parameters}\label{classbtx_1_1diagnostics_1_1geom__opt_1_1GeomOpt_autotoc_md10}
+powder \+: str or int if str, path to the powder diffraction in .npy format if int, number of images from which to compute powder mask \+: str npy file of mask in psana unassembled detector shape center \+: tuple list of detector \mbox{\hyperlink{classbtx_1_1diagnostics_1_1geom__opt_1_1GeomOpt_acec657bb36b42a8e478909ddddbdfb93}{center(s)}} (xc,yc) in pixels as starting guess if None, assume assembled image center. distance \+: float list of the intial estimate(s) of the sample-\/detector distance in mm. If None, pull from calib file. n\+\_\+iterations \+: int number of refinement steps n\+\_\+peaks \+: int list of the number of observed peaks to use for center fitting threshold \+: float pixels above this intensity in powder get set to 0; None for no thresholding. deltas\+: bool whether centers are in absolute positions or delta pixels from detector center plot \+: str or None output path for figure; if \textquotesingle{}\textquotesingle{}, plot but don\textquotesingle{}t save; if None, don\textquotesingle{}t plot plot\+\_\+final\+\_\+only\+: bool if True, only generate plot for the best distance / center\hypertarget{classbtx_1_1diagnostics_1_1geom__opt_1_1GeomOpt_autotoc_md11}{}\doxysubsubsection{Returns}\label{classbtx_1_1diagnostics_1_1geom__opt_1_1GeomOpt_autotoc_md11}
+distance \+: float estimated sample-\/detector distance in mm \mbox{\Hypertarget{classbtx_1_1diagnostics_1_1geom__opt_1_1GeomOpt_a9f8a6acd1ddb4dbdef64153cad172269}\label{classbtx_1_1diagnostics_1_1geom__opt_1_1GeomOpt_a9f8a6acd1ddb4dbdef64153cad172269}} 
+\index{btx.diagnostics.geom\_opt.GeomOpt@{btx.diagnostics.geom\_opt.GeomOpt}!report@{report}}
+\index{report@{report}!btx.diagnostics.geom\_opt.GeomOpt@{btx.diagnostics.geom\_opt.GeomOpt}}
+\doxysubsubsection{\texorpdfstring{report()}{report()}}
+{\footnotesize\ttfamily def btx.\+diagnostics.\+geom\+\_\+opt.\+Geom\+Opt.\+report (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{update\+\_\+url }\end{DoxyParamCaption})}
+
+
+
+Post summary to elog. 
+
+\hypertarget{classbtx_1_1diagnostics_1_1geom__opt_1_1GeomOpt_autotoc_md13}{}\doxysubsubsection{Parameters}\label{classbtx_1_1diagnostics_1_1geom__opt_1_1GeomOpt_autotoc_md13}
+update\+\_\+url \+: str elog URL for posting progress update 
+
+\doxysubsection{Member Data Documentation}
+\mbox{\Hypertarget{classbtx_1_1diagnostics_1_1geom__opt_1_1GeomOpt_acec657bb36b42a8e478909ddddbdfb93}\label{classbtx_1_1diagnostics_1_1geom__opt_1_1GeomOpt_acec657bb36b42a8e478909ddddbdfb93}} 
+\index{btx.diagnostics.geom\_opt.GeomOpt@{btx.diagnostics.geom\_opt.GeomOpt}!center@{center}}
+\index{center@{center}!btx.diagnostics.geom\_opt.GeomOpt@{btx.diagnostics.geom\_opt.GeomOpt}}
+\doxysubsubsection{\texorpdfstring{center}{center}}
+{\footnotesize\ttfamily btx.\+diagnostics.\+geom\+\_\+opt.\+Geom\+Opt.\+center}
+
+\mbox{\Hypertarget{classbtx_1_1diagnostics_1_1geom__opt_1_1GeomOpt_ac1e10c93e140c6c9cbc674454458ec7c}\label{classbtx_1_1diagnostics_1_1geom__opt_1_1GeomOpt_ac1e10c93e140c6c9cbc674454458ec7c}} 
+\index{btx.diagnostics.geom\_opt.GeomOpt@{btx.diagnostics.geom\_opt.GeomOpt}!comm@{comm}}
+\index{comm@{comm}!btx.diagnostics.geom\_opt.GeomOpt@{btx.diagnostics.geom\_opt.GeomOpt}}
+\doxysubsubsection{\texorpdfstring{comm}{comm}}
+{\footnotesize\ttfamily btx.\+diagnostics.\+geom\+\_\+opt.\+Geom\+Opt.\+comm}
+
+\mbox{\Hypertarget{classbtx_1_1diagnostics_1_1geom__opt_1_1GeomOpt_a6f62e39f655ef93049cb86876f4ba8ad}\label{classbtx_1_1diagnostics_1_1geom__opt_1_1GeomOpt_a6f62e39f655ef93049cb86876f4ba8ad}} 
+\index{btx.diagnostics.geom\_opt.GeomOpt@{btx.diagnostics.geom\_opt.GeomOpt}!diagnostics@{diagnostics}}
+\index{diagnostics@{diagnostics}!btx.diagnostics.geom\_opt.GeomOpt@{btx.diagnostics.geom\_opt.GeomOpt}}
+\doxysubsubsection{\texorpdfstring{diagnostics}{diagnostics}}
+{\footnotesize\ttfamily btx.\+diagnostics.\+geom\+\_\+opt.\+Geom\+Opt.\+diagnostics}
+
+\mbox{\Hypertarget{classbtx_1_1diagnostics_1_1geom__opt_1_1GeomOpt_a2ef474b4ec3c88ec373811940ed51105}\label{classbtx_1_1diagnostics_1_1geom__opt_1_1GeomOpt_a2ef474b4ec3c88ec373811940ed51105}} 
+\index{btx.diagnostics.geom\_opt.GeomOpt@{btx.diagnostics.geom\_opt.GeomOpt}!distance@{distance}}
+\index{distance@{distance}!btx.diagnostics.geom\_opt.GeomOpt@{btx.diagnostics.geom\_opt.GeomOpt}}
+\doxysubsubsection{\texorpdfstring{distance}{distance}}
+{\footnotesize\ttfamily btx.\+diagnostics.\+geom\+\_\+opt.\+Geom\+Opt.\+distance}
+
+\mbox{\Hypertarget{classbtx_1_1diagnostics_1_1geom__opt_1_1GeomOpt_a3a328bb8396327c98e30098bc2caf215}\label{classbtx_1_1diagnostics_1_1geom__opt_1_1GeomOpt_a3a328bb8396327c98e30098bc2caf215}} 
+\index{btx.diagnostics.geom\_opt.GeomOpt@{btx.diagnostics.geom\_opt.GeomOpt}!edge\_resolution@{edge\_resolution}}
+\index{edge\_resolution@{edge\_resolution}!btx.diagnostics.geom\_opt.GeomOpt@{btx.diagnostics.geom\_opt.GeomOpt}}
+\doxysubsubsection{\texorpdfstring{edge\_resolution}{edge\_resolution}}
+{\footnotesize\ttfamily btx.\+diagnostics.\+geom\+\_\+opt.\+Geom\+Opt.\+edge\+\_\+resolution}
+
+\mbox{\Hypertarget{classbtx_1_1diagnostics_1_1geom__opt_1_1GeomOpt_a031f86b09eb36ec3bf0187d01850c645}\label{classbtx_1_1diagnostics_1_1geom__opt_1_1GeomOpt_a031f86b09eb36ec3bf0187d01850c645}} 
+\index{btx.diagnostics.geom\_opt.GeomOpt@{btx.diagnostics.geom\_opt.GeomOpt}!img\_shape@{img\_shape}}
+\index{img\_shape@{img\_shape}!btx.diagnostics.geom\_opt.GeomOpt@{btx.diagnostics.geom\_opt.GeomOpt}}
+\doxysubsubsection{\texorpdfstring{img\_shape}{img\_shape}}
+{\footnotesize\ttfamily btx.\+diagnostics.\+geom\+\_\+opt.\+Geom\+Opt.\+img\+\_\+shape}
+
+\mbox{\Hypertarget{classbtx_1_1diagnostics_1_1geom__opt_1_1GeomOpt_a4ca8691e4a6ac5eeabbfc129b2342206}\label{classbtx_1_1diagnostics_1_1geom__opt_1_1GeomOpt_a4ca8691e4a6ac5eeabbfc129b2342206}} 
+\index{btx.diagnostics.geom\_opt.GeomOpt@{btx.diagnostics.geom\_opt.GeomOpt}!rank@{rank}}
+\index{rank@{rank}!btx.diagnostics.geom\_opt.GeomOpt@{btx.diagnostics.geom\_opt.GeomOpt}}
+\doxysubsubsection{\texorpdfstring{rank}{rank}}
+{\footnotesize\ttfamily btx.\+diagnostics.\+geom\+\_\+opt.\+Geom\+Opt.\+rank}
+
+\mbox{\Hypertarget{classbtx_1_1diagnostics_1_1geom__opt_1_1GeomOpt_a002f68504ffdfdaf262a57b0385dc12f}\label{classbtx_1_1diagnostics_1_1geom__opt_1_1GeomOpt_a002f68504ffdfdaf262a57b0385dc12f}} 
+\index{btx.diagnostics.geom\_opt.GeomOpt@{btx.diagnostics.geom\_opt.GeomOpt}!scan@{scan}}
+\index{scan@{scan}!btx.diagnostics.geom\_opt.GeomOpt@{btx.diagnostics.geom\_opt.GeomOpt}}
+\doxysubsubsection{\texorpdfstring{scan}{scan}}
+{\footnotesize\ttfamily btx.\+diagnostics.\+geom\+\_\+opt.\+Geom\+Opt.\+scan}
+
+\mbox{\Hypertarget{classbtx_1_1diagnostics_1_1geom__opt_1_1GeomOpt_a941d5e27c49ca195790ddc5a8053471f}\label{classbtx_1_1diagnostics_1_1geom__opt_1_1GeomOpt_a941d5e27c49ca195790ddc5a8053471f}} 
+\index{btx.diagnostics.geom\_opt.GeomOpt@{btx.diagnostics.geom\_opt.GeomOpt}!size@{size}}
+\index{size@{size}!btx.diagnostics.geom\_opt.GeomOpt@{btx.diagnostics.geom\_opt.GeomOpt}}
+\doxysubsubsection{\texorpdfstring{size}{size}}
+{\footnotesize\ttfamily btx.\+diagnostics.\+geom\+\_\+opt.\+Geom\+Opt.\+size}
+
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+btx/diagnostics/\mbox{\hyperlink{geom__opt_8py}{geom\+\_\+opt.\+py}}\end{DoxyCompactItemize}

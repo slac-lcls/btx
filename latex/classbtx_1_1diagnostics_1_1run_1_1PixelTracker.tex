@@ -1,0 +1,168 @@
+\hypertarget{classbtx_1_1diagnostics_1_1run_1_1PixelTracker}{}\doxysection{btx.\+diagnostics.\+run.\+Pixel\+Tracker Class Reference}
+\label{classbtx_1_1diagnostics_1_1run_1_1PixelTracker}\index{btx.diagnostics.run.PixelTracker@{btx.diagnostics.run.PixelTracker}}
+
+
+Class for tracking raw, calib, and (optionally) gain setting for a single pixel across a run.  
+
+
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+def \mbox{\hyperlink{classbtx_1_1diagnostics_1_1run_1_1PixelTracker_ac9e6986069b9fd99dbe59e738d581632}{\+\_\+\+\_\+init\+\_\+\+\_\+}} (self, exp, run, det\+\_\+type)
+\item 
+def \mbox{\hyperlink{classbtx_1_1diagnostics_1_1run_1_1PixelTracker_a907a033485aa91c48fdc5ebaf0a96337}{find\+\_\+flattened\+\_\+index}} (self, \mbox{\hyperlink{classbtx_1_1diagnostics_1_1run_1_1PixelTracker_ac60c79ef7358ba25ca9aef5ff5c1ef79}{index}})
+\begin{DoxyCompactList}\small\item\em From the input detector index, find the corresponding index in the flattened detector array. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{classbtx_1_1diagnostics_1_1run_1_1PixelTracker_a86e93b526831ae281293d829d2a02e1e}{finalize\+\_\+stats}} (self, n\+\_\+empty)
+\begin{DoxyCompactList}\small\item\em Gather stats from various ranks into single arrays in self.\+stats\+\_\+final. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{classbtx_1_1diagnostics_1_1run_1_1PixelTracker_ab23685c511afb96a823a1379652abb2b}{track\+\_\+pixel}} (self, \mbox{\hyperlink{classbtx_1_1diagnostics_1_1run_1_1PixelTracker_ac60c79ef7358ba25ca9aef5ff5c1ef79}{index}}, max\+\_\+events=-\/1, gain\+\_\+mode=True)
+\begin{DoxyCompactList}\small\item\em Compute powders and per-\/image statistics. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{classbtx_1_1diagnostics_1_1run_1_1PixelTracker_a117e2ec088241ba4909e6932fc66dad2}{save\+\_\+traj}} (self, outdir)
+\begin{DoxyCompactList}\small\item\em Save trajectories of raw, calib, and gain setting. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{classbtx_1_1diagnostics_1_1run_1_1PixelTracker_a596cd6c1f2e0d3fdbe4fd3a4ecb60f03}{visualize}} (self, outdir=None)
+\begin{DoxyCompactList}\small\item\em Plot the raw vs calibrated intensity, colored by gain setting. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classbtx_1_1diagnostics_1_1run_1_1PixelTracker_ae332dfbf687119ef588defbd08ebaf1d}{psi}}
+\item 
+\mbox{\hyperlink{classbtx_1_1diagnostics_1_1run_1_1PixelTracker_a72e996c52f45e372e5a66db4dbaa033f}{pixel\+\_\+index\+\_\+map}}
+\item 
+\mbox{\hyperlink{classbtx_1_1diagnostics_1_1run_1_1PixelTracker_a9f4232d28c74153465667f430ecc449a}{stats}}
+\item 
+\mbox{\hyperlink{classbtx_1_1diagnostics_1_1run_1_1PixelTracker_a08396aee9c2cea81e4290792d8d6667d}{comm}}
+\item 
+\mbox{\hyperlink{classbtx_1_1diagnostics_1_1run_1_1PixelTracker_a07a8d6d4985d3ba9a30106883583f791}{rank}}
+\item 
+\mbox{\hyperlink{classbtx_1_1diagnostics_1_1run_1_1PixelTracker_adaab8b0216cc1bf2f6074d1a48f5d770}{size}}
+\item 
+\mbox{\hyperlink{classbtx_1_1diagnostics_1_1run_1_1PixelTracker_a2100f80158fa8891efd0b6073263d6fd}{stats\+\_\+final}}
+\item 
+\mbox{\hyperlink{classbtx_1_1diagnostics_1_1run_1_1PixelTracker_ac60c79ef7358ba25ca9aef5ff5c1ef79}{index}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Class for tracking raw, calib, and (optionally) gain setting for a single pixel across a run. 
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classbtx_1_1diagnostics_1_1run_1_1PixelTracker_ac9e6986069b9fd99dbe59e738d581632}\label{classbtx_1_1diagnostics_1_1run_1_1PixelTracker_ac9e6986069b9fd99dbe59e738d581632}} 
+\index{btx.diagnostics.run.PixelTracker@{btx.diagnostics.run.PixelTracker}!\_\_init\_\_@{\_\_init\_\_}}
+\index{\_\_init\_\_@{\_\_init\_\_}!btx.diagnostics.run.PixelTracker@{btx.diagnostics.run.PixelTracker}}
+\doxysubsubsection{\texorpdfstring{\_\_init\_\_()}{\_\_init\_\_()}}
+{\footnotesize\ttfamily def btx.\+diagnostics.\+run.\+Pixel\+Tracker.\+\_\+\+\_\+init\+\_\+\+\_\+ (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{exp,  }\item[{}]{run,  }\item[{}]{det\+\_\+type }\end{DoxyParamCaption})}
+
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classbtx_1_1diagnostics_1_1run_1_1PixelTracker_a86e93b526831ae281293d829d2a02e1e}\label{classbtx_1_1diagnostics_1_1run_1_1PixelTracker_a86e93b526831ae281293d829d2a02e1e}} 
+\index{btx.diagnostics.run.PixelTracker@{btx.diagnostics.run.PixelTracker}!finalize\_stats@{finalize\_stats}}
+\index{finalize\_stats@{finalize\_stats}!btx.diagnostics.run.PixelTracker@{btx.diagnostics.run.PixelTracker}}
+\doxysubsubsection{\texorpdfstring{finalize\_stats()}{finalize\_stats()}}
+{\footnotesize\ttfamily def btx.\+diagnostics.\+run.\+Pixel\+Tracker.\+finalize\+\_\+stats (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{n\+\_\+empty }\end{DoxyParamCaption})}
+
+
+
+Gather stats from various ranks into single arrays in self.\+stats\+\_\+final. 
+
+\hypertarget{classbtx_1_1diagnostics_1_1run_1_1PixelTracker_autotoc_md34}{}\doxysubsubsection{Parameters}\label{classbtx_1_1diagnostics_1_1run_1_1PixelTracker_autotoc_md34}
+n\+\_\+empty \+: int number of empty images in this rank \mbox{\Hypertarget{classbtx_1_1diagnostics_1_1run_1_1PixelTracker_a907a033485aa91c48fdc5ebaf0a96337}\label{classbtx_1_1diagnostics_1_1run_1_1PixelTracker_a907a033485aa91c48fdc5ebaf0a96337}} 
+\index{btx.diagnostics.run.PixelTracker@{btx.diagnostics.run.PixelTracker}!find\_flattened\_index@{find\_flattened\_index}}
+\index{find\_flattened\_index@{find\_flattened\_index}!btx.diagnostics.run.PixelTracker@{btx.diagnostics.run.PixelTracker}}
+\doxysubsubsection{\texorpdfstring{find\_flattened\_index()}{find\_flattened\_index()}}
+{\footnotesize\ttfamily def btx.\+diagnostics.\+run.\+Pixel\+Tracker.\+find\+\_\+flattened\+\_\+index (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{index }\end{DoxyParamCaption})}
+
+
+
+From the input detector index, find the corresponding index in the flattened detector array. 
+
+\hypertarget{classbtx_1_1diagnostics_1_1run_1_1PixelTracker_autotoc_md32}{}\doxysubsubsection{Parameters}\label{classbtx_1_1diagnostics_1_1run_1_1PixelTracker_autotoc_md32}
+index \+: tuple, 2d pixel index on the assembled detector image\hypertarget{classbtx_1_1diagnostics_1_1run_1_1PixelTracker_autotoc_md33}{}\doxysubsubsection{Returns}\label{classbtx_1_1diagnostics_1_1run_1_1PixelTracker_autotoc_md33}
+tuple, 3d corresponding index of the unassembled detector array \mbox{\Hypertarget{classbtx_1_1diagnostics_1_1run_1_1PixelTracker_a117e2ec088241ba4909e6932fc66dad2}\label{classbtx_1_1diagnostics_1_1run_1_1PixelTracker_a117e2ec088241ba4909e6932fc66dad2}} 
+\index{btx.diagnostics.run.PixelTracker@{btx.diagnostics.run.PixelTracker}!save\_traj@{save\_traj}}
+\index{save\_traj@{save\_traj}!btx.diagnostics.run.PixelTracker@{btx.diagnostics.run.PixelTracker}}
+\doxysubsubsection{\texorpdfstring{save\_traj()}{save\_traj()}}
+{\footnotesize\ttfamily def btx.\+diagnostics.\+run.\+Pixel\+Tracker.\+save\+\_\+traj (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{outdir }\end{DoxyParamCaption})}
+
+
+
+Save trajectories of raw, calib, and gain setting. 
+
+\hypertarget{classbtx_1_1diagnostics_1_1run_1_1PixelTracker_autotoc_md36}{}\doxysubsubsection{Parameters\+:}\label{classbtx_1_1diagnostics_1_1run_1_1PixelTracker_autotoc_md36}
+outdir \+: str output directory \mbox{\Hypertarget{classbtx_1_1diagnostics_1_1run_1_1PixelTracker_ab23685c511afb96a823a1379652abb2b}\label{classbtx_1_1diagnostics_1_1run_1_1PixelTracker_ab23685c511afb96a823a1379652abb2b}} 
+\index{btx.diagnostics.run.PixelTracker@{btx.diagnostics.run.PixelTracker}!track\_pixel@{track\_pixel}}
+\index{track\_pixel@{track\_pixel}!btx.diagnostics.run.PixelTracker@{btx.diagnostics.run.PixelTracker}}
+\doxysubsubsection{\texorpdfstring{track\_pixel()}{track\_pixel()}}
+{\footnotesize\ttfamily def btx.\+diagnostics.\+run.\+Pixel\+Tracker.\+track\+\_\+pixel (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{index,  }\item[{}]{max\+\_\+events = {\ttfamily -\/1},  }\item[{}]{gain\+\_\+mode = {\ttfamily True} }\end{DoxyParamCaption})}
+
+
+
+Compute powders and per-\/image statistics. 
+
+If a mask is provided, it is only applied to the stats trajectories, not in computing the powder.\hypertarget{classbtx_1_1diagnostics_1_1run_1_1PixelTracker_autotoc_md35}{}\doxysubsubsection{Parameters}\label{classbtx_1_1diagnostics_1_1run_1_1PixelTracker_autotoc_md35}
+index \+: tuple, 2d or 3d pixel index on the assembled or unassembled detector image max\+\_\+events \+: int number of images to process; if -\/1, process entire run gain\+\_\+mode \+: bool whether to track gain mode statistics \mbox{\Hypertarget{classbtx_1_1diagnostics_1_1run_1_1PixelTracker_a596cd6c1f2e0d3fdbe4fd3a4ecb60f03}\label{classbtx_1_1diagnostics_1_1run_1_1PixelTracker_a596cd6c1f2e0d3fdbe4fd3a4ecb60f03}} 
+\index{btx.diagnostics.run.PixelTracker@{btx.diagnostics.run.PixelTracker}!visualize@{visualize}}
+\index{visualize@{visualize}!btx.diagnostics.run.PixelTracker@{btx.diagnostics.run.PixelTracker}}
+\doxysubsubsection{\texorpdfstring{visualize()}{visualize()}}
+{\footnotesize\ttfamily def btx.\+diagnostics.\+run.\+Pixel\+Tracker.\+visualize (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{outdir = {\ttfamily None} }\end{DoxyParamCaption})}
+
+
+
+Plot the raw vs calibrated intensity, colored by gain setting. 
+
+\hypertarget{classbtx_1_1diagnostics_1_1run_1_1PixelTracker_autotoc_md37}{}\doxysubsubsection{Parameters}\label{classbtx_1_1diagnostics_1_1run_1_1PixelTracker_autotoc_md37}
+outdir \+: str output directory 
+
+\doxysubsection{Member Data Documentation}
+\mbox{\Hypertarget{classbtx_1_1diagnostics_1_1run_1_1PixelTracker_a08396aee9c2cea81e4290792d8d6667d}\label{classbtx_1_1diagnostics_1_1run_1_1PixelTracker_a08396aee9c2cea81e4290792d8d6667d}} 
+\index{btx.diagnostics.run.PixelTracker@{btx.diagnostics.run.PixelTracker}!comm@{comm}}
+\index{comm@{comm}!btx.diagnostics.run.PixelTracker@{btx.diagnostics.run.PixelTracker}}
+\doxysubsubsection{\texorpdfstring{comm}{comm}}
+{\footnotesize\ttfamily btx.\+diagnostics.\+run.\+Pixel\+Tracker.\+comm}
+
+\mbox{\Hypertarget{classbtx_1_1diagnostics_1_1run_1_1PixelTracker_ac60c79ef7358ba25ca9aef5ff5c1ef79}\label{classbtx_1_1diagnostics_1_1run_1_1PixelTracker_ac60c79ef7358ba25ca9aef5ff5c1ef79}} 
+\index{btx.diagnostics.run.PixelTracker@{btx.diagnostics.run.PixelTracker}!index@{index}}
+\index{index@{index}!btx.diagnostics.run.PixelTracker@{btx.diagnostics.run.PixelTracker}}
+\doxysubsubsection{\texorpdfstring{index}{index}}
+{\footnotesize\ttfamily btx.\+diagnostics.\+run.\+Pixel\+Tracker.\+index}
+
+\mbox{\Hypertarget{classbtx_1_1diagnostics_1_1run_1_1PixelTracker_a72e996c52f45e372e5a66db4dbaa033f}\label{classbtx_1_1diagnostics_1_1run_1_1PixelTracker_a72e996c52f45e372e5a66db4dbaa033f}} 
+\index{btx.diagnostics.run.PixelTracker@{btx.diagnostics.run.PixelTracker}!pixel\_index\_map@{pixel\_index\_map}}
+\index{pixel\_index\_map@{pixel\_index\_map}!btx.diagnostics.run.PixelTracker@{btx.diagnostics.run.PixelTracker}}
+\doxysubsubsection{\texorpdfstring{pixel\_index\_map}{pixel\_index\_map}}
+{\footnotesize\ttfamily btx.\+diagnostics.\+run.\+Pixel\+Tracker.\+pixel\+\_\+index\+\_\+map}
+
+\mbox{\Hypertarget{classbtx_1_1diagnostics_1_1run_1_1PixelTracker_ae332dfbf687119ef588defbd08ebaf1d}\label{classbtx_1_1diagnostics_1_1run_1_1PixelTracker_ae332dfbf687119ef588defbd08ebaf1d}} 
+\index{btx.diagnostics.run.PixelTracker@{btx.diagnostics.run.PixelTracker}!psi@{psi}}
+\index{psi@{psi}!btx.diagnostics.run.PixelTracker@{btx.diagnostics.run.PixelTracker}}
+\doxysubsubsection{\texorpdfstring{psi}{psi}}
+{\footnotesize\ttfamily btx.\+diagnostics.\+run.\+Pixel\+Tracker.\+psi}
+
+\mbox{\Hypertarget{classbtx_1_1diagnostics_1_1run_1_1PixelTracker_a07a8d6d4985d3ba9a30106883583f791}\label{classbtx_1_1diagnostics_1_1run_1_1PixelTracker_a07a8d6d4985d3ba9a30106883583f791}} 
+\index{btx.diagnostics.run.PixelTracker@{btx.diagnostics.run.PixelTracker}!rank@{rank}}
+\index{rank@{rank}!btx.diagnostics.run.PixelTracker@{btx.diagnostics.run.PixelTracker}}
+\doxysubsubsection{\texorpdfstring{rank}{rank}}
+{\footnotesize\ttfamily btx.\+diagnostics.\+run.\+Pixel\+Tracker.\+rank}
+
+\mbox{\Hypertarget{classbtx_1_1diagnostics_1_1run_1_1PixelTracker_adaab8b0216cc1bf2f6074d1a48f5d770}\label{classbtx_1_1diagnostics_1_1run_1_1PixelTracker_adaab8b0216cc1bf2f6074d1a48f5d770}} 
+\index{btx.diagnostics.run.PixelTracker@{btx.diagnostics.run.PixelTracker}!size@{size}}
+\index{size@{size}!btx.diagnostics.run.PixelTracker@{btx.diagnostics.run.PixelTracker}}
+\doxysubsubsection{\texorpdfstring{size}{size}}
+{\footnotesize\ttfamily btx.\+diagnostics.\+run.\+Pixel\+Tracker.\+size}
+
+\mbox{\Hypertarget{classbtx_1_1diagnostics_1_1run_1_1PixelTracker_a9f4232d28c74153465667f430ecc449a}\label{classbtx_1_1diagnostics_1_1run_1_1PixelTracker_a9f4232d28c74153465667f430ecc449a}} 
+\index{btx.diagnostics.run.PixelTracker@{btx.diagnostics.run.PixelTracker}!stats@{stats}}
+\index{stats@{stats}!btx.diagnostics.run.PixelTracker@{btx.diagnostics.run.PixelTracker}}
+\doxysubsubsection{\texorpdfstring{stats}{stats}}
+{\footnotesize\ttfamily btx.\+diagnostics.\+run.\+Pixel\+Tracker.\+stats}
+
+\mbox{\Hypertarget{classbtx_1_1diagnostics_1_1run_1_1PixelTracker_a2100f80158fa8891efd0b6073263d6fd}\label{classbtx_1_1diagnostics_1_1run_1_1PixelTracker_a2100f80158fa8891efd0b6073263d6fd}} 
+\index{btx.diagnostics.run.PixelTracker@{btx.diagnostics.run.PixelTracker}!stats\_final@{stats\_final}}
+\index{stats\_final@{stats\_final}!btx.diagnostics.run.PixelTracker@{btx.diagnostics.run.PixelTracker}}
+\doxysubsubsection{\texorpdfstring{stats\_final}{stats\_final}}
+{\footnotesize\ttfamily btx.\+diagnostics.\+run.\+Pixel\+Tracker.\+stats\+\_\+final}
+
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+btx/diagnostics/\mbox{\hyperlink{run_8py}{run.\+py}}\end{DoxyCompactItemize}

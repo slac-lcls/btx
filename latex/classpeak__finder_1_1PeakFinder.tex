@@ -1,0 +1,472 @@
+\hypertarget{classpeak__finder_1_1PeakFinder}{}\doxysection{peak\+\_\+finder.\+Peak\+Finder Class Reference}
+\label{classpeak__finder_1_1PeakFinder}\index{peak\_finder.PeakFinder@{peak\_finder.PeakFinder}}
+
+
+Perform adaptive peak-\/finding on a psana run and save the results to cxi format.  
+
+
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+def \mbox{\hyperlink{classpeak__finder_1_1PeakFinder_a5f927ddbaca3d07110fe043d08b7d18e}{\+\_\+\+\_\+init\+\_\+\+\_\+}} (self, exp, run, det\+\_\+type, \mbox{\hyperlink{classpeak__finder_1_1PeakFinder_ac8e72985c6de2e49085de5d4bfb413cd}{outdir}}, event\+\_\+receiver=None, event\+\_\+code=None, event\+\_\+logic=True, \mbox{\hyperlink{classpeak__finder_1_1PeakFinder_a9aa0fe62f845d0dab46c26c307b3fe0e}{tag}}=\textquotesingle{}\textquotesingle{}, \mbox{\hyperlink{classpeak__finder_1_1PeakFinder_a5e1d786ef2a4b8cc604cf04cf82af4bd}{mask}}=None, psana\+\_\+mask=True, camera\+\_\+length=None, \mbox{\hyperlink{classpeak__finder_1_1PeakFinder_a8ca194b45952a1d630316a1f57545628}{min\+\_\+peaks}}=2, \mbox{\hyperlink{classpeak__finder_1_1PeakFinder_a6a865b47fc9a88e135490e81b73112cd}{max\+\_\+peaks}}=2048, \mbox{\hyperlink{classpeak__finder_1_1PeakFinder_abc338c326e6cd91a0f06e4afeffa838b}{npix\+\_\+min}}=2, \mbox{\hyperlink{classpeak__finder_1_1PeakFinder_ab1258fafb3ee1c1b1dd22035dd76cba3}{npix\+\_\+max}}=30, \mbox{\hyperlink{classpeak__finder_1_1PeakFinder_a770a8007f885419c62410fdc9ddb1355}{amax\+\_\+thr}}=80., \mbox{\hyperlink{classpeak__finder_1_1PeakFinder_a6e35664564b7c4ad4608db3695fa10e9}{atot\+\_\+thr}}=120., \mbox{\hyperlink{classpeak__finder_1_1PeakFinder_aae5fa72b666ff0b96559a2ed3ba128c6}{son\+\_\+min}}=7.\+0, \mbox{\hyperlink{classpeak__finder_1_1PeakFinder_a308ea3782d48ac964589cd68eea7a105}{peak\+\_\+rank}}=3, \mbox{\hyperlink{classpeak__finder_1_1PeakFinder_a613f66eb23b56ccb906d735400a1da48}{r0}}=3.\+0, \mbox{\hyperlink{classpeak__finder_1_1PeakFinder_a4accbfa47039c0753b7987510970c1f7}{dr}}=2.\+0, \mbox{\hyperlink{classpeak__finder_1_1PeakFinder_a710261074b310c72d57d546e67f513f8}{nsigm}}=7.\+0, calibdir=None)
+\item 
+def \mbox{\hyperlink{classpeak__finder_1_1PeakFinder_a9c00cccd220cb84037a1fc92d7a09dcc}{set\+\_\+up\+\_\+psana\+\_\+interface}} (self, exp, run, det\+\_\+type, event\+\_\+receiver=None, event\+\_\+code=None, event\+\_\+logic=True, calibdir=None)
+\begin{DoxyCompactList}\small\item\em Set up Psana\+Interface object and distribute events between ranks. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{classpeak__finder_1_1PeakFinder_a44a773245e4c3cb8cd2312fc7577ebc7}{set\+\_\+up\+\_\+algorithm}} (self, mask\+\_\+file=None, psana\+\_\+mask=True)
+\begin{DoxyCompactList}\small\item\em Set up the peak-\/finding algorithm. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{classpeak__finder_1_1PeakFinder_a745e979054f13b599c77c1c3615c6991}{set\+\_\+up\+\_\+cxi}} (self, \mbox{\hyperlink{classpeak__finder_1_1PeakFinder_a9aa0fe62f845d0dab46c26c307b3fe0e}{tag}}=\textquotesingle{}\textquotesingle{})
+\begin{DoxyCompactList}\small\item\em Set up the CXI files to which peak finding results will be saved. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{classpeak__finder_1_1PeakFinder_a8a4027ab7862da9a822130894b534aa9}{store\+\_\+event}} (self, outh5, img, peaks, phot\+\_\+energy)
+\begin{DoxyCompactList}\small\item\em Store event\textquotesingle{}s peaks in CXI file, converting to Cheetah conventions. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{classpeak__finder_1_1PeakFinder_a03be97b0558dd023080e87417bd22e77}{curate\+\_\+cxi}} (self)
+\begin{DoxyCompactList}\small\item\em Curate the CXI file by reshaping the keys to the number of hits and adding powders. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{classpeak__finder_1_1PeakFinder_abb1e8ac0012b1e65bc0e0c2206de2bd2}{find\+\_\+peaks\+\_\+event}} (self, img)
+\begin{DoxyCompactList}\small\item\em Find peaks on a single image. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{classpeak__finder_1_1PeakFinder_a850759e96a64268f234e4f92378cbbb3}{find\+\_\+peaks}} (self)
+\begin{DoxyCompactList}\small\item\em Find all peaks in the images assigned to this rank. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{classpeak__finder_1_1PeakFinder_a94934f3230335c13f22d9bddc399cd21}{summarize}} (self)
+\begin{DoxyCompactList}\small\item\em Summarize results and write to peakfinding.\+summary file. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{classpeak__finder_1_1PeakFinder_a86f0a73357a40a5a4dbe3dc273fbe2d8}{report}} (self, update\+\_\+url)
+\begin{DoxyCompactList}\small\item\em Post summary to elog. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{classpeak__finder_1_1PeakFinder_a3cf1a61610b9d83ad0746f70750786fa}{compute\+\_\+powders}} (self, fnames)
+\begin{DoxyCompactList}\small\item\em Compute the powder hits and misses by iterating through valid files. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{classpeak__finder_1_1PeakFinder_a37a3a0c22441114f351a135dd78b584a}{add\+\_\+virtual\+\_\+dataset}} (self, vfname, fnames, dname, shape, dtype, mode=\textquotesingle{}a\textquotesingle{})
+\begin{DoxyCompactList}\small\item\em Add a virtual dataset to the hdf5 file. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{classpeak__finder_1_1PeakFinder_a58a033982cdaf0282c321810664241e2}{generate\+\_\+vds}} (self, vfname)
+\begin{DoxyCompactList}\small\item\em Generate a virtual dataset to map all individual files for this run. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classpeak__finder_1_1PeakFinder_aeb38db814bb81e3e045880988ac31ee7}{comm}}
+\item 
+\mbox{\hyperlink{classpeak__finder_1_1PeakFinder_aa6eb43179a6bb9dc11efd7600e832051}{rank}}
+\item 
+\mbox{\hyperlink{classpeak__finder_1_1PeakFinder_af8a1be63e7c1f9f54157c9a3a429de9d}{size}}
+\item 
+\mbox{\hyperlink{classpeak__finder_1_1PeakFinder_a9e2b398f273eacf731fbeb5bc52e8fa3}{n\+\_\+hits\+\_\+per\+\_\+rank}}
+\item 
+\mbox{\hyperlink{classpeak__finder_1_1PeakFinder_ad1645973f8512994e77ae836c096120f}{n\+\_\+hits\+\_\+total}}
+\item 
+\mbox{\hyperlink{classpeak__finder_1_1PeakFinder_abc338c326e6cd91a0f06e4afeffa838b}{npix\+\_\+min}}
+\item 
+\mbox{\hyperlink{classpeak__finder_1_1PeakFinder_ab1258fafb3ee1c1b1dd22035dd76cba3}{npix\+\_\+max}}
+\item 
+\mbox{\hyperlink{classpeak__finder_1_1PeakFinder_a770a8007f885419c62410fdc9ddb1355}{amax\+\_\+thr}}
+\item 
+\mbox{\hyperlink{classpeak__finder_1_1PeakFinder_a6e35664564b7c4ad4608db3695fa10e9}{atot\+\_\+thr}}
+\item 
+\mbox{\hyperlink{classpeak__finder_1_1PeakFinder_aae5fa72b666ff0b96559a2ed3ba128c6}{son\+\_\+min}}
+\item 
+\mbox{\hyperlink{classpeak__finder_1_1PeakFinder_a308ea3782d48ac964589cd68eea7a105}{peak\+\_\+rank}}
+\item 
+\mbox{\hyperlink{classpeak__finder_1_1PeakFinder_a613f66eb23b56ccb906d735400a1da48}{r0}}
+\item 
+\mbox{\hyperlink{classpeak__finder_1_1PeakFinder_a4accbfa47039c0753b7987510970c1f7}{dr}}
+\item 
+\mbox{\hyperlink{classpeak__finder_1_1PeakFinder_a710261074b310c72d57d546e67f513f8}{nsigm}}
+\item 
+\mbox{\hyperlink{classpeak__finder_1_1PeakFinder_a8ca194b45952a1d630316a1f57545628}{min\+\_\+peaks}}
+\item 
+\mbox{\hyperlink{classpeak__finder_1_1PeakFinder_a6a865b47fc9a88e135490e81b73112cd}{max\+\_\+peaks}}
+\item 
+\mbox{\hyperlink{classpeak__finder_1_1PeakFinder_aa65e0384f98949cae8fa9c4c4cfd547a}{clen}}
+\item 
+\mbox{\hyperlink{classpeak__finder_1_1PeakFinder_ac8e72985c6de2e49085de5d4bfb413cd}{outdir}}
+\item 
+\mbox{\hyperlink{classpeak__finder_1_1PeakFinder_ae3b10c04204f63f5e53996009d1fedfe}{psi}}
+\item 
+\mbox{\hyperlink{classpeak__finder_1_1PeakFinder_abbc813bdad6167c67e3981c1d350ce6c}{n\+\_\+events}}
+\item 
+\mbox{\hyperlink{classpeak__finder_1_1PeakFinder_a931bd7ac2f1f7545ddcc4de3746c3a0a}{iX}}
+\item 
+\mbox{\hyperlink{classpeak__finder_1_1PeakFinder_adfe7fa0bd7bf39adcc9db45f127a683d}{iY}}
+\item 
+\mbox{\hyperlink{classpeak__finder_1_1PeakFinder_a949c14b625cc4eed18c1cf71ea3ddf25}{ipy}}
+\item 
+\mbox{\hyperlink{classpeak__finder_1_1PeakFinder_a5e1d786ef2a4b8cc604cf04cf82af4bd}{mask}}
+\item 
+\mbox{\hyperlink{classpeak__finder_1_1PeakFinder_a562340317b68f85502bf3f4334e37d77}{alg}}
+\item 
+\mbox{\hyperlink{classpeak__finder_1_1PeakFinder_a76832d90c6ed53589e7431d497c4fea9}{n\+\_\+hits}}
+\item 
+\mbox{\hyperlink{classpeak__finder_1_1PeakFinder_a70e7c18bca592d85c30e7d561e6304a0}{powder\+\_\+misses}}
+\item 
+\mbox{\hyperlink{classpeak__finder_1_1PeakFinder_a9aa0fe62f845d0dab46c26c307b3fe0e}{tag}}
+\item 
+\mbox{\hyperlink{classpeak__finder_1_1PeakFinder_a60ee780f242c1dba503045d3a07a1ee8}{fname}}
+\item 
+\mbox{\hyperlink{classpeak__finder_1_1PeakFinder_a55c4481909b31f2e359d74c96b624095}{powder\+\_\+hits}}
+\item 
+\mbox{\hyperlink{classpeak__finder_1_1PeakFinder_addbd97f70b9666062c024ccec8e77bb7}{n\+\_\+events\+\_\+per\+\_\+rank}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Private Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+def \mbox{\hyperlink{classpeak__finder_1_1PeakFinder_a30464731fe84ceff52e0d47dc719b90b}{\+\_\+generate\+\_\+mask}} (self, mask\+\_\+file=None, psana\+\_\+mask=True)
+\begin{DoxyCompactList}\small\item\em Generate mask, optionally a combination of the psana-\/generated mask and a user-\/supplied mask. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{classpeak__finder_1_1PeakFinder_a508dd7c6800f6d31a9cae5346ee2b0ae}{\+\_\+compute\+\_\+peak\+\_\+radius}} (self, peaks)
+\begin{DoxyCompactList}\small\item\em Compute radii of peaks based on their constituent pixels. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Perform adaptive peak-\/finding on a psana run and save the results to cxi format. 
+
+Adapted from psocake. More information about peak finding is available below\+: \href{https://confluence.slac.stanford.edu/display/PSDM/Hit+and+Peak+Finding+Algorithms}{\texttt{ https\+://confluence.\+slac.\+stanford.\+edu/display/\+PSDM/\+Hit+and+\+Peak+\+Finding+\+Algorithms}} 
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classpeak__finder_1_1PeakFinder_a5f927ddbaca3d07110fe043d08b7d18e}\label{classpeak__finder_1_1PeakFinder_a5f927ddbaca3d07110fe043d08b7d18e}} 
+\index{peak\_finder.PeakFinder@{peak\_finder.PeakFinder}!\_\_init\_\_@{\_\_init\_\_}}
+\index{\_\_init\_\_@{\_\_init\_\_}!peak\_finder.PeakFinder@{peak\_finder.PeakFinder}}
+\doxysubsubsection{\texorpdfstring{\_\_init\_\_()}{\_\_init\_\_()}}
+{\footnotesize\ttfamily def peak\+\_\+finder.\+Peak\+Finder.\+\_\+\+\_\+init\+\_\+\+\_\+ (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{exp,  }\item[{}]{run,  }\item[{}]{det\+\_\+type,  }\item[{}]{outdir,  }\item[{}]{event\+\_\+receiver = {\ttfamily None},  }\item[{}]{event\+\_\+code = {\ttfamily None},  }\item[{}]{event\+\_\+logic = {\ttfamily True},  }\item[{}]{tag = {\ttfamily \textquotesingle{}\textquotesingle{}},  }\item[{}]{mask = {\ttfamily None},  }\item[{}]{psana\+\_\+mask = {\ttfamily True},  }\item[{}]{camera\+\_\+length = {\ttfamily None},  }\item[{}]{min\+\_\+peaks = {\ttfamily 2},  }\item[{}]{max\+\_\+peaks = {\ttfamily 2048},  }\item[{}]{npix\+\_\+min = {\ttfamily 2},  }\item[{}]{npix\+\_\+max = {\ttfamily 30},  }\item[{}]{amax\+\_\+thr = {\ttfamily 80.},  }\item[{}]{atot\+\_\+thr = {\ttfamily 120.},  }\item[{}]{son\+\_\+min = {\ttfamily 7.0},  }\item[{}]{peak\+\_\+rank = {\ttfamily 3},  }\item[{}]{r0 = {\ttfamily 3.0},  }\item[{}]{dr = {\ttfamily 2.0},  }\item[{}]{nsigm = {\ttfamily 7.0},  }\item[{}]{calibdir = {\ttfamily None} }\end{DoxyParamCaption})}
+
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classpeak__finder_1_1PeakFinder_a508dd7c6800f6d31a9cae5346ee2b0ae}\label{classpeak__finder_1_1PeakFinder_a508dd7c6800f6d31a9cae5346ee2b0ae}} 
+\index{peak\_finder.PeakFinder@{peak\_finder.PeakFinder}!\_compute\_peak\_radius@{\_compute\_peak\_radius}}
+\index{\_compute\_peak\_radius@{\_compute\_peak\_radius}!peak\_finder.PeakFinder@{peak\_finder.PeakFinder}}
+\doxysubsubsection{\texorpdfstring{\_compute\_peak\_radius()}{\_compute\_peak\_radius()}}
+{\footnotesize\ttfamily def peak\+\_\+finder.\+Peak\+Finder.\+\_\+compute\+\_\+peak\+\_\+radius (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{peaks }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [private]}}
+
+
+
+Compute radii of peaks based on their constituent pixels. 
+
+\hypertarget{classpeak__finder_1_1PeakFinder_autotoc_md147}{}\doxysubsubsection{Parameters}\label{classpeak__finder_1_1PeakFinder_autotoc_md147}
+peaks \+: numpy.\+ndarray, shape (n\+\_\+peaks, 17) results of peak finding algorithm for a single event\hypertarget{classpeak__finder_1_1PeakFinder_autotoc_md148}{}\doxysubsubsection{Returns}\label{classpeak__finder_1_1PeakFinder_autotoc_md148}
+radius \+: numpy.\+ndarray, shape (n\+\_\+peaks) radii of peaks in pixels \mbox{\Hypertarget{classpeak__finder_1_1PeakFinder_a30464731fe84ceff52e0d47dc719b90b}\label{classpeak__finder_1_1PeakFinder_a30464731fe84ceff52e0d47dc719b90b}} 
+\index{peak\_finder.PeakFinder@{peak\_finder.PeakFinder}!\_generate\_mask@{\_generate\_mask}}
+\index{\_generate\_mask@{\_generate\_mask}!peak\_finder.PeakFinder@{peak\_finder.PeakFinder}}
+\doxysubsubsection{\texorpdfstring{\_generate\_mask()}{\_generate\_mask()}}
+{\footnotesize\ttfamily def peak\+\_\+finder.\+Peak\+Finder.\+\_\+generate\+\_\+mask (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{mask\+\_\+file = {\ttfamily None},  }\item[{}]{psana\+\_\+mask = {\ttfamily True} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [private]}}
+
+
+
+Generate mask, optionally a combination of the psana-\/generated mask and a user-\/supplied mask. 
+
+\hypertarget{classpeak__finder_1_1PeakFinder_autotoc_md144}{}\doxysubsubsection{Parameters}\label{classpeak__finder_1_1PeakFinder_autotoc_md144}
+mask\+\_\+file \+: str path to mask in shape of unassembled detector, optional psana\+\_\+mask \+: bool if True, retrieve mask from psana Detector object \mbox{\Hypertarget{classpeak__finder_1_1PeakFinder_a37a3a0c22441114f351a135dd78b584a}\label{classpeak__finder_1_1PeakFinder_a37a3a0c22441114f351a135dd78b584a}} 
+\index{peak\_finder.PeakFinder@{peak\_finder.PeakFinder}!add\_virtual\_dataset@{add\_virtual\_dataset}}
+\index{add\_virtual\_dataset@{add\_virtual\_dataset}!peak\_finder.PeakFinder@{peak\_finder.PeakFinder}}
+\doxysubsubsection{\texorpdfstring{add\_virtual\_dataset()}{add\_virtual\_dataset()}}
+{\footnotesize\ttfamily def peak\+\_\+finder.\+Peak\+Finder.\+add\+\_\+virtual\+\_\+dataset (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{vfname,  }\item[{}]{fnames,  }\item[{}]{dname,  }\item[{}]{shape,  }\item[{}]{dtype,  }\item[{}]{mode = {\ttfamily \textquotesingle{}a\textquotesingle{}} }\end{DoxyParamCaption})}
+
+
+
+Add a virtual dataset to the hdf5 file. 
+
+\hypertarget{classpeak__finder_1_1PeakFinder_autotoc_md153}{}\doxysubsubsection{Parameters}\label{classpeak__finder_1_1PeakFinder_autotoc_md153}
+vfname \+: str filename for virtual CXI file fnames \+: list of str list of individual CXI file names dname \+: str dataset path within hdf5 file shape \+: tuple shape of virtual dataset dtype \+: type dataset type, e.\+g. int or float mode \+: str \textquotesingle{}w\textquotesingle{} if first dataset, \textquotesingle{}a\textquotesingle{} otherwise \mbox{\Hypertarget{classpeak__finder_1_1PeakFinder_a3cf1a61610b9d83ad0746f70750786fa}\label{classpeak__finder_1_1PeakFinder_a3cf1a61610b9d83ad0746f70750786fa}} 
+\index{peak\_finder.PeakFinder@{peak\_finder.PeakFinder}!compute\_powders@{compute\_powders}}
+\index{compute\_powders@{compute\_powders}!peak\_finder.PeakFinder@{peak\_finder.PeakFinder}}
+\doxysubsubsection{\texorpdfstring{compute\_powders()}{compute\_powders()}}
+{\footnotesize\ttfamily def peak\+\_\+finder.\+Peak\+Finder.\+compute\+\_\+powders (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{fnames }\end{DoxyParamCaption})}
+
+
+
+Compute the powder hits and misses by iterating through valid files. 
+
+We use this rather than comm.\+gather to avoid memory errors.\hypertarget{classpeak__finder_1_1PeakFinder_autotoc_md152}{}\doxysubsubsection{Parameters}\label{classpeak__finder_1_1PeakFinder_autotoc_md152}
+fnames \+: list of str list of individual CXI file names \mbox{\Hypertarget{classpeak__finder_1_1PeakFinder_a03be97b0558dd023080e87417bd22e77}\label{classpeak__finder_1_1PeakFinder_a03be97b0558dd023080e87417bd22e77}} 
+\index{peak\_finder.PeakFinder@{peak\_finder.PeakFinder}!curate\_cxi@{curate\_cxi}}
+\index{curate\_cxi@{curate\_cxi}!peak\_finder.PeakFinder@{peak\_finder.PeakFinder}}
+\doxysubsubsection{\texorpdfstring{curate\_cxi()}{curate\_cxi()}}
+{\footnotesize\ttfamily def peak\+\_\+finder.\+Peak\+Finder.\+curate\+\_\+cxi (\begin{DoxyParamCaption}\item[{}]{self }\end{DoxyParamCaption})}
+
+
+
+Curate the CXI file by reshaping the keys to the number of hits and adding powders. 
+
+\mbox{\Hypertarget{classpeak__finder_1_1PeakFinder_a850759e96a64268f234e4f92378cbbb3}\label{classpeak__finder_1_1PeakFinder_a850759e96a64268f234e4f92378cbbb3}} 
+\index{peak\_finder.PeakFinder@{peak\_finder.PeakFinder}!find\_peaks@{find\_peaks}}
+\index{find\_peaks@{find\_peaks}!peak\_finder.PeakFinder@{peak\_finder.PeakFinder}}
+\doxysubsubsection{\texorpdfstring{find\_peaks()}{find\_peaks()}}
+{\footnotesize\ttfamily def peak\+\_\+finder.\+Peak\+Finder.\+find\+\_\+peaks (\begin{DoxyParamCaption}\item[{}]{self }\end{DoxyParamCaption})}
+
+
+
+Find all peaks in the images assigned to this rank. 
+
+\mbox{\Hypertarget{classpeak__finder_1_1PeakFinder_abb1e8ac0012b1e65bc0e0c2206de2bd2}\label{classpeak__finder_1_1PeakFinder_abb1e8ac0012b1e65bc0e0c2206de2bd2}} 
+\index{peak\_finder.PeakFinder@{peak\_finder.PeakFinder}!find\_peaks\_event@{find\_peaks\_event}}
+\index{find\_peaks\_event@{find\_peaks\_event}!peak\_finder.PeakFinder@{peak\_finder.PeakFinder}}
+\doxysubsubsection{\texorpdfstring{find\_peaks\_event()}{find\_peaks\_event()}}
+{\footnotesize\ttfamily def peak\+\_\+finder.\+Peak\+Finder.\+find\+\_\+peaks\+\_\+event (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{img }\end{DoxyParamCaption})}
+
+
+
+Find peaks on a single image. 
+
+\hypertarget{classpeak__finder_1_1PeakFinder_autotoc_md149}{}\doxysubsubsection{Parameters}\label{classpeak__finder_1_1PeakFinder_autotoc_md149}
+img \+: numpy.\+ndarray, shape (n\+\_\+panels, n\+\_\+panels\+\_\+fs, n\+\_\+panels\+\_\+ss) calibrated detector data in shape of unassembled detector\hypertarget{classpeak__finder_1_1PeakFinder_autotoc_md150}{}\doxysubsubsection{Returns}\label{classpeak__finder_1_1PeakFinder_autotoc_md150}
+peaks \+: numpy.\+ndarray, shape (n\+\_\+peaks, 17) results of peak finding algorithm for this image \mbox{\Hypertarget{classpeak__finder_1_1PeakFinder_a58a033982cdaf0282c321810664241e2}\label{classpeak__finder_1_1PeakFinder_a58a033982cdaf0282c321810664241e2}} 
+\index{peak\_finder.PeakFinder@{peak\_finder.PeakFinder}!generate\_vds@{generate\_vds}}
+\index{generate\_vds@{generate\_vds}!peak\_finder.PeakFinder@{peak\_finder.PeakFinder}}
+\doxysubsubsection{\texorpdfstring{generate\_vds()}{generate\_vds()}}
+{\footnotesize\ttfamily def peak\+\_\+finder.\+Peak\+Finder.\+generate\+\_\+vds (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{vfname }\end{DoxyParamCaption})}
+
+
+
+Generate a virtual dataset to map all individual files for this run. 
+
+\hypertarget{classpeak__finder_1_1PeakFinder_autotoc_md154}{}\doxysubsubsection{Parameters}\label{classpeak__finder_1_1PeakFinder_autotoc_md154}
+vfname \+: str filename for virtual CXI file ~\newline
+ \mbox{\Hypertarget{classpeak__finder_1_1PeakFinder_a86f0a73357a40a5a4dbe3dc273fbe2d8}\label{classpeak__finder_1_1PeakFinder_a86f0a73357a40a5a4dbe3dc273fbe2d8}} 
+\index{peak\_finder.PeakFinder@{peak\_finder.PeakFinder}!report@{report}}
+\index{report@{report}!peak\_finder.PeakFinder@{peak\_finder.PeakFinder}}
+\doxysubsubsection{\texorpdfstring{report()}{report()}}
+{\footnotesize\ttfamily def peak\+\_\+finder.\+Peak\+Finder.\+report (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{update\+\_\+url }\end{DoxyParamCaption})}
+
+
+
+Post summary to elog. 
+
+\hypertarget{classpeak__finder_1_1PeakFinder_autotoc_md151}{}\doxysubsubsection{Parameters}\label{classpeak__finder_1_1PeakFinder_autotoc_md151}
+update\+\_\+url \+: str elog URL for posting progress update \mbox{\Hypertarget{classpeak__finder_1_1PeakFinder_a44a773245e4c3cb8cd2312fc7577ebc7}\label{classpeak__finder_1_1PeakFinder_a44a773245e4c3cb8cd2312fc7577ebc7}} 
+\index{peak\_finder.PeakFinder@{peak\_finder.PeakFinder}!set\_up\_algorithm@{set\_up\_algorithm}}
+\index{set\_up\_algorithm@{set\_up\_algorithm}!peak\_finder.PeakFinder@{peak\_finder.PeakFinder}}
+\doxysubsubsection{\texorpdfstring{set\_up\_algorithm()}{set\_up\_algorithm()}}
+{\footnotesize\ttfamily def peak\+\_\+finder.\+Peak\+Finder.\+set\+\_\+up\+\_\+algorithm (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{mask\+\_\+file = {\ttfamily None},  }\item[{}]{psana\+\_\+mask = {\ttfamily True} }\end{DoxyParamCaption})}
+
+
+
+Set up the peak-\/finding algorithm. 
+
+Currently only the adaptive variant is supported. For more details, see\+: \href{https://github.com/lcls-psana/psalgos/blob/master/src/pypsalgos.py}{\texttt{ https\+://github.\+com/lcls-\/psana/psalgos/blob/master/src/pypsalgos.\+py}} \mbox{\Hypertarget{classpeak__finder_1_1PeakFinder_a745e979054f13b599c77c1c3615c6991}\label{classpeak__finder_1_1PeakFinder_a745e979054f13b599c77c1c3615c6991}} 
+\index{peak\_finder.PeakFinder@{peak\_finder.PeakFinder}!set\_up\_cxi@{set\_up\_cxi}}
+\index{set\_up\_cxi@{set\_up\_cxi}!peak\_finder.PeakFinder@{peak\_finder.PeakFinder}}
+\doxysubsubsection{\texorpdfstring{set\_up\_cxi()}{set\_up\_cxi()}}
+{\footnotesize\ttfamily def peak\+\_\+finder.\+Peak\+Finder.\+set\+\_\+up\+\_\+cxi (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{tag = {\ttfamily \textquotesingle{}\textquotesingle{}} }\end{DoxyParamCaption})}
+
+
+
+Set up the CXI files to which peak finding results will be saved. 
+
+\hypertarget{classpeak__finder_1_1PeakFinder_autotoc_md145}{}\doxysubsubsection{Parameters}\label{classpeak__finder_1_1PeakFinder_autotoc_md145}
+tag \+: str file nomenclature suffix, optional \mbox{\Hypertarget{classpeak__finder_1_1PeakFinder_a9c00cccd220cb84037a1fc92d7a09dcc}\label{classpeak__finder_1_1PeakFinder_a9c00cccd220cb84037a1fc92d7a09dcc}} 
+\index{peak\_finder.PeakFinder@{peak\_finder.PeakFinder}!set\_up\_psana\_interface@{set\_up\_psana\_interface}}
+\index{set\_up\_psana\_interface@{set\_up\_psana\_interface}!peak\_finder.PeakFinder@{peak\_finder.PeakFinder}}
+\doxysubsubsection{\texorpdfstring{set\_up\_psana\_interface()}{set\_up\_psana\_interface()}}
+{\footnotesize\ttfamily def peak\+\_\+finder.\+Peak\+Finder.\+set\+\_\+up\+\_\+psana\+\_\+interface (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{exp,  }\item[{}]{run,  }\item[{}]{det\+\_\+type,  }\item[{}]{event\+\_\+receiver = {\ttfamily None},  }\item[{}]{event\+\_\+code = {\ttfamily None},  }\item[{}]{event\+\_\+logic = {\ttfamily True},  }\item[{}]{calibdir = {\ttfamily None} }\end{DoxyParamCaption})}
+
+
+
+Set up Psana\+Interface object and distribute events between ranks. 
+
+\hypertarget{classpeak__finder_1_1PeakFinder_autotoc_md143}{}\doxysubsubsection{Parameters}\label{classpeak__finder_1_1PeakFinder_autotoc_md143}
+exp \+: str experiment name run \+: int run number det\+\_\+type \+: str detector name, e.\+g. jungfrau4M or epix10k2M calibdir \+: str directory to alternative calibration files \mbox{\Hypertarget{classpeak__finder_1_1PeakFinder_a8a4027ab7862da9a822130894b534aa9}\label{classpeak__finder_1_1PeakFinder_a8a4027ab7862da9a822130894b534aa9}} 
+\index{peak\_finder.PeakFinder@{peak\_finder.PeakFinder}!store\_event@{store\_event}}
+\index{store\_event@{store\_event}!peak\_finder.PeakFinder@{peak\_finder.PeakFinder}}
+\doxysubsubsection{\texorpdfstring{store\_event()}{store\_event()}}
+{\footnotesize\ttfamily def peak\+\_\+finder.\+Peak\+Finder.\+store\+\_\+event (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{outh5,  }\item[{}]{img,  }\item[{}]{peaks,  }\item[{}]{phot\+\_\+energy }\end{DoxyParamCaption})}
+
+
+
+Store event\textquotesingle{}s peaks in CXI file, converting to Cheetah conventions. 
+
+\hypertarget{classpeak__finder_1_1PeakFinder_autotoc_md146}{}\doxysubsubsection{Parameters}\label{classpeak__finder_1_1PeakFinder_autotoc_md146}
+outh5 \+: h5py.\+\_\+hl.\+files.\+File open h5 file for storing output for this rank img \+: numpy.\+ndarray, shape (n\+\_\+panels, n\+\_\+panels\+\_\+fs, n\+\_\+panels\+\_\+ss) calibrated detector data in shape of unassembled detector peaks \+: numpy.\+ndarray, shape (n\+\_\+peaks, 17) results of peak finding algorithm for a single event phot\+\_\+energy \+: float photon energy in eV \mbox{\Hypertarget{classpeak__finder_1_1PeakFinder_a94934f3230335c13f22d9bddc399cd21}\label{classpeak__finder_1_1PeakFinder_a94934f3230335c13f22d9bddc399cd21}} 
+\index{peak\_finder.PeakFinder@{peak\_finder.PeakFinder}!summarize@{summarize}}
+\index{summarize@{summarize}!peak\_finder.PeakFinder@{peak\_finder.PeakFinder}}
+\doxysubsubsection{\texorpdfstring{summarize()}{summarize()}}
+{\footnotesize\ttfamily def peak\+\_\+finder.\+Peak\+Finder.\+summarize (\begin{DoxyParamCaption}\item[{}]{self }\end{DoxyParamCaption})}
+
+
+
+Summarize results and write to peakfinding.\+summary file. 
+
+
+
+\doxysubsection{Member Data Documentation}
+\mbox{\Hypertarget{classpeak__finder_1_1PeakFinder_a562340317b68f85502bf3f4334e37d77}\label{classpeak__finder_1_1PeakFinder_a562340317b68f85502bf3f4334e37d77}} 
+\index{peak\_finder.PeakFinder@{peak\_finder.PeakFinder}!alg@{alg}}
+\index{alg@{alg}!peak\_finder.PeakFinder@{peak\_finder.PeakFinder}}
+\doxysubsubsection{\texorpdfstring{alg}{alg}}
+{\footnotesize\ttfamily peak\+\_\+finder.\+Peak\+Finder.\+alg}
+
+\mbox{\Hypertarget{classpeak__finder_1_1PeakFinder_a770a8007f885419c62410fdc9ddb1355}\label{classpeak__finder_1_1PeakFinder_a770a8007f885419c62410fdc9ddb1355}} 
+\index{peak\_finder.PeakFinder@{peak\_finder.PeakFinder}!amax\_thr@{amax\_thr}}
+\index{amax\_thr@{amax\_thr}!peak\_finder.PeakFinder@{peak\_finder.PeakFinder}}
+\doxysubsubsection{\texorpdfstring{amax\_thr}{amax\_thr}}
+{\footnotesize\ttfamily peak\+\_\+finder.\+Peak\+Finder.\+amax\+\_\+thr}
+
+\mbox{\Hypertarget{classpeak__finder_1_1PeakFinder_a6e35664564b7c4ad4608db3695fa10e9}\label{classpeak__finder_1_1PeakFinder_a6e35664564b7c4ad4608db3695fa10e9}} 
+\index{peak\_finder.PeakFinder@{peak\_finder.PeakFinder}!atot\_thr@{atot\_thr}}
+\index{atot\_thr@{atot\_thr}!peak\_finder.PeakFinder@{peak\_finder.PeakFinder}}
+\doxysubsubsection{\texorpdfstring{atot\_thr}{atot\_thr}}
+{\footnotesize\ttfamily peak\+\_\+finder.\+Peak\+Finder.\+atot\+\_\+thr}
+
+\mbox{\Hypertarget{classpeak__finder_1_1PeakFinder_aa65e0384f98949cae8fa9c4c4cfd547a}\label{classpeak__finder_1_1PeakFinder_aa65e0384f98949cae8fa9c4c4cfd547a}} 
+\index{peak\_finder.PeakFinder@{peak\_finder.PeakFinder}!clen@{clen}}
+\index{clen@{clen}!peak\_finder.PeakFinder@{peak\_finder.PeakFinder}}
+\doxysubsubsection{\texorpdfstring{clen}{clen}}
+{\footnotesize\ttfamily peak\+\_\+finder.\+Peak\+Finder.\+clen}
+
+\mbox{\Hypertarget{classpeak__finder_1_1PeakFinder_aeb38db814bb81e3e045880988ac31ee7}\label{classpeak__finder_1_1PeakFinder_aeb38db814bb81e3e045880988ac31ee7}} 
+\index{peak\_finder.PeakFinder@{peak\_finder.PeakFinder}!comm@{comm}}
+\index{comm@{comm}!peak\_finder.PeakFinder@{peak\_finder.PeakFinder}}
+\doxysubsubsection{\texorpdfstring{comm}{comm}}
+{\footnotesize\ttfamily peak\+\_\+finder.\+Peak\+Finder.\+comm}
+
+\mbox{\Hypertarget{classpeak__finder_1_1PeakFinder_a4accbfa47039c0753b7987510970c1f7}\label{classpeak__finder_1_1PeakFinder_a4accbfa47039c0753b7987510970c1f7}} 
+\index{peak\_finder.PeakFinder@{peak\_finder.PeakFinder}!dr@{dr}}
+\index{dr@{dr}!peak\_finder.PeakFinder@{peak\_finder.PeakFinder}}
+\doxysubsubsection{\texorpdfstring{dr}{dr}}
+{\footnotesize\ttfamily peak\+\_\+finder.\+Peak\+Finder.\+dr}
+
+\mbox{\Hypertarget{classpeak__finder_1_1PeakFinder_a60ee780f242c1dba503045d3a07a1ee8}\label{classpeak__finder_1_1PeakFinder_a60ee780f242c1dba503045d3a07a1ee8}} 
+\index{peak\_finder.PeakFinder@{peak\_finder.PeakFinder}!fname@{fname}}
+\index{fname@{fname}!peak\_finder.PeakFinder@{peak\_finder.PeakFinder}}
+\doxysubsubsection{\texorpdfstring{fname}{fname}}
+{\footnotesize\ttfamily peak\+\_\+finder.\+Peak\+Finder.\+fname}
+
+\mbox{\Hypertarget{classpeak__finder_1_1PeakFinder_a949c14b625cc4eed18c1cf71ea3ddf25}\label{classpeak__finder_1_1PeakFinder_a949c14b625cc4eed18c1cf71ea3ddf25}} 
+\index{peak\_finder.PeakFinder@{peak\_finder.PeakFinder}!ipy@{ipy}}
+\index{ipy@{ipy}!peak\_finder.PeakFinder@{peak\_finder.PeakFinder}}
+\doxysubsubsection{\texorpdfstring{ipy}{ipy}}
+{\footnotesize\ttfamily peak\+\_\+finder.\+Peak\+Finder.\+ipy}
+
+\mbox{\Hypertarget{classpeak__finder_1_1PeakFinder_a931bd7ac2f1f7545ddcc4de3746c3a0a}\label{classpeak__finder_1_1PeakFinder_a931bd7ac2f1f7545ddcc4de3746c3a0a}} 
+\index{peak\_finder.PeakFinder@{peak\_finder.PeakFinder}!iX@{iX}}
+\index{iX@{iX}!peak\_finder.PeakFinder@{peak\_finder.PeakFinder}}
+\doxysubsubsection{\texorpdfstring{iX}{iX}}
+{\footnotesize\ttfamily peak\+\_\+finder.\+Peak\+Finder.\+iX}
+
+\mbox{\Hypertarget{classpeak__finder_1_1PeakFinder_adfe7fa0bd7bf39adcc9db45f127a683d}\label{classpeak__finder_1_1PeakFinder_adfe7fa0bd7bf39adcc9db45f127a683d}} 
+\index{peak\_finder.PeakFinder@{peak\_finder.PeakFinder}!iY@{iY}}
+\index{iY@{iY}!peak\_finder.PeakFinder@{peak\_finder.PeakFinder}}
+\doxysubsubsection{\texorpdfstring{iY}{iY}}
+{\footnotesize\ttfamily peak\+\_\+finder.\+Peak\+Finder.\+iY}
+
+\mbox{\Hypertarget{classpeak__finder_1_1PeakFinder_a5e1d786ef2a4b8cc604cf04cf82af4bd}\label{classpeak__finder_1_1PeakFinder_a5e1d786ef2a4b8cc604cf04cf82af4bd}} 
+\index{peak\_finder.PeakFinder@{peak\_finder.PeakFinder}!mask@{mask}}
+\index{mask@{mask}!peak\_finder.PeakFinder@{peak\_finder.PeakFinder}}
+\doxysubsubsection{\texorpdfstring{mask}{mask}}
+{\footnotesize\ttfamily peak\+\_\+finder.\+Peak\+Finder.\+mask}
+
+\mbox{\Hypertarget{classpeak__finder_1_1PeakFinder_a6a865b47fc9a88e135490e81b73112cd}\label{classpeak__finder_1_1PeakFinder_a6a865b47fc9a88e135490e81b73112cd}} 
+\index{peak\_finder.PeakFinder@{peak\_finder.PeakFinder}!max\_peaks@{max\_peaks}}
+\index{max\_peaks@{max\_peaks}!peak\_finder.PeakFinder@{peak\_finder.PeakFinder}}
+\doxysubsubsection{\texorpdfstring{max\_peaks}{max\_peaks}}
+{\footnotesize\ttfamily peak\+\_\+finder.\+Peak\+Finder.\+max\+\_\+peaks}
+
+\mbox{\Hypertarget{classpeak__finder_1_1PeakFinder_a8ca194b45952a1d630316a1f57545628}\label{classpeak__finder_1_1PeakFinder_a8ca194b45952a1d630316a1f57545628}} 
+\index{peak\_finder.PeakFinder@{peak\_finder.PeakFinder}!min\_peaks@{min\_peaks}}
+\index{min\_peaks@{min\_peaks}!peak\_finder.PeakFinder@{peak\_finder.PeakFinder}}
+\doxysubsubsection{\texorpdfstring{min\_peaks}{min\_peaks}}
+{\footnotesize\ttfamily peak\+\_\+finder.\+Peak\+Finder.\+min\+\_\+peaks}
+
+\mbox{\Hypertarget{classpeak__finder_1_1PeakFinder_abbc813bdad6167c67e3981c1d350ce6c}\label{classpeak__finder_1_1PeakFinder_abbc813bdad6167c67e3981c1d350ce6c}} 
+\index{peak\_finder.PeakFinder@{peak\_finder.PeakFinder}!n\_events@{n\_events}}
+\index{n\_events@{n\_events}!peak\_finder.PeakFinder@{peak\_finder.PeakFinder}}
+\doxysubsubsection{\texorpdfstring{n\_events}{n\_events}}
+{\footnotesize\ttfamily peak\+\_\+finder.\+Peak\+Finder.\+n\+\_\+events}
+
+\mbox{\Hypertarget{classpeak__finder_1_1PeakFinder_addbd97f70b9666062c024ccec8e77bb7}\label{classpeak__finder_1_1PeakFinder_addbd97f70b9666062c024ccec8e77bb7}} 
+\index{peak\_finder.PeakFinder@{peak\_finder.PeakFinder}!n\_events\_per\_rank@{n\_events\_per\_rank}}
+\index{n\_events\_per\_rank@{n\_events\_per\_rank}!peak\_finder.PeakFinder@{peak\_finder.PeakFinder}}
+\doxysubsubsection{\texorpdfstring{n\_events\_per\_rank}{n\_events\_per\_rank}}
+{\footnotesize\ttfamily peak\+\_\+finder.\+Peak\+Finder.\+n\+\_\+events\+\_\+per\+\_\+rank}
+
+\mbox{\Hypertarget{classpeak__finder_1_1PeakFinder_a76832d90c6ed53589e7431d497c4fea9}\label{classpeak__finder_1_1PeakFinder_a76832d90c6ed53589e7431d497c4fea9}} 
+\index{peak\_finder.PeakFinder@{peak\_finder.PeakFinder}!n\_hits@{n\_hits}}
+\index{n\_hits@{n\_hits}!peak\_finder.PeakFinder@{peak\_finder.PeakFinder}}
+\doxysubsubsection{\texorpdfstring{n\_hits}{n\_hits}}
+{\footnotesize\ttfamily peak\+\_\+finder.\+Peak\+Finder.\+n\+\_\+hits}
+
+\mbox{\Hypertarget{classpeak__finder_1_1PeakFinder_a9e2b398f273eacf731fbeb5bc52e8fa3}\label{classpeak__finder_1_1PeakFinder_a9e2b398f273eacf731fbeb5bc52e8fa3}} 
+\index{peak\_finder.PeakFinder@{peak\_finder.PeakFinder}!n\_hits\_per\_rank@{n\_hits\_per\_rank}}
+\index{n\_hits\_per\_rank@{n\_hits\_per\_rank}!peak\_finder.PeakFinder@{peak\_finder.PeakFinder}}
+\doxysubsubsection{\texorpdfstring{n\_hits\_per\_rank}{n\_hits\_per\_rank}}
+{\footnotesize\ttfamily peak\+\_\+finder.\+Peak\+Finder.\+n\+\_\+hits\+\_\+per\+\_\+rank}
+
+\mbox{\Hypertarget{classpeak__finder_1_1PeakFinder_ad1645973f8512994e77ae836c096120f}\label{classpeak__finder_1_1PeakFinder_ad1645973f8512994e77ae836c096120f}} 
+\index{peak\_finder.PeakFinder@{peak\_finder.PeakFinder}!n\_hits\_total@{n\_hits\_total}}
+\index{n\_hits\_total@{n\_hits\_total}!peak\_finder.PeakFinder@{peak\_finder.PeakFinder}}
+\doxysubsubsection{\texorpdfstring{n\_hits\_total}{n\_hits\_total}}
+{\footnotesize\ttfamily peak\+\_\+finder.\+Peak\+Finder.\+n\+\_\+hits\+\_\+total}
+
+\mbox{\Hypertarget{classpeak__finder_1_1PeakFinder_ab1258fafb3ee1c1b1dd22035dd76cba3}\label{classpeak__finder_1_1PeakFinder_ab1258fafb3ee1c1b1dd22035dd76cba3}} 
+\index{peak\_finder.PeakFinder@{peak\_finder.PeakFinder}!npix\_max@{npix\_max}}
+\index{npix\_max@{npix\_max}!peak\_finder.PeakFinder@{peak\_finder.PeakFinder}}
+\doxysubsubsection{\texorpdfstring{npix\_max}{npix\_max}}
+{\footnotesize\ttfamily peak\+\_\+finder.\+Peak\+Finder.\+npix\+\_\+max}
+
+\mbox{\Hypertarget{classpeak__finder_1_1PeakFinder_abc338c326e6cd91a0f06e4afeffa838b}\label{classpeak__finder_1_1PeakFinder_abc338c326e6cd91a0f06e4afeffa838b}} 
+\index{peak\_finder.PeakFinder@{peak\_finder.PeakFinder}!npix\_min@{npix\_min}}
+\index{npix\_min@{npix\_min}!peak\_finder.PeakFinder@{peak\_finder.PeakFinder}}
+\doxysubsubsection{\texorpdfstring{npix\_min}{npix\_min}}
+{\footnotesize\ttfamily peak\+\_\+finder.\+Peak\+Finder.\+npix\+\_\+min}
+
+\mbox{\Hypertarget{classpeak__finder_1_1PeakFinder_a710261074b310c72d57d546e67f513f8}\label{classpeak__finder_1_1PeakFinder_a710261074b310c72d57d546e67f513f8}} 
+\index{peak\_finder.PeakFinder@{peak\_finder.PeakFinder}!nsigm@{nsigm}}
+\index{nsigm@{nsigm}!peak\_finder.PeakFinder@{peak\_finder.PeakFinder}}
+\doxysubsubsection{\texorpdfstring{nsigm}{nsigm}}
+{\footnotesize\ttfamily peak\+\_\+finder.\+Peak\+Finder.\+nsigm}
+
+\mbox{\Hypertarget{classpeak__finder_1_1PeakFinder_ac8e72985c6de2e49085de5d4bfb413cd}\label{classpeak__finder_1_1PeakFinder_ac8e72985c6de2e49085de5d4bfb413cd}} 
+\index{peak\_finder.PeakFinder@{peak\_finder.PeakFinder}!outdir@{outdir}}
+\index{outdir@{outdir}!peak\_finder.PeakFinder@{peak\_finder.PeakFinder}}
+\doxysubsubsection{\texorpdfstring{outdir}{outdir}}
+{\footnotesize\ttfamily peak\+\_\+finder.\+Peak\+Finder.\+outdir}
+
+\mbox{\Hypertarget{classpeak__finder_1_1PeakFinder_a308ea3782d48ac964589cd68eea7a105}\label{classpeak__finder_1_1PeakFinder_a308ea3782d48ac964589cd68eea7a105}} 
+\index{peak\_finder.PeakFinder@{peak\_finder.PeakFinder}!peak\_rank@{peak\_rank}}
+\index{peak\_rank@{peak\_rank}!peak\_finder.PeakFinder@{peak\_finder.PeakFinder}}
+\doxysubsubsection{\texorpdfstring{peak\_rank}{peak\_rank}}
+{\footnotesize\ttfamily peak\+\_\+finder.\+Peak\+Finder.\+peak\+\_\+rank}
+
+\mbox{\Hypertarget{classpeak__finder_1_1PeakFinder_a55c4481909b31f2e359d74c96b624095}\label{classpeak__finder_1_1PeakFinder_a55c4481909b31f2e359d74c96b624095}} 
+\index{peak\_finder.PeakFinder@{peak\_finder.PeakFinder}!powder\_hits@{powder\_hits}}
+\index{powder\_hits@{powder\_hits}!peak\_finder.PeakFinder@{peak\_finder.PeakFinder}}
+\doxysubsubsection{\texorpdfstring{powder\_hits}{powder\_hits}}
+{\footnotesize\ttfamily peak\+\_\+finder.\+Peak\+Finder.\+powder\+\_\+hits}
+
+\mbox{\Hypertarget{classpeak__finder_1_1PeakFinder_a70e7c18bca592d85c30e7d561e6304a0}\label{classpeak__finder_1_1PeakFinder_a70e7c18bca592d85c30e7d561e6304a0}} 
+\index{peak\_finder.PeakFinder@{peak\_finder.PeakFinder}!powder\_misses@{powder\_misses}}
+\index{powder\_misses@{powder\_misses}!peak\_finder.PeakFinder@{peak\_finder.PeakFinder}}
+\doxysubsubsection{\texorpdfstring{powder\_misses}{powder\_misses}}
+{\footnotesize\ttfamily peak\+\_\+finder.\+Peak\+Finder.\+powder\+\_\+misses}
+
+\mbox{\Hypertarget{classpeak__finder_1_1PeakFinder_ae3b10c04204f63f5e53996009d1fedfe}\label{classpeak__finder_1_1PeakFinder_ae3b10c04204f63f5e53996009d1fedfe}} 
+\index{peak\_finder.PeakFinder@{peak\_finder.PeakFinder}!psi@{psi}}
+\index{psi@{psi}!peak\_finder.PeakFinder@{peak\_finder.PeakFinder}}
+\doxysubsubsection{\texorpdfstring{psi}{psi}}
+{\footnotesize\ttfamily peak\+\_\+finder.\+Peak\+Finder.\+psi}
+
+\mbox{\Hypertarget{classpeak__finder_1_1PeakFinder_a613f66eb23b56ccb906d735400a1da48}\label{classpeak__finder_1_1PeakFinder_a613f66eb23b56ccb906d735400a1da48}} 
+\index{peak\_finder.PeakFinder@{peak\_finder.PeakFinder}!r0@{r0}}
+\index{r0@{r0}!peak\_finder.PeakFinder@{peak\_finder.PeakFinder}}
+\doxysubsubsection{\texorpdfstring{r0}{r0}}
+{\footnotesize\ttfamily peak\+\_\+finder.\+Peak\+Finder.\+r0}
+
+\mbox{\Hypertarget{classpeak__finder_1_1PeakFinder_aa6eb43179a6bb9dc11efd7600e832051}\label{classpeak__finder_1_1PeakFinder_aa6eb43179a6bb9dc11efd7600e832051}} 
+\index{peak\_finder.PeakFinder@{peak\_finder.PeakFinder}!rank@{rank}}
+\index{rank@{rank}!peak\_finder.PeakFinder@{peak\_finder.PeakFinder}}
+\doxysubsubsection{\texorpdfstring{rank}{rank}}
+{\footnotesize\ttfamily peak\+\_\+finder.\+Peak\+Finder.\+rank}
+
+\mbox{\Hypertarget{classpeak__finder_1_1PeakFinder_af8a1be63e7c1f9f54157c9a3a429de9d}\label{classpeak__finder_1_1PeakFinder_af8a1be63e7c1f9f54157c9a3a429de9d}} 
+\index{peak\_finder.PeakFinder@{peak\_finder.PeakFinder}!size@{size}}
+\index{size@{size}!peak\_finder.PeakFinder@{peak\_finder.PeakFinder}}
+\doxysubsubsection{\texorpdfstring{size}{size}}
+{\footnotesize\ttfamily peak\+\_\+finder.\+Peak\+Finder.\+size}
+
+\mbox{\Hypertarget{classpeak__finder_1_1PeakFinder_aae5fa72b666ff0b96559a2ed3ba128c6}\label{classpeak__finder_1_1PeakFinder_aae5fa72b666ff0b96559a2ed3ba128c6}} 
+\index{peak\_finder.PeakFinder@{peak\_finder.PeakFinder}!son\_min@{son\_min}}
+\index{son\_min@{son\_min}!peak\_finder.PeakFinder@{peak\_finder.PeakFinder}}
+\doxysubsubsection{\texorpdfstring{son\_min}{son\_min}}
+{\footnotesize\ttfamily peak\+\_\+finder.\+Peak\+Finder.\+son\+\_\+min}
+
+\mbox{\Hypertarget{classpeak__finder_1_1PeakFinder_a9aa0fe62f845d0dab46c26c307b3fe0e}\label{classpeak__finder_1_1PeakFinder_a9aa0fe62f845d0dab46c26c307b3fe0e}} 
+\index{peak\_finder.PeakFinder@{peak\_finder.PeakFinder}!tag@{tag}}
+\index{tag@{tag}!peak\_finder.PeakFinder@{peak\_finder.PeakFinder}}
+\doxysubsubsection{\texorpdfstring{tag}{tag}}
+{\footnotesize\ttfamily peak\+\_\+finder.\+Peak\+Finder.\+tag}
+
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+btx/processing/\mbox{\hyperlink{peak__finder_8py}{peak\+\_\+finder.\+py}}\end{DoxyCompactItemize}

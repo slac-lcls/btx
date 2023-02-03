@@ -1,0 +1,75 @@
+\hypertarget{namespacebtx_1_1misc_1_1xtal}{}\doxysection{btx.\+misc.\+xtal Namespace Reference}
+\label{namespacebtx_1_1misc_1_1xtal}\index{btx.misc.xtal@{btx.misc.xtal}}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+def \mbox{\hyperlink{namespacebtx_1_1misc_1_1xtal_a2e0e097512534da530bccfd1c4f3af0b}{cos\+\_\+sq}} (angles)
+\begin{DoxyCompactList}\small\item\em Compute cosine squared of input angles in radians. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{namespacebtx_1_1misc_1_1xtal_ab908bfe9028256eb679657aaacf4cd24}{sin\+\_\+sq}} (angles)
+\begin{DoxyCompactList}\small\item\em Compute sine squared of input angles in radianss. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{namespacebtx_1_1misc_1_1xtal_abe843c0f452f0286f9fe066f2aa97d76}{compute\+\_\+resolution}} (cell, hkl)
+\begin{DoxyCompactList}\small\item\em Compute reflections\textquotesingle{} resolution in 1/\+Angstrom. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{namespacebtx_1_1misc_1_1xtal_aa5fca3e9677516b9b8a139a6aeb5e1f5}{compute\+\_\+cell\+\_\+volume}} (cell)
+\begin{DoxyCompactList}\small\item\em Compute unit cell volume. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{namespacebtx_1_1misc_1_1xtal_aa41029db468a8ea2b10ef933b4d2b3d9}{enforce\+\_\+symmetry}} (cell, sg\+\_\+number)
+\begin{DoxyCompactList}\small\item\em Impose space group symmetry on the unit cell parameters. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{namespacebtx_1_1misc_1_1xtal_aa5fca3e9677516b9b8a139a6aeb5e1f5}\label{namespacebtx_1_1misc_1_1xtal_aa5fca3e9677516b9b8a139a6aeb5e1f5}} 
+\index{btx.misc.xtal@{btx.misc.xtal}!compute\_cell\_volume@{compute\_cell\_volume}}
+\index{compute\_cell\_volume@{compute\_cell\_volume}!btx.misc.xtal@{btx.misc.xtal}}
+\doxysubsubsection{\texorpdfstring{compute\_cell\_volume()}{compute\_cell\_volume()}}
+{\footnotesize\ttfamily def btx.\+misc.\+xtal.\+compute\+\_\+cell\+\_\+volume (\begin{DoxyParamCaption}\item[{}]{cell }\end{DoxyParamCaption})}
+
+
+
+Compute unit cell volume. 
+
+\hypertarget{namespacebtx_1_1misc_1_1xtal_autotoc_md128}{}\doxysubsubsection{Parameters}\label{namespacebtx_1_1misc_1_1xtal_autotoc_md128}
+cell \+: numpy.\+ndarray, shape (n\+\_\+refl, 6) unit cell parameters (a,b,c,alpha,beta,gamma) in Ang/deg\hypertarget{namespacebtx_1_1misc_1_1xtal_autotoc_md129}{}\doxysubsubsection{Returns}\label{namespacebtx_1_1misc_1_1xtal_autotoc_md129}
+volume \+: numpy.\+ndarray, shape (n\+\_\+refl) unit cell volume in Angstroms cubed \mbox{\Hypertarget{namespacebtx_1_1misc_1_1xtal_abe843c0f452f0286f9fe066f2aa97d76}\label{namespacebtx_1_1misc_1_1xtal_abe843c0f452f0286f9fe066f2aa97d76}} 
+\index{btx.misc.xtal@{btx.misc.xtal}!compute\_resolution@{compute\_resolution}}
+\index{compute\_resolution@{compute\_resolution}!btx.misc.xtal@{btx.misc.xtal}}
+\doxysubsubsection{\texorpdfstring{compute\_resolution()}{compute\_resolution()}}
+{\footnotesize\ttfamily def btx.\+misc.\+xtal.\+compute\+\_\+resolution (\begin{DoxyParamCaption}\item[{}]{cell,  }\item[{}]{hkl }\end{DoxyParamCaption})}
+
+
+
+Compute reflections\textquotesingle{} resolution in 1/\+Angstrom. 
+
+To check, see\+: \href{https://www.ruppweb.org/new_comp/reciprocal_cell.htm}{\texttt{ https\+://www.\+ruppweb.\+org/new\+\_\+comp/reciprocal\+\_\+cell.\+htm}}.\hypertarget{namespacebtx_1_1misc_1_1xtal_autotoc_md126}{}\doxysubsubsection{Parameters}\label{namespacebtx_1_1misc_1_1xtal_autotoc_md126}
+cell \+: numpy.\+ndarray, shape (n\+\_\+refl, 6) unit cell parameters (a,b,c,alpha,beta,gamma) in Ang/deg hkl \+: numpy.\+ndarray, shape (n\+\_\+refl, 3) Miller indices of reflections\hypertarget{namespacebtx_1_1misc_1_1xtal_autotoc_md127}{}\doxysubsubsection{Returns}\label{namespacebtx_1_1misc_1_1xtal_autotoc_md127}
+resolution \+: numpy.\+ndarray, shape (n\+\_\+refl) resolution associated with each reflection in 1/\+Angstrom \mbox{\Hypertarget{namespacebtx_1_1misc_1_1xtal_a2e0e097512534da530bccfd1c4f3af0b}\label{namespacebtx_1_1misc_1_1xtal_a2e0e097512534da530bccfd1c4f3af0b}} 
+\index{btx.misc.xtal@{btx.misc.xtal}!cos\_sq@{cos\_sq}}
+\index{cos\_sq@{cos\_sq}!btx.misc.xtal@{btx.misc.xtal}}
+\doxysubsubsection{\texorpdfstring{cos\_sq()}{cos\_sq()}}
+{\footnotesize\ttfamily def btx.\+misc.\+xtal.\+cos\+\_\+sq (\begin{DoxyParamCaption}\item[{}]{angles }\end{DoxyParamCaption})}
+
+
+
+Compute cosine squared of input angles in radians. 
+
+\mbox{\Hypertarget{namespacebtx_1_1misc_1_1xtal_aa41029db468a8ea2b10ef933b4d2b3d9}\label{namespacebtx_1_1misc_1_1xtal_aa41029db468a8ea2b10ef933b4d2b3d9}} 
+\index{btx.misc.xtal@{btx.misc.xtal}!enforce\_symmetry@{enforce\_symmetry}}
+\index{enforce\_symmetry@{enforce\_symmetry}!btx.misc.xtal@{btx.misc.xtal}}
+\doxysubsubsection{\texorpdfstring{enforce\_symmetry()}{enforce\_symmetry()}}
+{\footnotesize\ttfamily def btx.\+misc.\+xtal.\+enforce\+\_\+symmetry (\begin{DoxyParamCaption}\item[{}]{cell,  }\item[{}]{sg\+\_\+number }\end{DoxyParamCaption})}
+
+
+
+Impose space group symmetry on the unit cell parameters. 
+
+\hypertarget{namespacebtx_1_1misc_1_1xtal_autotoc_md130}{}\doxysubsubsection{Parameters}\label{namespacebtx_1_1misc_1_1xtal_autotoc_md130}
+cell \+: ndarary, shape (6,) unit cell parameters in Angstrom / degrees sg\+\_\+number \+: int space group number\hypertarget{namespacebtx_1_1misc_1_1xtal_autotoc_md131}{}\doxysubsubsection{Returns}\label{namespacebtx_1_1misc_1_1xtal_autotoc_md131}
+cell \+: ndarary, shape (6,) unit cell parameters with symmetry enforced ~\newline
+ \mbox{\Hypertarget{namespacebtx_1_1misc_1_1xtal_ab908bfe9028256eb679657aaacf4cd24}\label{namespacebtx_1_1misc_1_1xtal_ab908bfe9028256eb679657aaacf4cd24}} 
+\index{btx.misc.xtal@{btx.misc.xtal}!sin\_sq@{sin\_sq}}
+\index{sin\_sq@{sin\_sq}!btx.misc.xtal@{btx.misc.xtal}}
+\doxysubsubsection{\texorpdfstring{sin\_sq()}{sin\_sq()}}
+{\footnotesize\ttfamily def btx.\+misc.\+xtal.\+sin\+\_\+sq (\begin{DoxyParamCaption}\item[{}]{angles }\end{DoxyParamCaption})}
+
+
+
+Compute sine squared of input angles in radianss. 
+
