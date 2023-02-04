@@ -1,0 +1,24 @@
+name: doxygen
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: doxy
+
+      - name: merge main -> doxy
+        uses: devmasx/merge-branch@master
+        with:
+          type: now
+          from_branch: main
+          target_branch: doxy
+
+      - name: run doxygen
+        uses: mattnotmitt/doxygen-action@v1.9.5
