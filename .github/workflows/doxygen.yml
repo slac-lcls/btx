@@ -19,6 +19,7 @@ jobs:
           type: now
           from_branch: main
           target_branch: doxy
+          github_token: ${{ github.token }}
 
       - name: run doxygen
         uses: mattnotmitt/doxygen-action@v1.9.5
