@@ -5,6 +5,7 @@ Miscellaneous functions for aiding analysis during LCLS experiments.
 
 *Coming soon...*
 
+see *Doxygen* documentation here: https://lcls-users.github.io/btx/
 
 ## Contributing
 This repository is the centralized location to discuss and share calibration files, documentation, scripts and code for SFX analysis.
