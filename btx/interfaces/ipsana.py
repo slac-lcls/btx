@@ -6,13 +6,12 @@ from PSCalib.GeometryAccess import GeometryAccess
 
 class PsanaInterface:
 
-    def __init__(self, exp, run, det_type, pv_camera_length=None,
+    def __init__(self, exp, run, det_type,
                  event_receiver=None, event_code=None, event_logic=True,
                  ffb_mode=False, track_timestamps=False, calibdir=None):
         self.exp = exp # experiment name, str
         self.run = run # run number, int
         self.det_type = det_type # detector name, str
-        self.pv = pv_camera_length # PV corresponding to camera length, str
         self.track_timestamps = track_timestamps # bool, keep event info
         self.seconds, self.nanoseconds, self.fiducials = [], [], []
         self.event_receiver = event_receiver # 'evr0' or 'evr1', str
@@ -127,28 +126,33 @@ class PsanaInterface:
         """
         return -1*np.mean(self.det.coords_z(self.run))/1e3
 
-    def get_camera_length(self):
+    def get_camera_length(self, pv_camera_length=None):
         """
         Retrieve the camera length (clen) in mm.
+
+        Parameters
+        ----------
+        pv_camera_length : str
+            PV associated with camera length
 
         Returns
         -------
         clen : float
-            clen, where clen = distance - coffset
+            clen, where clen = distance - coffset in mm
         """
-        if self.pv is None:
+        if pv_camera_length is None:
             if self.det_type == 'jungfrau4M':
-                self.pv = 'CXI:DS1:MMS:06.RBV'
+                pv_camera_length = 'CXI:DS1:MMS:06.RBV'
             if self.det_type == 'Rayonix':
-                self.pv = 'MFX:DET:MMS:04.RBV'
+                pv_camera_length = 'MFX:DET:MMS:04.RBV'
             if self.det_type == 'epix10k2M':
-                self.pv = 'MFX:ROB:CONT:POS:Z'
-            print(f"PV used to retrieve clen parameter: {self.pv}")
+                pv_camera_length = 'MFX:ROB:CONT:POS:Z'
+            print(f"PV used to retrieve clen parameter: {pv_camera_length}")
 
         try:
-            return self.ds.env().epicsStore().value(self.pv)
+            return self.ds.env().epicsStore().value(pv_camera_length)
         except TypeError:
-            raise RuntimeError(f"PV {self.pv} is invalid")
+            raise RuntimeError(f"PV {pv_camera_length} is invalid")
 
     def get_timestamp(self, evtId):
         """
