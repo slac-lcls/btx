@@ -149,7 +149,10 @@ class PsanaInterface:
                 pv = 'MFX:ROB:CONT:POS:Z'
             print(f"PV used to retrieve clen parameter: {pv}")
 
-        return self.ds.env().epicsStore().value(pv)
+        try:
+            return self.ds.env().epicsStore().value(pv)
+        except TypeError:
+            raise RuntimeError(f"Invalid PV")
 
     def get_timestamp(self, evtId):
         """
