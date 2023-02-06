@@ -74,7 +74,7 @@ class PsanaInterface:
         pixel_size : float
             detector pixel size in mm
         """
-        if self.det_type == 'Rayonix':
+        if self.det_type.lower() == 'rayonix':
             env = self.ds.env()
             cfg = env.configStore()
             pixel_size_um = cfg.get(psana.Rayonix.ConfigV2).pixelWidth()
