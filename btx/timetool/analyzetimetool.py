@@ -116,7 +116,7 @@ def ttstage_code(hutch: str) -> str:
     @return code (str) Epics code for accessing hutches time tool delay.
     """
     id = ''
-    match hutch:
+    match hutch.lower():
         case 'xpp':
             id = '3'
         case 'xcs':
