@@ -162,7 +162,7 @@ class GeomOpt:
                                                self.distance,
                                                self.diagnostics.psi.get_pixel_size())[0] # in Angstrom
             
-    def deploy_geometry(self, outdir, pv_camera_length):
+    def deploy_geometry(self, outdir, pv_camera_length=None):
         """
         Write new geometry files (.geom and .data for CrystFEL and psana respectively) 
         with the optimized center and distance.
