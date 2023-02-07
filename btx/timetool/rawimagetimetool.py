@@ -159,13 +159,13 @@ class RawImageTimeTool:
         delays_fit = delays[edges > 250]
         edges_fit = edges[edges > 250]
 
-        delays_fit = edges_fit[edges_fit < 870]
+        delays_fit = delays_fit[edges_fit < 870]
         edges_fit = edges_fit[edges_fit < 870]
 
         #@todo implement amplitude- and fwhm-based selection and compare to this
         # simplified version
 
-        self.model = np.polyfit(edges_fit, delays_fit, order)
+        self._model = np.polyfit(edges_fit, delays_fit, order)
 
     def ttstage_code(self, hutch: str) -> str:
         """! Return the correct code for the time tool delay for a given
@@ -222,6 +222,22 @@ class RawImageTimeTool:
 
         @param val (list) List of polynomial coefficients in descending order.
         """
+        if type(val) == list:
+            # Directly setting via list
+            self._model = model
+        elif type(val) == str:
+            # If stored in a file
+            ext = val.split('.')[1]
+            if ext == 'txt':
+                pass
+            elif ext == 'yaml':
+                pass
+            elif ext == 'npy':
+                self._model = np.load(val)
+        else:
+            # Switch print statements to logging
+            print('Entry not understood and model has not been changed. Calibrate \\
+                   the model if it has not been already.')
 
 #@todo Implement to select individual images
 def get_images(ds: psana.DataSource, det: psana.Detector) -> (list):
