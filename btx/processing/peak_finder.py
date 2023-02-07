@@ -17,7 +17,7 @@ class PeakFinder:
     """
     
     def __init__(self, exp, run, det_type, outdir, event_receiver=None, event_code=None, event_logic=True,
-                 tag='', mask=None, psana_mask=True, camera_length=None,
+                 tag='', mask=None, psana_mask=True, pv_camera_length=None,
                  min_peaks=2, max_peaks=2048, npix_min=2, npix_max=30, amax_thr=80., atot_thr=120., 
                  son_min=7.0, peak_rank=3, r0=3.0, dr=2.0, nsigm=7.0, calibdir=None):
         
@@ -39,7 +39,7 @@ class PeakFinder:
         self.nsigm = nsigm # intensity threshold to include pixel in connected group, float
         self.min_peaks = min_peaks # int, min number of peaks per image
         self.max_peaks = max_peaks # int, max number of peaks per image
-        self.clen = camera_length # float, clen distance in mm, or str for a pv code
+        self.clen = pv_camera_length # float, clen distance in mm, or str for a pv code
         self.outdir = outdir # str, path for saving cxi files
 
         # set up class
@@ -73,7 +73,7 @@ class PeakFinder:
         # additional self variables for tracking peak stats
         self.iX = self.psi.det.indexes_x(self.psi.run).astype(np.int64)
         self.iY = self.psi.det.indexes_y(self.psi.run).astype(np.int64)
-        if det_type == 'Rayonix':
+        if det_type.lower() == 'rayonix':
             self.iX = np.expand_dims(self.iX, axis=0)
             self.iY = np.expand_dims(self.iY, axis=0)
         print(f"self.iX.shape = {self.iX.shape}")
@@ -82,7 +82,7 @@ class PeakFinder:
 
         # retrieve clen from psana if None or a PV code is supplied
         if type(self.clen) != float:
-            self.clen = self.psi.get_camera_length(pv=self.clen)
+            self.clen = self.psi.get_camera_length(pv_camera_length=self.clen)
             print(f"Value of clen parameter is: {self.clen} mm")
 
     def _generate_mask(self, mask_file=None, psana_mask=True):
@@ -98,7 +98,7 @@ class PeakFinder:
             if True, retrieve mask from psana Detector object
         """
         mask = np.ones(self.psi.det.shape()).astype(np.uint16)  
-        if psana_mask and self.psi.det_type!='Rayonix':
+        if psana_mask and self.psi.det_type.lower() != 'rayonix':
             mask = self.psi.det.mask(self.psi.run, calib=False, status=True, 
                                      edges=False, centra=False, unbond=False, 
                                      unbondnbrs=False).astype(np.uint16)
@@ -149,7 +149,7 @@ class PeakFinder:
         
         # for storing images in crystFEL format
         det_shape = self.psi.det.shape()
-        if self.psi.det_type == 'Rayonix':
+        if self.psi.det_type.lower() == 'rayonix':
             dim0, dim1 = det_shape[0], det_shape[1]
         else:
             dim0, dim1 = det_shape[0] * det_shape[1], det_shape[2]
@@ -535,7 +535,7 @@ def visualize_hits(fname, exp, run, det_type, savepath=None, vmax_ind=3, vmax_po
     indices = np.sort(rng.choice(shape[0], 9, replace=False))
     hits = f['entry_1/data_1/data'][indices]
     
-    if det_type != 'Rayonix':
+    if det_type.lower() != 'rayonix':
         hits = hits.reshape(hits.shape[0], *psi.det.shape())
         hits = assemble_image_stack_batch(hits, pixel_index_map)
         mask = assemble_image_stack_batch(mask.reshape(psi.det.shape()), pixel_index_map)
@@ -596,6 +596,7 @@ def parse_input():
     parser.add_argument('--event_code', help='Event code', required=False, type=int, default='None')
     parser.add_argument('--event_logic', help='True if only the event code is processed. False if it is ignored.', type=bool, default=True)
     parser.add_argument('--psana_mask', help='If True, apply mask from psana Detector object', required=False, type=bool, default=True)
+    parser.add_argument('--pv_camera_length', help='PV associated with camera length', required=False, type=str)
     parser.add_argument('--min_peaks', help='Minimum number of peaks per image', required=False, type=int, default=2)
     parser.add_argument('--max_peaks', help='Maximum number of peaks per image', required=False, type=int, default=2048)
     parser.add_argument('--npix_min', help='Minimum number of pixels per peak', required=False, type=int, default=2)
@@ -615,7 +616,7 @@ if __name__ == '__main__':
     
     params = parse_input()
     pf = PeakFinder(exp=params.exp, run=params.run, det_type=params.det_type, outdir=params.outdir,
-                    event_receiver=None, event_code=None, event_logic=True, tag=params.tag,
+                    event_receiver=None, event_code=None, event_logic=True, tag=params.tag, pv_camera_length=params.pv_camera_length,
                     mask=params.mask, psana_mask=params.psana_mask, min_peaks=params.min_peaks, max_peaks=params.max_peaks,
                     npix_min=params.npix_min, npix_max=params.npix_max, amax_thr=params.amax_thr, atot_thr=params.atot_thr, 
                     son_min=params.son_min, peak_rank=params.peak_rank, r0=params.r0, dr=params.dr, nsigm=params.nsigm,
