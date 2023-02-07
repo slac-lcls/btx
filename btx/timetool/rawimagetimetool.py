@@ -2,6 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import psana
 from scipy.signal import fftconvolve
+import subprocess
+
 
 class RawImageTimeTool:
     # Class vars
@@ -39,7 +41,34 @@ class RawImageTimeTool:
         # Considering only MFX right now
         ## @var det
         # (psana.Detector) Detector object corresponding to the time tool camera.
-        self.det = psana.Detector('opal_tt', self.ds.env())
+        self.det = psana.Detector(self.get_detector_name(run), self.ds.env())
+
+    def get_detector_name(self, run:str) -> str:
+        """! Run detnames from shell and determine the time tool detector name.
+
+        @param run (str) Experiment run to check detectors for
+        @return detname (str) Name of the detector (full or alias)
+        """
+        # Define command to run
+        prog = 'detnames'
+        arg = f'exp={self.expmt}:run={run}'
+        cmd = [prog, arg]
+
+        # Run detnames, save output
+        output = subprocess.check_output(cmd)
+
+        # Convert to list and strip some characters
+        output = str(output).split()
+        output = [o.strip('\\n') for o in output]
+
+        # Select detectors related to timetool (Opal, e.g.)
+        # Need to see if this actually works for all hutches, seems to be good
+        # for cxi and mfx
+        ttdets = [det for det in output if "opal" in det.lower() or "timetool" in det.lower()]
+
+        # Return the first entry (could use any)
+        return ttdets[0]
+
 
     def calibrate(self, run: str):
         """! Fit a calibration model to convert delay to time tool jitter
