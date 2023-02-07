@@ -6,7 +6,7 @@ from rawimagetimetool import *
 # Job 1 - calibrate_timetool
 ################################################################################
 
-def calibrate_timetool(expmt='mfxlz0420', run='17'):
+def calibrate_timetool(expmt='mfxlz0420', calibrun='17'):
     """! Run a time tool calibration for a given experiment and run. The model
     is written to disk to allow for time tool corrections later.
     """
@@ -30,12 +30,12 @@ def calibrate_timetool(expmt='mfxlz0420', run='17'):
 # expmt = 'mfxlz0420'
 # calibrun = '17'
 
-def timetool_corrections(expmt='mfxlz0420', run='40-60'):
+def timetool_corrections(expmt='mfxlz0420', calibrun='17', run='40-60'):
     # Instantiate analysis object
     tt = RawImageTimeTool(expmt)
 
     # Load the model - error check if not found
-    tt.model = np.load(f'{expmt}_TTCalib_Run{calibrun}.npy')
+    tt.model = np.load(f'{expmt}_TTCalib_Run{run}.npy')
 
     # Functions for analyzing runs - to be implemented
     # How should this data be output? Text file of events and corrections?

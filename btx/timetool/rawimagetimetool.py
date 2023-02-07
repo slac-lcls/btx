@@ -236,8 +236,7 @@ class RawImageTimeTool:
                 self._model = np.load(val)
         else:
             # Switch print statements to logging
-            print('Entry not understood and model has not been changed. Calibrate \\
-                   the model if it has not been already.')
+            print("Entry not understood and model has not been changed.")
 
 #@todo Implement to select individual images
 def get_images(ds: psana.DataSource, det: psana.Detector) -> (list):
