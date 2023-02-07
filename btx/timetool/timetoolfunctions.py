@@ -34,10 +34,4 @@ np.save(f'{expmt}_TTCalib_Run{calibrun}.npy', model)
 # expmt = 'mfxlz0420'
 # calibrun = '17'
 
-# Instantiate analysis object
-# tt = RawImageTimeTool(expmt)
-
 # First load the model - requires error checking if model not found
-# tt.model = np.load(f'{expmt}_TTCalib_Run{calibrun}.npy')
-
-# Functions for analyzing runs - to be implemented
