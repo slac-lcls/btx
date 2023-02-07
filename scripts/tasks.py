@@ -137,7 +137,7 @@ def opt_geom(config):
         logger.info(f'Refined detector distance in mm: {geom_opt.distance}')
         logger.info(f'Refined detector center in pixels: {geom_opt.center}')
         logger.info(f'Detector edge resolution in Angstroms: {geom_opt.edge_resolution}')    
-        geom_opt.deploy_geometry(taskdir)
+        geom_opt.deploy_geometry(taskdir, pv_camera_length=setup.get('pv_camera_length'))
         logger.info(f'Updated geometry files saved to: {taskdir}')
         logger.debug('Done!')
 
@@ -155,7 +155,7 @@ def find_peaks(config):
                     tag=task.tag, mask=mask_file, psana_mask=task.psana_mask, min_peaks=task.min_peaks, max_peaks=task.max_peaks,
                     npix_min=task.npix_min, npix_max=task.npix_max, amax_thr=task.amax_thr, atot_thr=task.atot_thr, 
                     son_min=task.son_min, peak_rank=task.peak_rank, r0=task.r0, dr=task.dr, nsigm=task.nsigm,
-                    calibdir=task.get('calibdir'))
+                    calibdir=task.get('calibdir'), pv_camera_length=setup.get('pv_camera_length'))
     logger.debug(f'Performing peak finding for run {setup.run} of {setup.exp}...')
     pf.find_peaks()
     pf.curate_cxi()
