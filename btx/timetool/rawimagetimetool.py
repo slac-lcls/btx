@@ -126,8 +126,6 @@ class RawImageTimeTool:
                 # Errors occur because there are some missing camera images,
                 # but the stage position still registers.
                 stage_pos.pop(-1)
-            if idx > 1000:
-                break
 
         return np.array(stage_pos), np.array(edge_pos), np.array(conv_ampl)
 
