@@ -126,10 +126,12 @@ class RawImageTimeTool:
                 # Errors occur because there are some missing camera images,
                 # but the stage position still registers.
                 stage_pos.pop(-1)
+            if idx > 1000:
+                break
 
         return np.array(stage_pos), np.array(edge_pos), np.array(conv_ampl)
 
-    def crop_image(img: np.array) -> np.array:
+    def crop_image(self, img: np.array) -> np.array:
         ## @todo implement method to select ROI and crop automatically
         # At the moment, simply return the correctly cropped image for experiment
         # MFXLZ0420 (at least for run 17 - the calibration run)
@@ -154,18 +156,24 @@ class RawImageTimeTool:
         # This will almost certainly depend on experimental conditions, alignment
         # target choice, etc.
 
+        inrange = False
         # Delays and edges should be the same length if error checking in the
         # process_calib_run function works properly
-        delays_fit = delays[edges > 250]
-        edges_fit = edges[edges > 250]
-
-        delays_fit = delays_fit[edges_fit < 870]
-        edges_fit = edges_fit[edges_fit < 870]
-
         #@todo implement amplitude- and fwhm-based selection and compare to this
         # simplified version
-
-        self._model = np.polyfit(edges_fit, delays_fit, order)
+        if (edges > 250).any():
+            delays_fit = delays[edges > 250]
+            edges_fit = edges[edges > 250]
+            if (edges_fit < 870).any():
+                delays_fit = delays_fit[edges_fit < 870]
+                edges_fit = edges_fit[edges_fit < 870]
+                inrange = True
+        if inrange:
+            print('Fitting calibration between 250 and 870 pixels.')
+            self._model = np.polyfit(edges_fit, delays_fit, order)
+        else:
+            print('Fit data is out of 250-870 pixel range. Results questionable.')
+            self._model = np.polyfit(edges, delays, order)
 
     def ttstage_code(self, hutch: str) -> str:
         """! Return the correct code for the time tool delay for a given
@@ -205,6 +213,9 @@ class RawImageTimeTool:
         ax.set_xlabel('Edge Pixel')
         ax.set_ylabel('Delay')
 
+    #@todo Implement to select individual images
+    def get_images(ds: psana.DataSource, det: psana.Detector) -> (list):
+        pass
 
     # Decide where to save etc
 
@@ -237,11 +248,6 @@ class RawImageTimeTool:
         else:
             # Switch print statements to logging
             print("Entry not understood and model has not been changed.")
-
-#@todo Implement to select individual images
-def get_images(ds: psana.DataSource, det: psana.Detector) -> (list):
-    pass
-
 
 
 
