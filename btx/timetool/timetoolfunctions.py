@@ -22,6 +22,10 @@ def calibrate_timetool(expmt='mfxlz0420', calibrun='17'):
     # Save model, this can be plain text or numpy binary. Currently the latter
     np.save(f'{expmt}_TTCalib_Run{calibrun}.npy', model)
 
+    # For testing
+    np.save(f'{expmt}_EdgePos_Run{calibrun}.npy', tt.edges_fit)
+    np.save(f'{expmt}_StagePos_Run{calibrun}.npy', tt.delays_fit)
+
 
 # Job 2 - timetool_corrections
 ################################################################################

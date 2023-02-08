@@ -89,6 +89,9 @@ class RawImageTimeTool:
         """! Detect edge positions in the time tool camera images through
         convolution with a Heaviside kernel.
         """
+        ## @todo Split edge detection into separate function from loop for ease
+        # of use with jitter correction once model is known.
+
         # Create kernel for convolution and edge detection.
         kernel = np.zeros([300])
         kernel[:150] = 1
@@ -129,11 +132,20 @@ class RawImageTimeTool:
 
         return np.array(stage_pos), np.array(edge_pos), np.array(conv_ampl)
 
-    def crop_image(self, img: np.array) -> np.array:
+    def crop_image(self, img: np.array, first: int = 40, last: int = 60) -> np.array:
+        """! Crop image. Currently done by inspection by specifying a range of
+        rows containing the signal of interest.
+
+        @param img (np.array) 2D time tool camera image.
+        @param first (int) First row containing signal of interest.
+        @param last (int) Last row containing signal of interest.
+
+        @return cropped (np.array) Cropped image.
+        """
         ## @todo implement method to select ROI and crop automatically
         # At the moment, simply return the correctly cropped image for experiment
         # MFXLZ0420 (at least for run 17 - the calibration run)
-        return img[40:60]
+        return img[first:last]
 
 
     def fit_calib(self, delays: np.array, edges: np.array, amplitudes: np.array,
@@ -159,6 +171,8 @@ class RawImageTimeTool:
         # process_calib_run function works properly
         #@todo implement amplitude- and fwhm-based selection and compare to this
         # simplified version
+        self.edges = edges
+        self.delays = delays
         if (edges > 250).any():
             delays_fit = delays[edges > 250]
             edges_fit = edges[edges > 250]
@@ -166,6 +180,10 @@ class RawImageTimeTool:
                 delays_fit = delays_fit[edges_fit < 870]
                 edges_fit = edges_fit[edges_fit < 870]
                 inrange = True
+
+                # For testing
+                self.edges_fit = edges_fit
+                self.delays_fit = delays_fit
         if inrange:
             print('Fitting calibration between 250 and 870 pixels.')
             self._model = np.polyfit(edges_fit, delays_fit, order)
@@ -198,12 +216,45 @@ class RawImageTimeTool:
         else:
             raise InvalidHutchError(hutch)
 
+    def jitter_correct(self, edge_pos: int) -> float:
+        """! Given an internal model and an edge position, return the time tool
+        jitter correction.
+
+        @param edge_pos (int) Position (pixel) of detected edge on camera.
+
+        @return correction (float) Jitter correction in picoseconds.
+        """
+        correction = 0
+        if self._model:
+            n = len(self._model)
+            for i, coeff in enumerate(self._model):
+                correction += coeff*edge_pos**(n-i-1)
+            print('Using model to correct for jitter.')
+        else:
+            print('No calibration model. Jitter correction not possible.')
+
+        ## @todo Add multiplicative factor to convert correction from stage to
+        # time (if needed). Determine units of time tool stage in calibration.
+        return correction
+
+    def actual_time(self, edge_pos: int, nominal_delay: float) -> float:
+        """! Return the actual time given a nominal delay and time tool data.
+
+        @param edge_pos (int) Position (pixel) of detected edge on camera.
+        @param nominal_delay (float) Nominal delay in picoseconds.
+
+        @return time (float) Absolute time. Nominal delay corrected for jitter.
+        """
+        time = nominal_delay
+        time += self.jitter_correct(edge_pos)
+        return time
+
 
     def plot_calib(delays: list, edges: list, model: list):
         poly = np.zeros([len(edges)])
         n = len(model)
         for i, coeff in enumerate(model):
-            poly += coeff*edges**(n-i)
+            poly += coeff*edges**(n-i-1)
 
         fig, ax = plt.subplots(1, 1)
         ax.hexbin(edges, delays, gridsize=50, vmax=500)
