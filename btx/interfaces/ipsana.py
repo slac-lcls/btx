@@ -74,7 +74,7 @@ class PsanaInterface:
         pixel_size : float
             detector pixel size in mm
         """
-        if self.det_type == 'Rayonix':
+        if self.det_type.lower() == 'rayonix':
             env = self.ds.env()
             cfg = env.configStore()
             pixel_size_um = cfg.get(psana.Rayonix.ConfigV2).pixelWidth()
@@ -126,30 +126,33 @@ class PsanaInterface:
         """
         return -1*np.mean(self.det.coords_z(self.run))/1e3
 
-    def get_camera_length(self, pv=None):
+    def get_camera_length(self, pv_camera_length=None):
         """
         Retrieve the camera length (clen) in mm.
 
         Parameters
         ----------
-        pv : str
-            pv code for distance, optional
+        pv_camera_length : str
+            PV associated with camera length
 
         Returns
         -------
         clen : float
-            clen, where clen = distance - coffset
+            clen, where clen = distance - coffset in mm
         """
-        if pv is None:
+        if pv_camera_length is None:
             if self.det_type == 'jungfrau4M':
-                pv = 'CXI:DS1:MMS:06.RBV'
+                pv_camera_length = 'CXI:DS1:MMS:06.RBV'
             if self.det_type == 'Rayonix':
-                pv = 'MFX:DET:MMS:04.RBV'
+                pv_camera_length = 'MFX:DET:MMS:04.RBV'
             if self.det_type == 'epix10k2M':
-                pv = 'MFX:ROB:CONT:POS:Z'
-            print(f"PV used to retrieve clen parameter: {pv}")
+                pv_camera_length = 'MFX:ROB:CONT:POS:Z'
+            print(f"PV used to retrieve clen parameter: {pv_camera_length}")
 
-        return self.ds.env().epicsStore().value(pv)
+        try:
+            return self.ds.env().epicsStore().value(pv_camera_length)
+        except TypeError:
+            raise RuntimeError(f"PV {pv_camera_length} is invalid")
 
     def get_timestamp(self, evtId):
         """

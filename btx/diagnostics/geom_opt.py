@@ -73,11 +73,6 @@ class GeomOpt:
             output path for figure; if '', plot but don't save; if None, don't plot
         plot_final_only: bool
             if True, only generate plot for the best distance / center
-
-        Returns
-        -------
-        distance : float
-            estimated sample-detector distance in mm
         """
         
         if type(powder) == str:
@@ -167,19 +162,17 @@ class GeomOpt:
                                                self.distance,
                                                self.diagnostics.psi.get_pixel_size())[0] # in Angstrom
             
-    def deploy_geometry(self, outdir):
+    def deploy_geometry(self, outdir, pv_camera_length=None):
         """
         Write new geometry files (.geom and .data for CrystFEL and psana respectively) 
         with the optimized center and distance.
     
         Parameters
         ----------
-        center : tuple
-            optimized center (cx, cy) in pixels
-        distance : float
-            optimized sample-detector distance in mm
         outdir : str
             path to output directory
+        pv_camera_length : str
+            PV associated with camera length
         """
         # retrieve original geometry
         run = self.diagnostics.psi.run
@@ -199,14 +192,14 @@ class GeomOpt:
         psana_file, crystfel_file = os.path.join(outdir, f"r{run:04}_end.data"), os.path.join(outdir, f"r{run:04}.geom")
         temp_file = os.path.join(outdir, "temp.geom")
         geom.save_pars_in_file(psana_file)
-        generate_geom_file(self.diagnostics.psi.exp, run, self.diagnostics.psi.det_type, psana_file, temp_file)
+        generate_geom_file(self.diagnostics.psi.exp, run, self.diagnostics.psi.det_type, psana_file, temp_file, pv_camera_length)
         modify_crystfel_header(temp_file, crystfel_file)
         os.remove(temp_file)
 
         # Rayonix check
         if self.diagnostics.psi.get_pixel_size() != self.diagnostics.psi.det.pixel_size(run):
             print("Original geometry is wrong due to hardcoded Rayonix pixel size. Correcting geom file now...")
-            coffset = (self.distance - self.diagnostics.psi.get_camera_length()) / 1e3 # convert from mm to m
+            coffset = (self.distance - self.diagnostics.psi.get_camera_length(pv_camera_length)) / 1e3 # convert from mm to m
             res = 1e3 / self.diagnostics.psi.get_pixel_size() # convert from mm to um
             os.rename(crystfel_file, temp_file)
             modify_crystfel_coffset_res(temp_file, crystfel_file, coffset, res)

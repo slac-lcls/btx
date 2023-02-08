@@ -71,7 +71,7 @@ class RunDiagnostics:
             self.powders_final['std'] = np.sqrt(np.sum(powder_sqr, axis=0) / float(total_n_proc) - np.square(self.powders_final['avg']))
             if self.gain_map is not None:
                 self.powders_final['gain_mode_counts'] = np.sum(powder_gain, axis=0)
-            if self.psi.det_type != 'Rayonix':
+            if self.psi.det_type.lower() != 'rayonix':
                 for key in self.powders_final.keys():
                     self.powders_final[key] = assemble_image_stack_batch(self.powders_final[key], self.pixel_index_map)
                 self.panel_mask = assemble_image_stack_batch(np.ones(self.psi.det.shape()), self.pixel_index_map)
