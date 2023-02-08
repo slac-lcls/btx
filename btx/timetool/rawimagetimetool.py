@@ -6,6 +6,31 @@ import subprocess
 
 
 class RawImageTimeTool:
+    """! Class to reimplement time tool analysis at LCLS from raw images.
+
+    Uses psana to interface with experimental data to retrieve raw camera images.
+    Edge detection is implemented in order to perform jitter correction.
+
+    Properties:
+    -----------
+    model - Retrieve or load polynomial model coefficients.
+
+    Methods:
+    --------
+    __init__(self, expmt: str) - Instantiate an analysis object for experiment expmt.
+    open_run(self, run: str) - Open DataSource for a specified run.
+    get_detector_name(self, run: str) - Determine time tool camera name in data files.
+    calibrate(self, run: str) - Calibrate the analysis object for jitter correction on specified run.
+    detect_edges(self) - Perform edge detection on time tool images.
+    crop_image(self, img: np.array) - Crop time tool image to ROI.
+    fit_calib(self, delays: np.array, edges: np.array, amplitudes: np.array,
+            fwhm: np.array = None, order: int = 2) - Fit polynomial to calibration run data.
+    ttstage_code
+    jitter_correct
+    actual_time
+    plot_calib
+    plot_hist
+    """
     # Class vars
     ############################################################################
 
@@ -35,7 +60,7 @@ class RawImageTimeTool:
 
         ## @var ds
         # (psana.DataSource) DataSource object for accessing data for specified runs.
-        self.ds = psana.DataSource(f'exp={self.expmt}:run={run}')
+        self.ds = psana.MPIDataSource(f'exp={self.expmt}:run={run}')
 
         # Detector lookup needs to be modified for each hutch!
         # Considering only MFX right now
@@ -251,6 +276,13 @@ class RawImageTimeTool:
 
 
     def plot_calib(delays: list, edges: list, model: list):
+        """! Plot the density of detected edges during a time tool calibration
+        run and the polynomial fit to it.
+
+        @param delays (array-like) Time tool stage positions.
+        @param edges (array-like) Detected edges in time tool camera.
+        @param model (array-like) Polynomial model coefficients.
+        """
         poly = np.zeros([len(edges)])
         n = len(model)
         for i, coeff in enumerate(model):
@@ -261,6 +293,15 @@ class RawImageTimeTool:
         ax.plot(edges, poly, 'ko', markersize=2)
         ax.set_xlabel('Edge Pixel')
         ax.set_ylabel('Delay')
+
+    def plot_hist(self, edges: list):
+        """! Plot the density of detected edges in a histogram. For calibration
+        runs this should be uniform. For experiment runs this will ideally be
+        quasi-Gaussian.
+
+        @param edges (array-like) Detected edges in time tool camera.
+        """
+        pass
 
     #@todo Implement to select individual images
     def get_images(ds: psana.DataSource, det: psana.Detector) -> (list):
