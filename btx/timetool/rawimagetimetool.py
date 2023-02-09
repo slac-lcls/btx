@@ -107,12 +107,16 @@ class RawImageTimeTool:
         self.open_run(run)
 
         # Detect the edges
-        stage_pos, edge_pos, conv_ampl = self.detect_edges()
-        self.fit_calib(stage_pos, edge_pos, conv_ampl, None, 2)
+        delays, edge_pos, conv_ampl = self.detect_edges()
+        self.fit_calib(delays, edge_pos, conv_ampl, None, 2)
 
     def detect_edges(self) -> (np.array, np.array, np.array):
         """! Detect edge positions in the time tool camera images through
         convolution with a Heaviside kernel.
+
+        @return delays (np.array) Array of delays used.
+        @return edge_pos (np.array) Detected edge position.
+        @return conv_ampl (np.array) Convolution amplitudes for the detected edges.
         """
         ## @todo Split edge detection into separate function from loop for ease
         # of use with jitter correction once model is known.
@@ -121,7 +125,7 @@ class RawImageTimeTool:
         kernel = np.zeros([300])
         kernel[:150] = 1
 
-        stage_pos = []
+        delays = []
         edge_pos = []
         conv_ampl = [] # Can be used for filtering good edges from bad
 
@@ -129,7 +133,7 @@ class RawImageTimeTool:
 
         # Loop through run events
         for idx, evt in enumerate(self.ds.events()):
-            stage_pos.append(self.ds.env().epicsStore().value(stage_code))
+            delays.append(self.ds.env().epicsStore().value(stage_code))
             try:
                 # Retrieve time tool camera image for the event
                 img = self.det.image(evt=evt)
@@ -153,9 +157,9 @@ class RawImageTimeTool:
                 # the stage_pos list
                 # Errors occur because there are some missing camera images,
                 # but the stage position still registers.
-                stage_pos.pop(-1)
+                delays.pop(-1)
 
-        return np.array(stage_pos), np.array(edge_pos), np.array(conv_ampl)
+        return np.array(delays), np.array(edge_pos), np.array(conv_ampl)
 
     def crop_image(self, img: np.array, first: int = 40, last: int = 60) -> np.array:
         """! Crop image. Currently done by inspection by specifying a range of
