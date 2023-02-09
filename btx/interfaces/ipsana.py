@@ -115,6 +115,41 @@ class PsanaInterface:
             lambda_m =  1.23984197386209e-06 / photon_energy # convert to meters using e=hc/lambda
             return lambda_m * 1e10
 
+    def get_fee_gas_detector_energy_mJ_evt(self, evt, mode=None):
+        """
+        Retrieve pulse energy measured by Front End Enclosure Gas Detectors.
+        For more information:
+         - https://pswww.slac.stanford.edu/swdoc/releases/ana-current/psana-ref/html/psana/#class-psana-bld-blddatafeegasdetenergyv1
+         - https://confluence.slac.stanford.edu/display/PSDM/New+XTCAV+Documentation
+         - https://www-ssrl.slac.stanford.edu/lcls/technotes/LCLS-TN-09-5.pdf
+
+        Note: the pulse energy is equal to the photon energy times the number of photons in the pulse.
+
+        Parameters
+        ----------
+        evt : psana.Event object
+            individual psana event
+        mode : str, optional
+            whether to only return the energy 'before' or 'after' gas attenuation,
+            or if 'None' the average of the two.
+
+        Returns
+        -------
+        gas_detector_energy: float
+            Beam energy in mJ
+
+        """
+        gdet = evt.get(psana.Bld.BldDataFEEGasDetEnergyV1, psana.Source())
+        if gdet is not None:
+            gdet_before_attenuation = 0.5 * (gdet.f_11_ENRC() + gdet.f_12_ENRC())
+            gdet_after_attenuation  = 0.5 * (gdet.f_21_ENRC() + gdet.f_22_ENRC())
+            if( mode == 'before' ):
+                return gdet_before_attenuation
+            elif( mode == 'after' ):
+                return gdet_after_attenuation
+            else:
+                return 0.5 * (gdet_before_attenuation + gdet_after_attenuation)
+
     def estimate_distance(self):
         """
         Retrieve an estimate of the detector distance in mm.
