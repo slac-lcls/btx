@@ -127,6 +127,9 @@ class PsanaInterface:
         ----------
         evt : psana.Event object
             individual psana event
+        mode : str, optional
+            whether to only return the energy 'before' or 'after' gas attenuation,
+            or if 'None' the average of the two.
 
         Returns
         -------
