@@ -81,8 +81,8 @@ def run_analysis(config):
     if task.get('raw_img') is not None:
         if task.raw_img:
             command += f" --raw_img"
-    js = JobScheduler(os.path.join(".", f'ra_{setup.run:04}.sh'), 
-                      queue=setup.queue, 
+    js = JobScheduler(os.path.join(".", f'ra_{setup.run:04}.sh'),
+                      queue=setup.queue,
                       ncores=task.ncores,
                       jobname=f'ra_{setup.run:04}')
     js.write_header()
@@ -90,7 +90,7 @@ def run_analysis(config):
     js.clean_up()
     js.submit()
     logger.debug('Run analysis launched!')
-    
+
 def opt_geom(config):
     from btx.diagnostics.geom_opt import GeomOpt
     from btx.misc.shortcuts import fetch_latest
@@ -123,7 +123,7 @@ def opt_geom(config):
                       mask=mask_file,
                       distance=task.distance,
                       center=centers,
-                      n_iterations=task.get('n_iterations'), 
+                      n_iterations=task.get('n_iterations'),
                       n_peaks=task.n_peaks,
                       threshold=task.get('threshold'),
                       deltas=True,
@@ -136,7 +136,7 @@ def opt_geom(config):
             logger.debug("Could not communicate with the elog update url")
         logger.info(f'Refined detector distance in mm: {geom_opt.distance}')
         logger.info(f'Refined detector center in pixels: {geom_opt.center}')
-        logger.info(f'Detector edge resolution in Angstroms: {geom_opt.edge_resolution}')    
+        logger.info(f'Detector edge resolution in Angstroms: {geom_opt.edge_resolution}')
         geom_opt.deploy_geometry(taskdir)
         logger.info(f'Updated geometry files saved to: {taskdir}')
         logger.debug('Done!')
@@ -153,13 +153,13 @@ def find_peaks(config):
     pf = PeakFinder(exp=setup.exp, run=setup.run, det_type=setup.det_type, outdir=os.path.join(taskdir ,f"r{setup.run:04}"),
                     event_receiver=setup.get('event_receiver'), event_code=setup.get('event_code'), event_logic=setup.get('event_logic'),
                     tag=task.tag, mask=mask_file, psana_mask=task.psana_mask, min_peaks=task.min_peaks, max_peaks=task.max_peaks,
-                    npix_min=task.npix_min, npix_max=task.npix_max, amax_thr=task.amax_thr, atot_thr=task.atot_thr, 
+                    npix_min=task.npix_min, npix_max=task.npix_max, amax_thr=task.amax_thr, atot_thr=task.atot_thr,
                     son_min=task.son_min, peak_rank=task.peak_rank, r0=task.r0, dr=task.dr, nsigm=task.nsigm,
                     calibdir=task.get('calibdir'))
     logger.debug(f'Performing peak finding for run {setup.run} of {setup.exp}...')
     pf.find_peaks()
     pf.curate_cxi()
-    pf.summarize() 
+    pf.summarize()
     try:
         pf.report(update_url)
     except:
@@ -175,8 +175,8 @@ def index(config):
     """ Index run using indexamajig. """
     taskdir = os.path.join(setup.root_dir, 'index')
     geom_file = fetch_latest(fnames=os.path.join(setup.root_dir, 'geom', 'r*.geom'), run=setup.run)
-    indexer_obj = Indexer(exp=config.setup.exp, run=config.setup.run, det_type=config.setup.det_type, tag=task.tag, tag_cxi=task.get('tag_cxi'), taskdir=taskdir, 
-                          geom=geom_file, cell=task.get('cell'), int_rad=task.int_radius, methods=task.methods, tolerance=task.tolerance, no_revalidate=task.no_revalidate, 
+    indexer_obj = Indexer(exp=config.setup.exp, run=config.setup.run, det_type=config.setup.det_type, tag=task.tag, tag_cxi=task.get('tag_cxi'), taskdir=taskdir,
+                          geom=geom_file, cell=task.get('cell'), int_rad=task.int_radius, methods=task.methods, tolerance=task.tolerance, no_revalidate=task.no_revalidate,
                           multi=task.multi, profile=task.profile, queue=setup.get('queue'), ncores=task.get('ncores') if task.get('ncores') is not None else 64,
                           time=task.get('time') if task.get('time') is not None else '1:00:00')
     logger.debug(f'Generating indexing executable for run {setup.run} of {setup.exp}...')
@@ -191,14 +191,14 @@ def stream_analysis(config):
     taskdir = os.path.join(setup.root_dir, 'index')
     os.makedirs(os.path.join(taskdir, 'figs'), exist_ok=True)
     os.makedirs(os.path.join(setup.root_dir, 'cell'), exist_ok=True)
-    launch_stream_analysis(os.path.join(taskdir, f"r*{task.tag}.stream"), 
-                           os.path.join(taskdir, f"{task.tag}.stream"), 
-                           os.path.join(taskdir, 'figs'), 
-                           os.path.join(taskdir, "stream_analysis.sh"), 
+    launch_stream_analysis(os.path.join(taskdir, f"r*{task.tag}.stream"),
+                           os.path.join(taskdir, f"{task.tag}.stream"),
+                           os.path.join(taskdir, 'figs'),
+                           os.path.join(taskdir, "stream_analysis.sh"),
                            setup.queue,
-                           ncores=task.get('ncores') if task.get('ncores') is not None else 6, 
-                           cell_only=task.get('cell_only') if task.get('cell_only') is not None else False, 
-                           cell_out=os.path.join(setup.root_dir, 'cell', f'{task.tag}.cell'), 
+                           ncores=task.get('ncores') if task.get('ncores') is not None else 6,
+                           cell_only=task.get('cell_only') if task.get('cell_only') is not None else False,
+                           cell_out=os.path.join(setup.root_dir, 'cell', f'{task.tag}.cell'),
                            cell_ref=task.get('ref_cell'))
     logger.info(f'Stream analysis launched')
 
@@ -217,10 +217,10 @@ def determine_cell(config):
         os.makedirs(celldir, exist_ok=True)
         keys = ['a','b','c','alpha','beta','gamma']
         cell = np.array([st.stream_data[key] for key in keys])
-        labels = cluster_cell_params(cell.T, 
+        labels = cluster_cell_params(cell.T,
                                      os.path.join(taskdir, f"clusters_{task.tag}.txt"),
                                      os.path.join(celldir, f"{task.tag}.cell"),
-                                     in_cell=task.get('input_cell'), 
+                                     in_cell=task.get('input_cell'),
                                      eps=task.get('eps') if task.get('eps') is not None else 5,
                                      min_samples=task.get('min_samples') if task.get('min_samples') is not None else 5)
         logger.info(f'Wrote updated CrystFEL cell file for sample {task.tag} to {celldir}')
@@ -235,11 +235,11 @@ def merge(config):
     input_stream = os.path.join(setup.root_dir, f"index/{task.tag}.stream")
     cellfile = os.path.join(setup.root_dir, f"cell/{task.tag}.cell")
     foms = task.foms.split(" ")
-    stream_to_mtz = StreamtoMtz(input_stream, task.symmetry, taskdir, cellfile, queue=setup.get('queue'), 
-                                ncores=task.get('ncores') if task.get('ncores') is not None else 16, 
+    stream_to_mtz = StreamtoMtz(input_stream, task.symmetry, taskdir, cellfile, queue=setup.get('queue'),
+                                ncores=task.get('ncores') if task.get('ncores') is not None else 16,
                                 mtz_dir=os.path.join(setup.root_dir, "solve", f"{task.tag}"),
                                 anomalous=task.get('anomalous') if task.get('anomalous') is not None else False)
-    stream_to_mtz.cmd_partialator(iterations=task.iterations, model=task.model, 
+    stream_to_mtz.cmd_partialator(iterations=task.iterations, model=task.model,
                                   min_res=task.get('min_res'), push_res=task.get('push_res'), max_adu=task.get('max_adu'))
     for ns in [1, task.nshells]:
         stream_to_mtz.cmd_compare_hkl(foms=foms, nshells=ns, highres=task.get('highres'))
@@ -255,8 +255,8 @@ def solve(config):
     task = config.solve
     """ Run the CCP4 dimple pipeline for structure solution and refinement. """
     taskdir = os.path.join(setup.root_dir, "solve", f"{task.tag}")
-    run_dimple(os.path.join(taskdir, f"{task.tag}.mtz"), 
-               task.pdb, 
+    run_dimple(os.path.join(taskdir, f"{task.tag}.mtz"),
+               task.pdb,
                taskdir,
                queue=setup.get('queue'),
                ncores=task.get('ncores') if task.get('ncores') is not None else 16,
@@ -293,12 +293,12 @@ def refine_geometry(config, task=None):
                         task.dy,
                         task.dz)
     geopt.launch_indexing(setup.exp, setup.det_type, config.index, cell_file)
-    geopt.launch_stream_wrangling(config.stream_analysis)    
+    geopt.launch_stream_wrangling(config.stream_analysis)
     geopt.launch_merging(config.merge)
     geopt.save_results(setup.root_dir, config.merge.tag)
     check_file_existence(os.path.join(task.scan_dir, "results.txt"), geopt.timeout)
     logger.debug('Done!')
-    
+
 def refine_center(config):
     """ Wrapper for the refine_geometry task, searching for the detector center. """
     setup = config.setup
@@ -310,7 +310,7 @@ def refine_center(config):
     task.dy = np.linspace(task.dy[0], task.dy[1], int(task.dy[2]))
     task.dz = [0]
     refine_geometry(config, task)
-    
+
 def refine_distance(config):
     """ Wrapper for the refine_geometry task, searching for the detector distance. """
     setup = config.setup
@@ -336,8 +336,8 @@ def visualize_sample(config):
     task = config.visualize_sample
     """ Plot per-run cell parameters and peak-finding/indexing statistics. """
     logger.info(f'Extracting statistics from stream and summary files.')
-    vs = VisualizeSample(os.path.join(setup.root_dir, "index"), 
-                         task.tag, 
+    vs = VisualizeSample(os.path.join(setup.root_dir, "index"),
+                         task.tag,
                          save_plots=True)
     vs.plot_cell_trajectory()
     vs.plot_stats()
@@ -350,3 +350,26 @@ def clean_up(config):
     if os.path.isdir(taskdir):
         os.system(f"rm -f {taskdir}/r*/*{task.tag}.cxi")
     logger.debug('Done!')
+
+def calibrate_timetool(config):
+    from btx.timetool.rawimagetimetool import RawImageTimeTool
+    from btx.timetool.daqtimetool import DaqTimeTool
+    setup = config.setup
+    task = config.calibrate_timetool
+    taskdir = os.path.join(setup.root_dir, 'timetool')
+
+    expmt = setup.exp
+    run = task.run
+    tt = RawImageTimetool(expmt)
+    logger.info(f'Calibrating timetool on run {run}')
+    tt.calibrate(run)
+    logger.info(f'Writing calibration data to timetool folder.')
+    np.save(f'{taskdir}/{expmt}_TTCalib_Run{run}.npy', tt.model)
+    np.save(f'{taskdir}/{expmt}_EdgesFit_Run{run}.npy', tt.edges_fit)
+    np.save(f'{taskdir}/{expmt}_TgtNanoseconds_Run{run}.npy', tt.delays_fit)
+
+def timetool_correct(config):
+    from btx.timetool.rawimagetimetool import RawImageTimeTool
+    from btx.timetool.daqtimetool import DaqTimeTool
+
+    taskdir = os.path.join(setup.root_dir, 'timetool')

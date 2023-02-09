@@ -1,0 +1,9 @@
+setup:
+  queue: 'anaq'
+  root_dir: '/cds/data/drpsrcf/mfx/mfxx49820/scratch/btx/'
+  exp: 'mfxlz0420'
+  run: 15
+  det_type: 'epix10k2M'
+
+calibrate_timetool:
+  run: 17

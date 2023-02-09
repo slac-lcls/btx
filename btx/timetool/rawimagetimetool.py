@@ -149,7 +149,7 @@ class RawImageTimeTool:
                 conv_ampl.append(conv[edge_pos[-1]])
             except Exception as e:
                 # BAD - Do specific exception handling
-                # If error occurs while getting the image remove the last entry in
+                # If error occurs while getting the image remove the last entry inted
                 # the stage_pos list
                 # Errors occur because there are some missing camera images,
                 # but the stage position still registers.
@@ -180,7 +180,7 @@ class RawImageTimeTool:
             improve the calibration. Currently only fits within a certain x pixel
             range of the camera.
 
-        @param delays (list) List of TT delay stage positions used for calibration.
+        @param delays (list) List of TT target times (in ns) used for calibration.
         @param edges (list) List of corresponding detected edge positions on camera.
         @param amplitudes (list) Convolution amplitudes used for edge rejection.
         @param fwhms (list) Full-width half-max of convolution used for edge rejection.
@@ -191,6 +191,7 @@ class RawImageTimeTool:
         # This will almost certainly depend on experimental conditions, alignment
         # target choice, etc.
 
+        # Restructure this gross conditional block
         inrange = False
         # Delays and edges should be the same length if error checking in the
         # process_calib_run function works properly
@@ -217,7 +218,7 @@ class RawImageTimeTool:
             self._model = np.polyfit(edges, delays, order)
 
     def ttstage_code(self, hutch: str) -> str:
-        """! Return the correct code for the time tool delay for a given
+        """! Return the correct code for the time tool delay (in ns) for a given
         experimental hutch.
 
         @param hutch (str) Three letter hutch name. E.g. mfx, cxi, xpp
@@ -245,7 +246,12 @@ class RawImageTimeTool:
         """! Given an internal model and an edge position, return the time tool
         jitter correction.
 
-        @param edge_pos (int) Position (pixel) of detected edge on camera.
+        This method is called by the partner method actual_time; however, it is
+        provided directly so that users who have a different time convention
+        (i.e. negative times when pump arrives before xray) can more easily
+        correct their data.
+
+        @param edge_pos (int | array-like) Position (pixel) of detected edge on camera.
 
         @return correction (float) Jitter correction in picoseconds.
         """
@@ -260,6 +266,11 @@ class RawImageTimeTool:
 
         ## @todo Add multiplicative factor to convert correction from stage to
         # time (if needed). Determine units of time tool stage in calibration.
+
+        ## LAS:FS:VIT:FS... is in NANOSECONDS. Multiply model fit by 1000 to get
+        # the correction in ps. MAKE SURE YOUR DIRECTION OF TIME IS CORRECT. YOU
+        # MAY NEED A FACTOR OF -1!
+        correction *= 1000
         return correction
 
     def actual_time(self, edge_pos: int, nominal_delay: float) -> float:
@@ -268,7 +279,7 @@ class RawImageTimeTool:
         @param edge_pos (int) Position (pixel) of detected edge on camera.
         @param nominal_delay (float) Nominal delay in picoseconds.
 
-        @return time (float) Absolute time. Nominal delay corrected for jitter.
+        @return time (float) Absolute time (ps). Nominal delay corrected for jitter.
         """
         time = nominal_delay
         time += self.jitter_correct(edge_pos)
@@ -279,7 +290,7 @@ class RawImageTimeTool:
         """! Plot the density of detected edges during a time tool calibration
         run and the polynomial fit to it.
 
-        @param delays (array-like) Time tool stage positions.
+        @param delays (array-like) Time tool delays in nanoseconds.
         @param edges (array-like) Detected edges in time tool camera.
         @param model (array-like) Polynomial model coefficients.
         """
