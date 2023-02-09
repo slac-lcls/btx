@@ -123,6 +123,8 @@ class PsanaInterface:
          - https://confluence.slac.stanford.edu/display/PSDM/New+XTCAV+Documentation
          - https://www-ssrl.slac.stanford.edu/lcls/technotes/LCLS-TN-09-5.pdf
 
+        Note: the pulse energy is equal to the photon energy times the number of photons in the pulse.
+
         Parameters
         ----------
         evt : psana.Event object
@@ -133,6 +135,8 @@ class PsanaInterface:
 
         Returns
         -------
+        gas_detector_energy: float
+            Beam energy in mJ
 
         """
         gdet = evt.get(psana.Bld.BldDataFEEGasDetEnergyV1, psana.Source())
