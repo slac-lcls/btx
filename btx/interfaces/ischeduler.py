@@ -66,6 +66,8 @@ class JobScheduler:
             dep_paths += "source /reg/g/psdm/etc/psconda.sh -py3\n"
         if "crystfel" in dependencies:
             dep_paths += "export PATH=/cds/sw/package/crystfel/crystfel-dev/bin:$PATH\n"
+        if "mosflm" in dependencies:
+            dep_paths += "export PATH=/cds/sw/package/autosfx:$PATH\n"
         if "ccp4" in dependencies:
             dep_paths += "source /cds/sw/package/ccp4/ccp4-8.0/bin/ccp4.setup-sh\n"
         if "phenix" in dependencies:
