@@ -10,6 +10,7 @@ class PsanaInterface:
                  event_receiver=None, event_code=None, event_logic=True,
                  ffb_mode=False, track_timestamps=False, calibdir=None):
         self.exp = exp # experiment name, str
+        self.hutch = exp[:3] # hutch name, str
         self.run = run # run number, int
         self.det_type = det_type # detector name, str
         self.track_timestamps = track_timestamps # bool, keep event info
@@ -188,6 +189,31 @@ class PsanaInterface:
             return self.ds.env().epicsStore().value(pv_camera_length)
         except TypeError:
             raise RuntimeError(f"PV {pv_camera_length} is invalid")
+
+    def get_beam_attenuation(self, pv_beam_attenuation=None):
+        """
+        Attenuation set by beamline scientists before the beam reaches the sample.
+
+        Parameters
+        ----------
+        pv_beam_attenuation : str
+            PV associated with beam attenuation
+
+        Returns
+        -------
+        beam_attenuation : float
+            0.0 is no beam, 1.0 is full beam.
+        """
+        if pv_beam_attenuation is None:
+            if self.hutch == 'mfx':
+                pv_beam_attenuation = "MFX:ATT:COM:R_CUR"
+            else:
+                raise NotImplementedError
+
+        try:
+            self.ds.env().epicsStore().value(pv_beam_attenuation)
+        except TypeError:
+            raise RuntimeError(f"PV {pv_beam_attenuation} is invalid")
 
     def get_timestamp(self, evtId):
         """
