@@ -128,7 +128,7 @@ class PsanaInterface:
         photon_energy : float
             photon energy in eV
         """
-        return psana.Detector('Ebeam').get(evt).ebeamPhotonEnergy()
+        return psana.Detector('EBeam').get(evt).ebeamPhotonEnergy()
 
     def get_fee_gas_detector_energy_mJ_evt(self, evt, mode=None):
         """
