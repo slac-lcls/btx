@@ -137,7 +137,8 @@ class RawImageTimeTool:
 
         # Write necessary files
         run = self.format_run()
-        fname = f'{self.expmt}_TTCalib_{run}.out'
+        outdir = '{self.savedir}/calibmodels'
+        fname = f'{run}.out'
         self.write_file(self._model, fname, self.savedir)
 
         if figs:
@@ -155,8 +156,10 @@ class RawImageTimeTool:
             run = f'r{int(run):04}'
         return run
 
-    def process_run(self) -> (np.array, np.array, np.array):
+    def process_run(self, calib=True) -> (np.array, np.array, np.array):
         """! Perform edge detection for all images in a run.
+
+        @param calib (bool) Whether or not this is a calibration run.
 
         @return delays (np.array) Array of delays used.
         @return edges (np.array) Detected edge position.
@@ -187,6 +190,11 @@ class RawImageTimeTool:
                 edges.append(edge)
                 ampls.append(ampl)
                 fwhms.append(fwhm)
+
+                if not calib:
+                    ## @todo
+                    # Implement stamp creation.
+                    pass
             except Exception as e:
                 # BAD - Do specific exception handling
                 # If error occurs while getting the image remove the last entry inted
@@ -252,7 +260,10 @@ class RawImageTimeTool:
 
         # Cropping can be done by selecting argmax (ie row) of sum along axis=1
         # and taking +/- 15 pixels. E.g. argmax == row 55, ROI == [40, 70]
-        return img[first:last]
+        colsum = np.sum(img, axis=1)
+        argmaxi = colsum.argmax()
+        return img[(argmaxi - 15):(argmax+15)]
+#        return img[first:last]
 
 
     def fit_calib(self, delays: np.array, edges: np.array, ampls: np.array,
@@ -371,25 +382,27 @@ class RawImageTimeTool:
 
     def timetool_correct(self, run: str, nominal: float, model = None,
                                                          figs: bool = True):
-        """! Fit a calibration model to convert delay to time tool jitter
-        correction. MUST be run before analysis if a model has not been previously
-        fit.
+        """! Correct a run or set of runs at a given nominal delay for arrival
+        time jitter. Output correct time stamps for later binning.
 
-        @param run (str) SINGLE run number for the experimental calibration run.
-        @param order (int) Order of the polynomial to fit for calibration.
+        @param run (str) Run(s) to correct with timetool. Single string, e.g. '17' or range '16-20'.
+        @param nominal (float) Nominal time being corrected for in ps. E.g. .5 (500 fs)
+        @param model (None | str | array-like) Polynomial coefficients of the timetool calibration model. Searches for the latest model if none is provided.
+        @param figs (bool) Whether or not to produce diagnostic figures.
         """
 
-        # Open calibration run first!
+        # Open necessary runs
         self.open_run(run)
-
+        
         # Detect the edges
         delays, edges, ampls = self.process_run()
         self.fit_calib(delays, edges, ampls, None, order)
 
         # Write necessary files
         run = self.format_run()
-        fname = f'{self.expmt}_TTCalib_{run}'
-        self.write_file(self._model, fname, self.savedir)
+        fname = f'{run}.out'
+        outdir = f'{self.savedir}/corrections'
+        self.write_file(self._model, fname, outdir)
 
     def plot_calib(self, delays: list, edges: list, model: list):
         """! Plot the density of detected edges during a time tool calibration
@@ -410,7 +423,7 @@ class RawImageTimeTool:
         ax.set_xlabel('Edge Pixel')
         ax.set_ylabel('Delay')
         run = self.format_run()
-        fname = f'{self.expmt}_TTCalib_{run}_Fit.png'
+        fname = f'TTCalib_{run}.png'
         self.write_file(fig, fname, f'{self.savedir}/figs')
 
     def plot_hist(self, edges: list):
@@ -425,7 +438,7 @@ class RawImageTimeTool:
         ax.set_xlabel('Edge Pixel')
         ax.set_ylabel('Density')
         run = self.format_run()
-        fname = f'{self.expmt}_TT_{run}_EdgeHist.png'
+        fname = f'EdgeHist_{run}.png'
         self.write_file(fig, fname, f'{self.savedir}/figs')
 
     def write_file(self, fobj, fname: str, savedir: str):
@@ -445,13 +458,19 @@ class RawImageTimeTool:
                 fobj.savefig(f'{savedir}/{fname}')
             elif type(fobj) == np.ndarray:
                 np.savetxt(f'{savedir}/{fname}', fobj)
-                
 
     #@todo Implement to select individual images
     def get_images(ds: psana.DataSource, det: psana.Detector) -> (list):
         pass
 
-    # Decide where to save etc
+   # if direct:
+   #     for idx,evt in enumerate(ds.events()):
+   #         ec = evr_det.eventCodes(evt)
+   #         if ec is None: continue
+   #         edge_pos = np.append(edge_pos,ds.env().epicsStore().value(f'{beamline}:TIMETOOL:FLTPOS'))
+   #         edge_fwhm = np.append(edge_fwhm,ds.env().epicsStore().value(f'{beamline}:TIMETOOL:FLTPOSFWHM'))
+   #         edge_amp = np.append(edge_amp,ds.env().epicsStore().value(f'{beamline}:TIMETOOL:AMPL'))
+            
 
     # Properties
     ############################################################################
