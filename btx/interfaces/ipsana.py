@@ -226,7 +226,7 @@ class PsanaInterface:
                 raise NotImplementedError
 
         try:
-            self.ds.env().epicsStore().value(pv_beam_transmission)
+            return self.ds.env().epicsStore().value(pv_beam_transmission)
         except TypeError:
             raise RuntimeError(f"PV {pv_beam_transmission} is invalid")
 
