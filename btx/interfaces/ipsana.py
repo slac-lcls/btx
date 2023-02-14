@@ -190,30 +190,31 @@ class PsanaInterface:
         except TypeError:
             raise RuntimeError(f"PV {pv_camera_length} is invalid")
 
-    def get_beam_attenuation(self, pv_beam_attenuation=None):
+    def get_beam_transmission(self, pv_beam_transmission=None):
         """
-        Attenuation set by beamline scientists before the beam reaches the sample.
+        Fraction of beam transmitted to the sample.
+        The attenuation is set by beamline scientists before the beam reaches the sample.
 
         Parameters
         ----------
-        pv_beam_attenuation : str
+        pv_beam_transmission : str
             PV associated with beam attenuation
 
         Returns
         -------
-        beam_attenuation : float
+        beam_transmission : float
             0.0 is no beam, 1.0 is full beam.
         """
-        if pv_beam_attenuation is None:
+        if pv_beam_transmission is None:
             if self.hutch == 'mfx':
-                pv_beam_attenuation = "MFX:ATT:COM:R_CUR"
+                pv_beam_transmission = "MFX:ATT:COM:R_CUR"
             else:
                 raise NotImplementedError
 
         try:
-            self.ds.env().epicsStore().value(pv_beam_attenuation)
+            self.ds.env().epicsStore().value(pv_beam_transmission)
         except TypeError:
-            raise RuntimeError(f"PV {pv_beam_attenuation} is invalid")
+            raise RuntimeError(f"PV {pv_beam_transmission} is invalid")
 
     def get_timestamp(self, evtId):
         """
