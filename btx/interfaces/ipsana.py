@@ -96,7 +96,7 @@ class PsanaInterface:
     
     def get_wavelength_evt(self, evt):
         """
-        Retrieve the detector's wavelength for a specfic event.
+        Retrieve the detector's wavelength for a specific event.
 
         Parameters
         ----------
@@ -108,13 +108,27 @@ class PsanaInterface:
         wavelength : float
             wavelength in Angstrom
         """
-        ebeam = psana.Detector('EBeam')
-        photon_energy = ebeam.get(evt).ebeamPhotonEnergy()
+        photon_energy = self.get_photon_energy_eV_evt(evt)
         if np.isinf(photon_energy):
             return self.get_wavelength()
         else:
             lambda_m =  1.23984197386209e-06 / photon_energy # convert to meters using e=hc/lambda
             return lambda_m * 1e10
+
+    def get_photon_energy_eV_evt(self, evt):
+        """
+        Retrieve the photon energy in eV for a specific event.
+        Parameters
+        ----------
+        evt : psana.Event object
+            individual psana event
+
+        Returns
+        -------
+        photon_energy : float
+            photon energy in eV
+        """
+        return psana.Detector('Ebeam').get(evt).ebeamPhotonEnergy()
 
     def get_fee_gas_detector_energy_mJ_evt(self, evt, mode=None):
         """
