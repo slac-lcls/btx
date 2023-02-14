@@ -164,6 +164,7 @@ class RawImageTimeTool:
         @return delays (np.array) Array of delays used.
         @return edges (np.array) Detected edge position.
         @return ampls (np.array) Convolution amplitudes for the detected edges.
+        @return stamps (np.array) Unique event identifier stamps. NOT returned in calibration.
         """
         ## @todo Split edge detection into separate function from loop for ease
         # of use with jitter correction once model is known.
@@ -176,6 +177,9 @@ class RawImageTimeTool:
         edges = []
         ampls = [] # Can be used for filtering good edges from bad
         fwhms = [] # Can be used for filtering good edges from bad
+
+        if not calib:
+            stamps = []
 
         stage_code = self.ttstage_code(self.hutch)
 
@@ -192,9 +196,12 @@ class RawImageTimeTool:
                 fwhms.append(fwhm)
 
                 if not calib:
-                    ## @todo
-                    # Implement stamp creation.
-                    pass
+                    evtid = evt.get(psana.EventId)
+                    evtfid = evtid.fiducials()
+                    evttime = evtid.time()
+                    stamp = f'{evttime[0]}-{evttime[1]}-{evtfid}'
+                    stamps.append(stamp)
+
             except Exception as e:
                 # BAD - Do specific exception handling
                 # If error occurs while getting the image remove the last entry inted
@@ -202,8 +209,10 @@ class RawImageTimeTool:
                 # Errors occur because there are some missing camera images,
                 # but the stage position still registers.
                 delays.pop(-1)
-
-        return np.array(delays), np.array(edges), np.array(ampls)
+        if calib:
+            return np.array(delays), np.array(edges), np.array(ampls)
+        else:
+            return np.array(delays), np.array(edges), np.array(ampls), np.array(stamps)
 
     def detect_edge(self, img: np.array, kernel: np.array) -> (float, int, float):
         """! Detects an edge in an image projection using convolution with a
@@ -359,9 +368,6 @@ class RawImageTimeTool:
         else:
             print('No calibration model. Jitter correction not possible.')
 
-        ## @todo Add multiplicative factor to convert correction from stage to
-        # time (if needed). Determine units of time tool stage in calibration.
-
         ## LAS:FS:VIT:FS... is in NANOSECONDS. Multiply model fit by 1000 to get
         # the correction in ps. MAKE SURE YOUR DIRECTION OF TIME IS CORRECT. YOU
         # MAY NEED A FACTOR OF -1!
@@ -395,14 +401,18 @@ class RawImageTimeTool:
         self.open_run(run)
         
         # Detect the edges
-        delays, edges, ampls = self.process_run()
-        self.fit_calib(delays, edges, ampls, None, order)
+        delays, edges, ampls, stamps = self.process_run()
+
+        # Convert the edges and nominal delay into an actual delay
+        times = self.actual_time(edges, nominal)
+
+        timed_stamps = np.array((stamps, times)).T
 
         # Write necessary files
         run = self.format_run()
         fname = f'{run}.out'
         outdir = f'{self.savedir}/corrections'
-        self.write_file(self._model, fname, outdir)
+        self.write_file(timed_stamps, fname, outdir, fmt='%s')
 
     def plot_calib(self, delays: list, edges: list, model: list):
         """! Plot the density of detected edges during a time tool calibration
@@ -441,7 +451,7 @@ class RawImageTimeTool:
         fname = f'EdgeHist_{run}.png'
         self.write_file(fig, fname, f'{self.savedir}/figs')
 
-    def write_file(self, fobj, fname: str, savedir: str):
+    def write_file(self, fobj, fname: str, savedir: str, fmt = None):
         """! Writes objects of multiple types to output files. Checks if the
         save directory exists, if not it creates it.
 
@@ -457,7 +467,10 @@ class RawImageTimeTool:
             if type(fobj) == plt.Figure:
                 fobj.savefig(f'{savedir}/{fname}')
             elif type(fobj) == np.ndarray:
-                np.savetxt(f'{savedir}/{fname}', fobj)
+                if fmt:
+                    np.savetxt(f'{savedir}/{fname}', fobj, fmt)
+                else:
+                    np.savetxt(f'{savedir}/{fname}', fobj)
 
     #@todo Implement to select individual images
     def get_images(ds: psana.DataSource, det: psana.Detector) -> (list):
@@ -470,7 +483,6 @@ class RawImageTimeTool:
    #         edge_pos = np.append(edge_pos,ds.env().epicsStore().value(f'{beamline}:TIMETOOL:FLTPOS'))
    #         edge_fwhm = np.append(edge_fwhm,ds.env().epicsStore().value(f'{beamline}:TIMETOOL:FLTPOSFWHM'))
    #         edge_amp = np.append(edge_amp,ds.env().epicsStore().value(f'{beamline}:TIMETOOL:AMPL'))
-            
 
     # Properties
     ############################################################################
