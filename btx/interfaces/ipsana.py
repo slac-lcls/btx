@@ -322,13 +322,17 @@ class PsanaInterface:
             images retrieved sequentially from run, optionally assembled
         """
         # set up storage array
-        if assemble:
-            images = np.zeros((num_images, 
-                               self.det.image_xaxis(self.run).shape[0], 
-                               self.det.image_yaxis(self.run).shape[0]))
+        if self.det_type != 'opal_tt':
+            if assemble:
+                images = np.zeros((num_images, 
+                                   self.det.image_xaxis(self.run).shape[0], 
+                                   self.det.image_yaxis(self.run).shape[0]))
+            else:
+                images = np.zeros((num_images,) + self.det.shape())
         else:
-            images = np.zeros((num_images,) + self.det.shape())
-            
+            images = np.zeros((num_images, 230, 1024))
+            assemble = False
+
         # retrieve next batch of images
         for counter_batch in range(num_images):
             if self.counter >= self.max_events:
