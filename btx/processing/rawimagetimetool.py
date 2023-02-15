@@ -177,7 +177,7 @@ class RawImageTimeTool:
 
         if figs:
             self.plot_calib(delays, edges, self._model)
-            self.plot_hist(edges)
+            self.plot_hist(self.edges_fit)
 
     def format_run(self) -> str:
         """! Format the run(s) number for output file names. The format is
@@ -463,6 +463,8 @@ class RawImageTimeTool:
         fname = f'{run}.out'
         outdir = f'{self.savedir}/corrections'
         self.write_file(timed_stamps, fname, outdir, fmt='%s')
+        if figs:
+            self.plot_hist(edges)
 
     def plot_calib(self, delays: list, edges: list, model: list):
         """! Plot the density of detected edges during a time tool calibration
