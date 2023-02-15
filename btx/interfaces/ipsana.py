@@ -322,7 +322,7 @@ class PsanaInterface:
             images retrieved sequentially from run, optionally assembled
         """
         # set up storage array
-        if self.det_type != 'opal_tt':
+        if 'opal' not in self.det_type.lower():
             if assemble:
                 images = np.zeros((num_images, 
                                    self.det.image_xaxis(self.run).shape[0], 
