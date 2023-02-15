@@ -10,6 +10,7 @@ class PsanaInterface:
                  event_receiver=None, event_code=None, event_logic=True,
                  ffb_mode=False, track_timestamps=False, calibdir=None):
         self.exp = exp # experiment name, str
+        self.hutch = exp[:3] # hutch name, str
         self.run = run # run number, int
         self.det_type = det_type # detector name, str
         self.track_timestamps = track_timestamps # bool, keep event info
@@ -95,7 +96,7 @@ class PsanaInterface:
     
     def get_wavelength_evt(self, evt):
         """
-        Retrieve the detector's wavelength for a specfic event.
+        Retrieve the detector's wavelength for a specific event.
 
         Parameters
         ----------
@@ -107,13 +108,27 @@ class PsanaInterface:
         wavelength : float
             wavelength in Angstrom
         """
-        ebeam = psana.Detector('EBeam')
-        photon_energy = ebeam.get(evt).ebeamPhotonEnergy()
+        photon_energy = self.get_photon_energy_eV_evt(evt)
         if np.isinf(photon_energy):
             return self.get_wavelength()
         else:
             lambda_m =  1.23984197386209e-06 / photon_energy # convert to meters using e=hc/lambda
             return lambda_m * 1e10
+
+    def get_photon_energy_eV_evt(self, evt):
+        """
+        Retrieve the photon energy in eV for a specific event.
+        Parameters
+        ----------
+        evt : psana.Event object
+            individual psana event
+
+        Returns
+        -------
+        photon_energy : float
+            photon energy in eV
+        """
+        return psana.Detector('EBeam').get(evt).ebeamPhotonEnergy()
 
     def get_fee_gas_detector_energy_mJ_evt(self, evt, mode=None):
         """
@@ -188,6 +203,32 @@ class PsanaInterface:
             return self.ds.env().epicsStore().value(pv_camera_length)
         except TypeError:
             raise RuntimeError(f"PV {pv_camera_length} is invalid")
+
+    def get_beam_transmission(self, pv_beam_transmission=None):
+        """
+        Fraction of beam transmitted to the sample.
+        The attenuation is set by beamline scientists before the beam reaches the sample.
+
+        Parameters
+        ----------
+        pv_beam_transmission : str
+            PV associated with beam attenuation
+
+        Returns
+        -------
+        beam_transmission : float
+            0.0 is no beam, 1.0 is full beam.
+        """
+        if pv_beam_transmission is None:
+            if self.hutch == 'mfx':
+                pv_beam_transmission = "MFX:ATT:COM:R_CUR"
+            else:
+                raise NotImplementedError
+
+        try:
+            return self.ds.env().epicsStore().value(pv_beam_transmission)
+        except TypeError:
+            raise RuntimeError(f"PV {pv_beam_transmission} is invalid")
 
     def get_timestamp(self, evtId):
         """
