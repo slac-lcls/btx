@@ -164,7 +164,7 @@ class RawImageTimeTool:
 
         # Write necessary files
         run = self.format_run()
-        outdir = '{self.savedir}/calib'
+        outdir = f'{self.savedir}/calib'
         ## Model coefficients
         fname = f'{run}.out'
         self.write_file(self._model, fname, outdir)
