@@ -121,7 +121,7 @@ class RawImageTimeTool:
     def calibrate(self, run: str, order: int = 2, figs: bool = True):
         """! Fit a calibration model to convert delay to time tool jitter
         correction. MUST be run before analysis if a model has not been previously
-        fit.
+        fit. The fitted polynomial model is saved to a text file for later use.
 
         @param run (str) SINGLE run number for the experimental calibration run.
         @param order (int) Order of the polynomial to fit for calibration.
@@ -143,8 +143,12 @@ class RawImageTimeTool:
 
         if figs:
             self.plot_calib(delays, edges, self._model)
+            self.plot_hist(edges)
 
-    def format_run(self):
+    def format_run(self) -> str:
+        """! Format the run(s) number for output file names. The format is
+        r0000 for a single run and r0000-r0000 for a range of runs.
+        """
         run = self.ds.ds_string.split(':')[1].split('=')[1]
         if '-' in run:
             run = run.split('-')
@@ -263,10 +267,6 @@ class RawImageTimeTool:
 
         @return cropped (np.array) Cropped image.
         """
-        ## @todo implement method to select ROI and crop automatically
-        # At the moment, simply return the correctly cropped image for experiment
-        # MFXLZ0420 (at least for run 17 - the calibration run)
-
         # Cropping can be done by selecting argmax (ie row) of sum along axis=1
         # and taking +/- 15 pixels. E.g. argmax == row 55, ROI == [40, 70]
         colsum = np.sum(img, axis=1)
@@ -346,7 +346,7 @@ class RawImageTimeTool:
         else:
             raise InvalidHutchError(hutch)
 
-    def jitter_correct(self, edge_pos: int) -> float:
+    def edge_to_time(self, edge_pos: int) -> float:
         """! Given an internal model and an edge position, return the time tool
         jitter correction.
 
@@ -383,20 +383,21 @@ class RawImageTimeTool:
         @return time (float) Absolute time (ps). Nominal delay corrected for jitter.
         """
         time = nominal_delay
-        time += self.jitter_correct(edge_pos)
+        time += self.edge_to_time(edge_pos)
         return time
 
     def timetool_correct(self, run: str, nominal: float, model = None,
                                                          figs: bool = True):
         """! Correct a run or set of runs at a given nominal delay for arrival
-        time jitter. Output correct time stamps for later binning.
+        time jitter. Outputs correct time stamps for later binning. Events are
+        identified using their time and fiducial. The output text file has one
+        event per line in the format (seconds-nanoseconds-fiducial tt_correction).
 
         @param run (str) Run(s) to correct with timetool. Single string, e.g. '17' or range '16-20'.
         @param nominal (float) Nominal time being corrected for in ps. E.g. .5 (500 fs)
         @param model (None | str | array-like) Polynomial coefficients of the timetool calibration model. Searches for the latest model if none is provided.
         @param figs (bool) Whether or not to produce diagnostic figures.
         """
-
         # Open necessary runs
         self.open_run(run)
         
