@@ -47,15 +47,16 @@ class RawImageTimeTool:
     __init__(self, expmt: str, savedir: str) - Instantiate an analysis object for experiment expmt.
     open_run(self, run: str) - Open DataSource for a specified run.
     get_tt_name(self) - Determine time tool camera name in data files.
-    calibrate(self, run: str, order: int) - Calibrate the analysis object for jitter correction on specified run.
+    calibrate(self, run: str, order: int, figs=True) - Calibrate the analysis object for jitter correction on specified run.
     process_run(self) - Perform edge detection on all events in a run.
     detect_edge(self, img: np.array, kernel: np.array) - Perform edge detection on an image.
     crop_image(self, img: np.array) - Crop time tool image to ROI.
     fit_calib(self, delays: np.array, edges: np.array, amplitudes: np.array,
             fwhm: np.array = None, order: int = 2) - Fit polynomial to calibration run data.
-    ttstage_code(self, hutch) - Return the time tool target time stage for a given hutch.
-    jitter_correct
-    actual_time
+    ttstage_code(self, hutch) - Return the time tool target time stage for a given hutch.(
+    edge_to_time(self, edge)
+    actual_time(self, edge, nominal)
+    timetool_correct(self, edge, nominal, model, figs=True)
     plot_calib
     plot_hist
     """
@@ -444,9 +445,10 @@ class RawImageTimeTool:
             self.model = model # See property setter for assignment handling
         else:
             # No model provided - try to retrieve latest
-            latest = fetch_latest(f'{self.savedir}/calib/*.out', int(run.split('-')[0]))
+            latest = fetch_latest(f'{self.savedir}/calib/r*.out', int(run.split('-')[0]))
             if latest:
                 self.model = latest
+                print(f'Using model: {latest}')
             else:
                 print('No model found!')
 
