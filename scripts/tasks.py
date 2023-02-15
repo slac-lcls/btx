@@ -350,26 +350,3 @@ def clean_up(config):
     if os.path.isdir(taskdir):
         os.system(f"rm -f {taskdir}/r*/*{task.tag}.cxi")
     logger.debug('Done!')
-
-def calibrate_timetool(config):
-    from btx.timetool.rawimagetimetool import RawImageTimeTool
-    from btx.timetool.daqtimetool import DaqTimeTool
-    setup = config.setup
-    task = config.calibrate_timetool
-    taskdir = os.path.join(setup.root_dir, 'timetool')
-
-    expmt = setup.exp
-    run = task.run
-    tt = RawImageTimetool(expmt)
-    logger.info(f'Calibrating timetool on run {run}')
-    tt.calibrate(run)
-    logger.info(f'Writing calibration data to timetool folder.')
-    np.save(f'{taskdir}/{expmt}_TTCalib_Run{run}.npy', tt.model)
-    np.save(f'{taskdir}/{expmt}_EdgesFit_Run{run}.npy', tt.edges_fit)
-    np.save(f'{taskdir}/{expmt}_TgtNanoseconds_Run{run}.npy', tt.delays_fit)
-
-def timetool_correct(config):
-    from btx.timetool.rawimagetimetool import RawImageTimeTool
-    from btx.timetool.daqtimetool import DaqTimeTool
-
-    taskdir = os.path.join(setup.root_dir, 'timetool')

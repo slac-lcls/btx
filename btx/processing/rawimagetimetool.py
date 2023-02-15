@@ -1,9 +1,36 @@
 import numpy as np
-import matplotlib.pyplot as plt
-import psana
-from scipy.signal import fftconvolve
-import subprocess
-import os
+import matplotlib.pyplot as plt # Figure creation
+import psana # Data retrieval
+from scipy.signal import fftconvolve # Edge detection
+import subprocess # Use has been deprecated
+import os # Directory creation
+# from btx.misc.shortcuts import fetch_latest # Retrieving latest calibration
+import glob
+
+def fetch_latest(fnames, run):
+    """! Fetch the most recently created (in terms of run numbers) file.
+    Here we assume that files are named /{base_path}/r{run:04}.* .
+    
+    Parameters
+    ----------
+    @param fnames (str) glob-expandable string pointing to geom or mask files
+    @param run (int) run number
+    
+    Returns
+    -------
+    @return fname (str) filename of relevant geom or mask file
+    """
+    fnames = glob.glob(fnames)
+    avail = [os.path.basename(f)[1:].split('.')[0] for f in fnames]
+    avail = np.array([int(a) for a in avail])
+    sort_idx = np.argsort(avail)
+    idx = np.searchsorted(avail[sort_idx], run, side='right') - 1
+    return fnames[sort_idx[idx]]
+    try:
+        return fnames[sort_idx[idx]]
+    except IndexError:
+        print('File not found.')
+        return ''
 
 class RawImageTimeTool:
     """! Class to reimplement time tool analysis at LCLS from raw images.
@@ -141,7 +168,6 @@ class RawImageTimeTool:
         ## Model coefficients
         fname = f'{run}.out'
         self.write_file(self._model, fname, outdir)
-
         ## Fitted edges
         fname = f'EdgesFit_{run}.out'
         self.write_file(self.edges_fit, fname, outdir)
@@ -216,8 +242,8 @@ class RawImageTimeTool:
 
             except Exception as e:
                 # BAD - Do specific exception handling
-                # If error occurs while getting the image remove the last entry inted
-                # the stage_pos list
+                # If error occurs while getting the image remove the last entry
+                # in the delays list
                 # Errors occur because there are some missing camera images,
                 # but the stage position still registers.
                 delays.pop(-1)
@@ -279,7 +305,10 @@ class RawImageTimeTool:
         # and taking +/- 15 pixels. E.g. argmax == row 55, ROI == [40, 70]
         colsum = np.sum(img, axis=1)
         argmaxi = colsum.argmax()
-        return img[(argmaxi - 15):(argmax+15)]
+
+        s = np.max(((argmaxi - 15), 0))
+        e = np.min(((argmaxi + 15), len(colsum) - 1))
+        return img[s:e]
         #return img[first:last]
 
 
@@ -368,7 +397,7 @@ class RawImageTimeTool:
         @return correction (float) Jitter correction in picoseconds.
         """
         correction = 0
-        if self._model:
+        if len(self._model) > 0:
             n = len(self._model)
             for i, coeff in enumerate(self._model):
                 correction += coeff*edge_pos**(n-i-1)
@@ -408,9 +437,21 @@ class RawImageTimeTool:
         """
         # Open necessary runs
         self.open_run(run)
-        
-        # Detect the edges
-        delays, edges, ampls, stamps = self.process_run()
+
+        # Check for model
+        if model:
+            # Model provided
+            self.model = model # See property setter for assignment handling
+        else:
+            # No model provided - try to retrieve latest
+            latest = fetch_latest(f'{self.savedir}/calib/*.out', int(run.split('-')[0]))
+            if latest:
+                self.model = latest
+            else:
+                print('No model found!')
+
+        # Detect the edges, not a calibration run!
+        delays, edges, ampls, stamps = self.process_run(calib=False)
 
         # Convert the edges and nominal delay into an actual delay
         times = self.actual_time(edges, nominal)
