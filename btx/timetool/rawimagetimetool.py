@@ -137,9 +137,17 @@ class RawImageTimeTool:
 
         # Write necessary files
         run = self.format_run()
-        outdir = '{self.savedir}/calibmodels'
+        outdir = '{self.savedir}/calib'
+        ## Model coefficients
         fname = f'{run}.out'
-        self.write_file(self._model, fname, self.savedir)
+        self.write_file(self._model, fname, outdir)
+
+        ## Fitted edges
+        fname = f'EdgesFit_{run}.out'
+        self.write_file(self.edges_fit, fname, outdir)
+        ## Fitted delays
+        fname = f'DelaysFit_{run}.out'
+        self.write_file(self.delays_fit, fname, outdir)
 
         if figs:
             self.plot_calib(delays, edges, self._model)
@@ -272,7 +280,7 @@ class RawImageTimeTool:
         colsum = np.sum(img, axis=1)
         argmaxi = colsum.argmax()
         return img[(argmaxi - 15):(argmax+15)]
-#        return img[first:last]
+        #return img[first:last]
 
 
     def fit_calib(self, delays: np.array, edges: np.array, ampls: np.array,
