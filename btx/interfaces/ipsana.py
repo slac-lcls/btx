@@ -322,15 +322,20 @@ class PsanaInterface:
             images retrieved sequentially from run, optionally assembled
         """
         # set up storage array
-        if assemble:
-            images = np.zeros((num_images, 
-                               self.det.image_xaxis(self.run).shape[0], 
-                               self.det.image_yaxis(self.run).shape[0]))
+        if 'opal' not in self.det_type.lower():
+            if assemble:
+                images = np.zeros((num_images, 
+                                   self.det.image_xaxis(self.run).shape[0], 
+                                   self.det.image_yaxis(self.run).shape[0]))
+            else:
+                images = np.zeros((num_images,) + self.det.shape())
         else:
-            images = np.zeros((num_images,) + self.det.shape())
-            
+            images = np.zeros((num_images, 230, 1024))
+            assemble = False
+
         # retrieve next batch of images
-        for counter_batch in range(num_images):
+        counter_batch = 0
+        while counter_batch < num_images:
             if self.counter >= self.max_events:
                 images = images[:counter_batch]
                 print("No more events to retrieve")
@@ -338,19 +343,21 @@ class PsanaInterface:
                 
             else:
                 evt = self.runner.event(self.times[self.counter])
-                if assemble:
+                if assemble and self.det_type.lower()!='rayonix':
                     if not self.calibrate:
                         raise IOError("Error: calibration data not found for this run.")
                     else:
-                        images[counter_batch] = self.det.image(evt=evt)
+                        img = self.det.image(evt=evt)
                 else:
                     if self.calibrate:
-                        images[counter_batch] = self.det.calib(evt=evt)
+                        img = self.det.calib(evt=evt)
                     else:
-                        raw = self.det.raw(evt=evt)
+                        img = self.det.raw(evt=evt)
                         if self.det_type == 'epix10k2M':
-                            raw = raw & 0x3fff # exclude first two bits
-                        images[counter_batch] = raw
+                            img = img & 0x3fff # exclude first two bits
+                if img is not None:
+                    images[counter_batch] = img
+                    counter_batch += 1
                         
                 if self.track_timestamps:
                     self.get_timestamp(evt.get(EventId))
