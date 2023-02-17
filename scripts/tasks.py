@@ -68,7 +68,7 @@ def run_analysis(config):
     from btx.misc.shortcuts import fetch_latest
     setup = config.setup
     task = config.run_analysis
-    """ Generate the max, avg, and std powders for a given run. """
+    """ Generate powders for a given run and plot traces of run statistics. """
     taskdir = os.path.join(setup.root_dir, 'powder')
     os.makedirs(taskdir, exist_ok=True)
     os.makedirs(os.path.join(taskdir, 'figs'), exist_ok=True)
@@ -76,11 +76,15 @@ def run_analysis(config):
     script_path = os.path.join(os.path.dirname(os.path.realpath(__file__)),  "../btx/diagnostics/run.py")
     command = f"python {script_path}"
     command += f" -e {setup.exp} -r {setup.run} -d {setup.det_type} -o {taskdir} -m {mask_file}"
+    if task.get('mean_threshold') is not None:
+        command += f" --mean_threshold={task.mean_threshold}"
     if task.get('gain_mode') is not None:
         command += f" --gain_mode={task.gain_mode}"
     if task.get('raw_img') is not None:
         if task.raw_img:
             command += f" --raw_img"
+    if task.get('outlier_threshold') is not None:
+        command += f" --outlier_threshold={task.outlier_threshold}" 
     js = JobScheduler(os.path.join(".", f'ra_{setup.run:04}.sh'), 
                       queue=setup.queue, 
                       ncores=task.ncores,
