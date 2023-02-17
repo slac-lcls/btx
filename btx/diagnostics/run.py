@@ -15,11 +15,10 @@ from Detector.UtilsEpix10ka import info_pixel_gain_mode_statistics_for_raw
 from Detector.UtilsEpix10ka import map_pixel_gain_mode_for_raw
 
 class RunDiagnostics:
-
     """
-    Class for computing powders and a trajectory of statistics from a given run.
-    """
-    
+    Class to compute powders and trajectories of various image statistics
+    and event characteristics for a given run.
+    """    
     def __init__(self, exp, run, det_type):
         self.psi = PsanaInterface(exp=exp, run=run, det_type=det_type, track_timestamps=True)
         self.pixel_index_map = retrieve_pixel_index_map(self.psi.det.geometry(run))
@@ -93,24 +92,35 @@ class RunDiagnostics:
         for key in self.powders_final.keys():
             np.save(os.path.join(outdir, f"r{self.psi.run:04}_{key}{suffix}.npy"), self.powders_final[key])
 
-    def compute_stats(self, img):
+    def compute_stats(self, evt, img):
         """
-        Compute the following stats: mean, std deviation, max, min.
+        Compute the following image stats: mean, std deviation, max, min.
 
         Parameters
         ----------
+        evt : psana.Event object
+            individual psana event       
         img : numpy.ndarray, 3d
             unassembled, calibrated images of shape (n_panels, n_x, n_y)
         """
         if not self.stats:
-            for key in ['mean','std','max','min']:
+            for key in ['mean', 'std', 'max', 'min', 'beam_energy_eV', 'photon_energy_eV']:
                 self.stats[key] = np.zeros(self.psi.max_events - self.psi.counter)
         
-        self.stats['mean'][self.n_proc] = np.mean(img)
-        self.stats['std'][self.n_proc] = np.std(img)
-        self.stats['max'][self.n_proc] = np.max(img)
-        self.stats['min'][self.n_proc] = np.min(img)
-        
+        beam_energy_mJ   = self.psi.get_fee_gas_detector_energy_mJ_evt(evt)
+        photon_energy_eV = self.psi.get_photon_energy_eV_evt(evt)                
+        if beam_energy_mJ is not None and photon_energy_eV is not None:
+            beam_energy_eV = beam_energy_mJ / 1.602e-16 * self.psi.get_beam_transmission()
+            self.stats['beam_energy_eV'][self.n_proc] = beam_energy_eV
+            self.stats['photon_energy_eV'][self.n_proc] = photon_energy_eV
+
+            self.stats['mean'][self.n_proc] = np.mean(img)
+            self.stats['std'][self.n_proc] = np.std(img)
+            self.stats['max'][self.n_proc] = np.max(img)
+            self.stats['min'][self.n_proc] = np.min(img)
+        else:
+            self.n_empty += 1
+                
     def finalize_stats(self, n_empty=0, n_empty_raw=0):
         """
         Gather stats from various ranks into single arrays in self.stats_final.
@@ -191,9 +201,9 @@ class RunDiagnostics:
 
         self.psi.distribute_events(self.rank, self.size, max_events=max_events)
         start_idx, end_idx = self.psi.counter, self.psi.max_events
-        self.n_proc, n_empty, n_empty_raw, n_excluded = 0, 0, 0, 0
+        self.n_proc, self.n_empty, n_empty_raw, n_excluded = 0, 0, 0, 0
 
-        if self.psi.det_type == 'Rayonix':
+        if self.psi.det_type.lower() == 'rayonix':
             if self.rank == 0:
                 if self.check_first_evt(mask=mask):
                     print("First image of the run is an outlier and will be excluded")
@@ -209,7 +219,7 @@ class RunDiagnostics:
             else:
                 img = self.psi.det.calib(evt=evt)
             if img is None:
-                n_empty += 1
+                self.n_empty += 1
                 continue
                 
             if threshold:
@@ -222,7 +232,7 @@ class RunDiagnostics:
             if not powder_only:
                 if mask is not None:
                     img = np.ma.masked_array(img, 1-mask)
-                self.compute_stats(img)
+                self.compute_stats(evt, img)
                 
             if gain_mode is not None and self.psi.det_type == 'epix10k2M':
                 raw = self.psi.det.raw(evt)
@@ -234,14 +244,14 @@ class RunDiagnostics:
                 self.gain_mode = ''
 
             self.n_proc += 1
-            if self.psi.counter + n_empty + n_excluded == self.psi.max_events:
+            if self.psi.counter + self.n_empty + n_excluded == self.psi.max_events:
                 break
 
         self.comm.Barrier()
         self.finalize_powders()
         if not powder_only:
-            self.finalize_stats(n_empty + n_excluded, n_empty_raw)
-            print(f"Rank {self.rank}, no. empty images: {n_empty}, no. excluded images: {n_excluded}")
+            self.finalize_stats(self.n_empty + n_excluded, n_empty_raw)
+            print(f"Rank {self.rank}, no. empty images: {self.n_empty}, no. excluded images: {n_excluded}")
 
     def visualize_powder(self, tag='max', vmin=-1e5, vmax=1e5, output=None, figsize=12, dpi=300):
         """
@@ -289,10 +299,12 @@ class RunDiagnostics:
         """
         if self.rank == 0:
             n_plots = len(self.stats_final.keys())-1
-            keys = ['mean', 'max', 'min', 'std', 'gain_mode_counts']
-            labels = ['mean(I)', 'max(I)', 'min(I)', 'std dev(I)', f'No. pixels in\n{self.gain_mode} mode']
+            keys = ['mean', 'max', 'min', 'std', 'beam_energy_eV', 'photon_energy_eV', 'gain_mode_counts']
+            labels = ['mean(I)', 'max(I)', 'min(I)', 'std dev(I)', 
+                      'Beam\nenergy (eV)', 'Photon\nenergy (eV)',
+                      f'No. pixels in\n{self.gain_mode} mode']
             
-            f, axs = plt.subplots(n_plots, figsize=(n_plots*2.4,8), sharex=True)
+            f, axs = plt.subplots(n_plots, figsize=(n_plots*2.4,12), sharex=True)
             for n in range(n_plots):
                 axs[n].plot(self.stats_final[keys[n]], c='black')
                 axs[n].set_ylabel(labels[n], fontsize=12)       
@@ -327,6 +339,63 @@ class RunDiagnostics:
             
             if output is not None:
                 f.savefig(output, dpi=300, bbox_inches='tight')
+                
+    def visualize_energy_stats(self, output=None, outlier_threshold=-np.inf):
+        """
+        Plot the number of incoming photons per event, the number
+        of incoming photons versus the mean image intensity, and 
+        the beam energy versus photon energy. Energies are in eV.
+        
+        Parameters
+        ----------
+        output : str
+            path for optionally saving plot to disk
+        outlier_threshold : float
+            mean intensity threshold for considering images outliers
+        """
+        if self.rank == 0:
+            fig, axs = plt.subplots(nrows=1,ncols=3, figsize=(13,3.6))
+
+            valid = [self.stats['mean']>outlier_threshold][0]
+
+            n_incoming_photons = self.stats['beam_energy_eV']/self.stats['photon_energy_eV']
+            scatter = axs[0].scatter(np.arange(len(n_incoming_photons))[valid], n_incoming_photons[valid], 
+                                     s=2, c=self.stats['photon_energy_eV'][valid], cmap='magma')
+            axs[0].scatter(np.arange(len(n_incoming_photons))[~valid], n_incoming_photons[~valid], 
+                           s=2, c='grey', alpha=0.2, label='Outlier events')
+            axs[0].set_xlabel('Event index', fontsize=12)
+            axs[0].set_ylabel('No. incoming photons', fontsize=12)
+            axs[0].grid()
+            axs[0].legend(loc=1)
+
+            cax0 = fig.add_axes([0.15,0.24,0.16,0.025])
+            fig.colorbar(scatter, label='photon energy (eV)', 
+                         cax=cax0, orientation='horizontal')
+
+            hexbin = axs[1].hexbin(self.stats['mean'][valid], 
+                                   n_incoming_photons[valid], 
+                                   mincnt=1, gridsize=20, cmap='Reds')
+            axs[1].set_xlabel('Mean image intensity', fontsize=12)
+            axs[1].set_ylabel('No. incoming photons', fontsize=12)
+
+            cax1 = fig.add_axes([0.43,0.24,0.16,0.025])
+            fig.colorbar(hexbin, label='events per bin (outliers excluded)', 
+                         cax=cax1, orientation='horizontal')
+
+            hexbin = axs[2].hexbin(self.stats['photon_energy_eV'][valid],
+                                   self.stats['beam_energy_eV'][valid], 
+                                   mincnt=1, gridsize=20, cmap='Reds')
+            axs[2].set_xlabel('photon energy (eV)', fontsize=12)
+            axs[2].set_ylabel('beam energy (eV)', fontsize=12)
+
+            cax2 = fig.add_axes([0.71,0.24,0.16,0.025])
+            fig.colorbar(hexbin, label='events per bin (outliers excluded)', 
+                         cax=cax2, orientation='horizontal')
+
+            fig.subplots_adjust(wspace=0.3)
+        
+        if output is not None:
+            f.savefig(output, dpi=300, bbox_inches='tight')
     
     def check_first_evt(self, mask=None, scale_factor=5, n_images=5):
         """
