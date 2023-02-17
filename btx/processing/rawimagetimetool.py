@@ -55,17 +55,11 @@ class RawImageTimeTool:
             fwhm: np.array = None, order: int = 2) - Fit polynomial to calibration run data.
     ttstage_code(self, hutch) - Return the time tool target time stage for a given hutch.(
     edge_to_time(self, edge)
-    actual_time(self, edge, nominal)
+    actual_time_ps(self, edge, nominal)
     timetool_correct(self, edge, nominal, model, figs=True)
     plot_calib
     plot_hist
     """
-    # Class vars
-    ############################################################################
-
-    # Methods
-    ############################################################################
-
     def __init__(self, expmt: str, savedir: str):
         """! Initializer for the time tool analysis object.
 
@@ -100,11 +94,8 @@ class RawImageTimeTool:
         # (psana.DataSource) DataSource object for accessing data for specified runs.
         self.ds = psana.MPIDataSource(f'exp={self.expmt}:run={run}')
 
-        # Detector lookup needs to be modified for each hutch!
-        # Considering only MFX right now
         ## @var det
         # (psana.Detector) Detector object corresponding to the time tool camera.
-        # self.det = psana.Detector(self.get_detector_name(run), self.ds.env())
         self.det = psana.Detector(self.get_tt_name(), self.ds.env())
 
     def get_tt_name(self) -> str:
@@ -118,34 +109,6 @@ class RawImageTimeTool:
                 if any(alias in name.lower() for alias in ['opal', 'timetool']):
                     return name
 
-    def get_detector_name(self, run:str) -> str:
-        """! This method is deprecated.
-        Run detnames from shell and determine the time tool detector name.
-
-        @param run (str) Experiment run to check detectors for
-        @return detname (str) Name of the detector (full or alias)
-        """
-        # Define command to run
-        prog = 'detnames'
-        arg = f'exp={self.expmt}:run={run}'
-        cmd = [prog, arg]
-
-        # Run detnames, save output
-        output = subprocess.check_output(cmd)
-
-        # Convert to list and strip some characters
-        output = str(output).split()
-        output = [o.strip('\\n') for o in output]
-
-        # Select detectors related to timetool (Opal, e.g.)
-        # Need to see if this actually works for all hutches, seems to be good
-        # for cxi and mfx
-        ttdets = [det for det in output if "opal" in det.lower() or "timetool" in det.lower()]
-
-        # Return the first entry (could use any)
-        return ttdets[0]
-
-
     def calibrate(self, run: str, order: int = 2, figs: bool = True):
         """! Fit a calibration model to convert delay to time tool jitter
         correction. MUST be run before analysis if a model has not been previously
@@ -155,24 +118,20 @@ class RawImageTimeTool:
         @param order (int) Order of the polynomial to fit for calibration.
         @param figs (bool) Whether or not to print diagnostic figures.
         """
-
-        # Open calibration run first!
         self.open_run(run)
 
-        # Detect the edges
         delays, edges, ampls = self.process_run()
         self.fit_calib(delays, edges, ampls, None, order)
 
-        # Write necessary files
         run = self.format_run()
         outdir = f'{self.savedir}/calib'
-        ## Model coefficients
+
         fname = f'{run}.out'
         self.write_file(self._model, fname, outdir)
-        ## Fitted edges
+
         fname = f'EdgesFit_{run}.out'
         self.write_file(self.edges_fit, fname, outdir)
-        ## Fitted delays
+
         fname = f'DelaysFit_{run}.out'
         self.write_file(self.delays_fit, fname, outdir)
 
@@ -205,28 +164,22 @@ class RawImageTimeTool:
         @return ampls (np.array) Convolution amplitudes for the detected edges.
         @return stamps (np.array) Unique event identifier stamps. NOT returned in calibration.
         """
-        ## @todo Split edge detection into separate function from loop for ease
-        # of use with jitter correction once model is known.
-
-        # Create kernel for convolution and edge detection.
         kernel = np.zeros([300])
         kernel[:150] = 1
 
         delays = []
         edges = []
-        ampls = [] # Can be used for filtering good edges from bad
-        fwhms = [] # Can be used for filtering good edges from bad
+        ampls = []
+        fwhms = []
 
         if not calib:
             stamps = []
 
         stage_code = self.ttstage_code(self.hutch)
 
-        # Loop through run events
         for idx, evt in enumerate(self.ds.events()):
             delays.append(self.ds.env().epicsStore().value(stage_code))
             try:
-                # Retrieve time tool camera image for the event
                 img = self.det.image(evt=evt)
                 edge, ampl, fwhm = self.detect_edge(img, kernel)
 
@@ -242,11 +195,6 @@ class RawImageTimeTool:
                     stamps.append(stamp)
 
             except Exception as e:
-                # BAD - Do specific exception handling
-                # If error occurs while getting the image remove the last entry
-                # in the delays list
-                # Errors occur because there are some missing camera images,
-                # but the stage position still registers.
                 delays.pop(-1)
         if calib:
             return np.array(delays), np.array(edges), np.array(ampls)
@@ -264,16 +212,12 @@ class RawImageTimeTool:
         @return ampl (float) Convolution amplitude. Can be used for filtering.
         @return fwhm (float) Full-width half-max of convolution. Can be used for filtering.
         """
-        # Crop the image
         cropped = self.crop_image(img)
 
-        # Produce a normalize projection of the cropped data
         proj = np.sum(cropped, axis=0)
         proj -= np.min(proj)
         proj /= np.max(proj)
-        
-        # Convolve the 1D projection with the kernel. Maximum appears
-        # at the detected edge.
+
         trace = fftconvolve(proj, kernel, mode='same')
         edge = trace.argmax()
         ampl = trace[edge]
@@ -289,32 +233,26 @@ class RawImageTimeTool:
 
         @return fwhm (float) Full-width half-max of signal in pixel space.
         """
-        ## @todo Implement this function
         return 10
 
-    def crop_image(self, img: np.array, first: int = 40, last: int = 60) -> np.array:
+    def crop_image(self, img: np.array) -> np.array:
         """! Crop image. Currently done by inspection by specifying a range of
         rows containing the signal of interest.
 
         @param img (np.array) 2D time tool camera image.
-        @param first (int) First row containing signal of interest.
-        @param last (int) Last row containing signal of interest.
 
         @return cropped (np.array) Cropped image.
         """
-        # Cropping can be done by selecting argmax (ie row) of sum along axis=1
-        # and taking +/- 15 pixels. E.g. argmax == row 55, ROI == [40, 70]
         colsum = np.sum(img, axis=1)
         argmaxi = colsum.argmax()
 
         s = np.max(((argmaxi - 15), 0))
         e = np.min(((argmaxi + 15), len(colsum) - 1))
         return img[s:e]
-        #return img[first:last]
-
 
     def fit_calib(self, delays: np.array, edges: np.array, ampls: np.array,
-                                        fwhm: np.array = None, order: int = 2):
+                                          fwhm: np.array = None, order: int = 2,
+                                                       xroi: list = [250, 870]):
         """! Fit a polynomial calibration curve to a list of edge pixel positions
             vs delay. In the future this will implement edge acceptance/rejection to
             improve the calibration. Currently only fits within a certain x pixel
@@ -325,29 +263,20 @@ class RawImageTimeTool:
         @param ampls (list) Convolution amplitudes used for edge rejection.
         @param fwhms (list) Full-width half-max of convolution used for edge rejection.
         @param order (int) Order of polynomial to fit.
+        @param xroi (list-like) X-window to consider for fitting. [Min X pixel, Max X pixel]
         """
-        # Should only fit a certain X range of the data.
-        # Ad hoc something like 250 - 870 may be appropriate.
-        # This will almost certainly depend on experimental conditions, alignment
-        # target choice, etc.
-
-        # Restructure this gross conditional block
         inrange = False
-        # Delays and edges should be the same length if error checking in the
-        # process_calib_run function works properly
-        #@todo implement amplitude- and fwhm-based selection and compare to this
-        # simplified version
+
         self.edges = edges
         self.delays = delays
-        if (edges > 250).any():
-            delays_fit = delays[edges > 250]
-            edges_fit = edges[edges > 250]
-            if (edges_fit < 870).any():
-                delays_fit = delays_fit[edges_fit < 870]
-                edges_fit = edges_fit[edges_fit < 870]
+        if (edges > xroi[0]).any():
+            delays_fit = delays[edges > xroi[0]]
+            edges_fit = edges[edges > xroi[0]]
+            if (edges_fit < xroi[1]).any():
+                delays_fit = delays_fit[edges_fit < xroi[1]]
+                edges_fit = edges_fit[edges_fit < xroi[1]]
                 inrange = True
 
-                # For testing
                 self.edges_fit = edges_fit
                 self.delays_fit = delays_fit
         if inrange:
@@ -384,16 +313,17 @@ class RawImageTimeTool:
         else:
             raise InvalidHutchError(hutch)
 
-    def edge_to_time(self, edge_pos: int) -> float:
+    def edge_to_time(self, edge_pos: int, dirtime: int = 1) -> float:
         """! Given an internal model and an edge position, return the time tool
         jitter correction.
 
-        This method is called by the partner method actual_time; however, it is
+        This method is called by the partner method actual_time_ps; however, it is
         provided directly so that users who have a different time convention
         (i.e. negative times when pump arrives before xray) can more easily
         correct their data.
 
         @param edge_pos (int | array-like) Position (pixel) of detected edge on camera.
+        @param dirtime (int) Takes the value of 1 or -1. Use -1 to reverse the direction of time.
 
         @return correction (float) Jitter correction in picoseconds.
         """
@@ -406,14 +336,12 @@ class RawImageTimeTool:
         else:
             print('No calibration model. Jitter correction not possible.')
 
-        ## LAS:FS:VIT:FS... is in NANOSECONDS. Multiply model fit by 1000 to get
-        # the correction in ps. MAKE SURE YOUR DIRECTION OF TIME IS CORRECT. YOU
-        # MAY NEED A FACTOR OF -1!
-        correction *= 1000
+        correction *= 1000*dirtime
         return correction
 
-    def actual_time(self, edge_pos: int, nominal_delay: float) -> float:
-        """! Return the actual time given a nominal delay and time tool data.
+    def actual_time_ps(self, edge_pos: int, nominal_delay: float) -> float:
+        """! Return the actual time in picoseconds given a nominal delay and
+        time tool data.
 
         @param edge_pos (int) Position (pixel) of detected edge on camera.
         @param nominal_delay (float) Nominal delay in picoseconds.
@@ -436,15 +364,11 @@ class RawImageTimeTool:
         @param model (None | str | array-like) Polynomial coefficients of the timetool calibration model. Searches for the latest model if none is provided.
         @param figs (bool) Whether or not to produce diagnostic figures.
         """
-        # Open necessary runs
         self.open_run(run)
 
-        # Check for model
         if model:
-            # Model provided
-            self.model = model # See property setter for assignment handling
+            self.model = model
         else:
-            # No model provided - try to retrieve latest
             latest = fetch_latest(f'{self.savedir}/calib/r*.out', int(run.split('-')[0]))
             if latest:
                 self.model = latest
@@ -452,15 +376,10 @@ class RawImageTimeTool:
             else:
                 print('No model found!')
 
-        # Detect the edges, not a calibration run!
         delays, edges, ampls, stamps = self.process_run(calib=False)
-
-        # Convert the edges and nominal delay into an actual delay
-        times = self.actual_time(edges, nominal)
-
+        times = self.actual_time_ps(edges, nominal)
         timed_stamps = np.array((stamps, times)).T
 
-        # Write necessary files
         run = self.format_run()
         fname = f'{run}.out'
         outdir = f'{self.savedir}/corrections'
@@ -482,7 +401,7 @@ class RawImageTimeTool:
             poly += coeff*edges**(n-i-1)
 
         fig, ax = plt.subplots(1, 1)
-        ax.hexbin(edges, delays, gridsize=50, vmax=500)
+        ax.hexbin(edges, delays, gridsize=50, vmax=500, mincnt=1)
         ax.plot(edges, poly, 'ko', markersize=2)
         ax.set_xlabel('Edge Pixel')
         ax.set_ylabel('Delay')
@@ -525,21 +444,6 @@ class RawImageTimeTool:
                     np.savetxt(f'{savedir}/{fname}', fobj, fmt)
                 else:
                     np.savetxt(f'{savedir}/{fname}', fobj)
-
-    #@todo Implement to select individual images
-    def get_images(ds: psana.DataSource, det: psana.Detector) -> (list):
-        pass
-
-   # if direct:
-   #     for idx,evt in enumerate(ds.events()):
-   #         ec = evr_det.eventCodes(evt)
-   #         if ec is None: continue
-   #         edge_pos = np.append(edge_pos,ds.env().epicsStore().value(f'{beamline}:TIMETOOL:FLTPOS'))
-   #         edge_fwhm = np.append(edge_fwhm,ds.env().epicsStore().value(f'{beamline}:TIMETOOL:FLTPOSFWHM'))
-   #         edge_amp = np.append(edge_amp,ds.env().epicsStore().value(f'{beamline}:TIMETOOL:AMPL'))
-
-    # Properties
-    ############################################################################
 
     @property
     def model(self):
