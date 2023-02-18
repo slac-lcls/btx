@@ -677,8 +677,9 @@ class PiPCA:
         n, q, m, d = self.get_params()
 
         a, b, c = self.psi.det.shape()
-        b = int(b / self.bin_factor)
-        c = int(c / self.bin_factor)
+        if self.downsample:
+            b = int(b / self.bin_factor)
+            c = int(c / self.bin_factor)
 
         fig, ax = plt.subplots(1)
 
