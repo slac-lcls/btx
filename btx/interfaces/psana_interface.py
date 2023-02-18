@@ -453,8 +453,9 @@ def bin_pixel_index_map(arr, bin_factor):
     :return binned_arr: binned pixel_index_map of same dimensions as arr
     """
     arr = np.moveaxis(arr, -1, 0)
-    arr = np.minimum(arr[..., ::bin_factor, :], arr[..., 1::bin_factor, :])
-    arr = np.minimum(arr[..., ::bin_factor], arr[..., 1::bin_factor])
-    arr = arr // bin_factor
+    if bin_factor > 1:
+        arr = np.minimum(arr[..., ::bin_factor, :], arr[..., 1::bin_factor, :])
+        arr = np.minimum(arr[..., ::bin_factor], arr[..., 1::bin_factor])
+        arr = arr // bin_factor
 
     return np.moveaxis(arr, 0, -1)
