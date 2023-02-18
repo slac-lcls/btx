@@ -8,7 +8,7 @@ from matplotlib import colors
 
 from btx.misc.shortcuts import TaskTimer
 
-from btx.interfaces.psana_interface import (
+from btx.interfaces.ipsana import (
     PsanaInterface,
     bin_data,
     bin_pixel_index_map,

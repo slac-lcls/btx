@@ -7,7 +7,7 @@ import matplotlib.colors as colors
 from matplotlib.colors import LogNorm
 
 from psana import EventId
-from btx.interfaces.psana_interface import *
+from btx.interfaces.ipsana import *
 from mpi4py import MPI
 
 class RunDiagnostics:

@@ -16,7 +16,7 @@ def test(config):
     requests.post(update_url, json=[ { "key": "root_dir", "value": f"{config.setup.root_dir}" } ])
 
 def fetch_mask(config):
-    from btx.interfaces.mask_interface import MaskInterface
+    from btx.interfaces.imask import MaskInterface
     setup = config.setup
     task = config.fetch_mask
     """ Fetch most recent mask for this detector from mrxv. """
@@ -42,7 +42,7 @@ def fetch_geom(config):
     logger.debug('Done!')
 
 def build_mask(config):
-    from btx.interfaces.mask_interface import MaskInterface
+    from btx.interfaces.imask import MaskInterface
     from btx.misc.shortcuts import fetch_latest
     setup = config.setup
     task = config.build_mask

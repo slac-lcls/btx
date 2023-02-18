@@ -3,7 +3,7 @@ import sys
 import requests
 from mpi4py import MPI
 from btx.diagnostics.run import RunDiagnostics
-from btx.interfaces.psana_interface import assemble_image_stack_batch
+from btx.interfaces.ipsana import assemble_image_stack_batch
 from btx.misc.metrology import *
 from btx.misc.radial import pix2q
 from .ag_behenate import *

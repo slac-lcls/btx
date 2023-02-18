@@ -4,7 +4,7 @@ import h5py
 import os
 import requests
 from mpi4py import MPI
-from btx.interfaces.psana_interface import *
+from btx.interfaces.ipsana import *
 from psalgos.pypsalgos import PyAlgos
 import matplotlib.pyplot as plt
 
