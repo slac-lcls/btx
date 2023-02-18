@@ -86,11 +86,30 @@ class RunDiagnostics:
         raw_img : bool
             if True, save powder files with _raw nomenclature
         """
-        suffix=""
-        if raw_img:
-            suffix = "_raw"
-        for key in self.powders_final.keys():
-            np.save(os.path.join(outdir, f"r{self.psi.run:04}_{key}{suffix}.npy"), self.powders_final[key])
+        if self.rank == 0:
+            suffix=""
+            if raw_img:
+                suffix = "_raw"
+            for key in self.powders_final.keys():
+                np.save(os.path.join(outdir, f"r{self.psi.run:04}_{key}{suffix}.npy"), self.powders_final[key])
+
+    def save_traces(self, outdir, raw_img=False):
+        """
+        Save trajectories of statistics to output directory.
+        
+        Parameters
+        ----------
+        output : str
+            path to directory in which to save traces, optional
+        raw_img : bool
+            if True, save powder files with _raw nomenclature
+        """
+        if self.rank == 0:
+            suffix=""
+            if raw_img:
+                suffix = "_raw"
+            for key in self.stats_final.keys():
+                np.save(os.path.join(outdir, f"r{self.psi.run:04}_trace_{key}{suffix}.npy"), self.stats_final[key])
 
     def compute_stats(self, evt, img):
         """
@@ -356,11 +375,11 @@ class RunDiagnostics:
         if self.rank == 0:
             fig, axs = plt.subplots(nrows=1,ncols=3, figsize=(13,3.6))
 
-            valid = [self.stats['mean']>outlier_threshold][0]
+            valid = [self.stats_final['mean']>outlier_threshold][0]
 
-            n_incoming_photons = self.stats['beam_energy_eV']/self.stats['photon_energy_eV']
+            n_incoming_photons = self.stats_final['beam_energy_eV']/self.stats_final['photon_energy_eV']
             scatter = axs[0].scatter(np.arange(len(n_incoming_photons))[valid], n_incoming_photons[valid], 
-                                     s=2, c=self.stats['photon_energy_eV'][valid], cmap='magma')
+                                     s=2, c=self.stats_final['photon_energy_eV'][valid], cmap='magma')
             axs[0].scatter(np.arange(len(n_incoming_photons))[~valid], n_incoming_photons[~valid], 
                            s=2, c='grey', alpha=0.2, label='Outlier events')
             axs[0].set_xlabel('Event index', fontsize=12)
@@ -372,7 +391,7 @@ class RunDiagnostics:
             fig.colorbar(scatter, label='photon energy (eV)', 
                          cax=cax0, orientation='horizontal')
 
-            hexbin = axs[1].hexbin(self.stats['mean'][valid], 
+            hexbin = axs[1].hexbin(self.stats_final['mean'][valid], 
                                    n_incoming_photons[valid], 
                                    mincnt=1, gridsize=20, cmap='Reds')
             axs[1].set_xlabel('Mean image intensity', fontsize=12)
@@ -382,8 +401,8 @@ class RunDiagnostics:
             fig.colorbar(hexbin, label='events per bin (outliers excluded)', 
                          cax=cax1, orientation='horizontal')
 
-            hexbin = axs[2].hexbin(self.stats['photon_energy_eV'][valid],
-                                   self.stats['beam_energy_eV'][valid], 
+            hexbin = axs[2].hexbin(self.stats_final['photon_energy_eV'][valid],
+                                   self.stats_final['beam_energy_eV'][valid], 
                                    mincnt=1, gridsize=20, cmap='Reds')
             axs[2].set_xlabel('photon energy (eV)', fontsize=12)
             axs[2].set_ylabel('beam energy (eV)', fontsize=12)
@@ -394,8 +413,8 @@ class RunDiagnostics:
 
             fig.subplots_adjust(wspace=0.3)
         
-        if output is not None:
-            f.savefig(output, dpi=300, bbox_inches='tight')
+            if output is not None:
+                fig.savefig(output, dpi=300, bbox_inches='tight')
     
     def check_first_evt(self, mask=None, scale_factor=5, n_images=5):
         """
@@ -594,11 +613,14 @@ def main():
                          gain_mode=params.gain_mode,
                          raw_img=params.raw_img)
     rd.save_powders(params.outdir, raw_img=params.raw_img)
+    rd.save_traces(params.outdir, raw_img=params.raw_img)
     suffix = ""
     if params.raw_img:
         suffix = "_raw"
     rd.visualize_powder(output=os.path.join(params.outdir, f"figs/powder_r{params.run:04}{suffix}.png"))
     rd.visualize_stats(output=os.path.join(params.outdir, f"figs/stats_r{params.run:04}{suffix}.png"))
+    rd.visualize_energy_stats(output=os.path.join(params.outdir, f"figs/stats_energy_r{params.run:04}{suffix}.png"),
+                              outlier_threshold=params.outlier_threshold)
     if params.gain_mode is not None:
         rd.visualize_gain_frequency(output=os.path.join(params.outdir, f"figs/gain_freq_r{params.run:04}{suffix}.png"))
 
@@ -616,6 +638,8 @@ def parse_input():
     parser.add_argument('--mean_threshold', help='Exclude images with a mean above this threshold', required=False, type=float)
     parser.add_argument('--gain_mode', help='Gain mode to track, e.g. AML-L for epix10k2M autoranging low gain', required=False, type=str)
     parser.add_argument('--raw_img', help="Analyze raw rather than calibrated images", action='store_true')
+    parser.add_argument('--outlier_threshold', help='Consider images with a mean below this threshold outliers for energy stats plot',
+                        required=False, default=-np.inf, type=float)
 
     return parser.parse_args()
 
