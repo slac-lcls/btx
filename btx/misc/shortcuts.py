@@ -2,6 +2,7 @@ import numpy as np
 import os
 import glob
 import time
+from time import perf_counter
 
 class AttrDict(dict):
     """ Nested Attribute Dictionary
@@ -76,3 +77,49 @@ def check_file_existence(fname, timeout, frequency=15):
         if os.path.exists(fname):
             break
         time.sleep(frequency)
+
+class TaskTimer:
+    """
+    A context manager to record the duration of managed tasks.
+
+    Attributes
+    ----------
+    start_time : float
+        reference time for start time of task
+    task_durations : dict
+        Dictionary containing iinterval data and their corresponding tasks
+    task_description : str
+        description of current task
+    """
+
+    def __init__(self, task_durations, task_description):
+        """
+        Construct all necessary attributes for the TaskTimer context manager.
+
+        Parameters
+        ----------
+        task_durations : dict
+            Dictionary containing iinterval data and their corresponding tasks
+        task_description : str
+            description of current task
+        """
+        self.start_time = 0.0
+        self.task_durations = task_durations
+        self.task_description = task_description
+
+    def __enter__(self):
+        """
+        Set reference start time.
+        """
+        self.start_time = perf_counter()
+
+    def __exit__(self, *args, **kwargs):
+        """
+        Mutate duration dict with time interval of current task.
+        """
+        time_interval = perf_counter() - self.start_time
+
+        if self.task_description not in self.task_durations:
+            self.task_durations[self.task_description] = []
+
+        self.task_durations[self.task_description].append(time_interval)

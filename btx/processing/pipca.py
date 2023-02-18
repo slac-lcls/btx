@@ -3,9 +3,10 @@ import os, csv, argparse
 import numpy as np
 from mpi4py import MPI
 
-from time import perf_counter
 from matplotlib import pyplot as plt
 from matplotlib import colors
+
+from btx.misc.shortcuts import TaskTimer
 
 from btx.interfaces.psana_interface import (
     PsanaInterface,
@@ -14,62 +15,11 @@ from btx.interfaces.psana_interface import (
     retrieve_pixel_index_map,
     assemble_image_stack_batch,
 )
-from btx.misc.ipca_helpers import (
-    calculate_sample_mean_and_variance,
-    update_sample_variance,
-    update_sample_mean,
-    compression_loss,
-)
 
+class PiPCA:
 
-class TaskTimer:
-    """
-    A context manager to record the duration of managed tasks.
+    """Parallelized Incremental Principal Component Analysis."""
 
-    Attributes
-    ----------
-    start_time : float
-        reference time for start time of task
-    task_durations : dict
-        Dictionary containing iinterval data and their corresponding tasks
-    task_description : str
-        description of current task
-    """
-
-    def __init__(self, task_durations, task_description):
-        """
-        Construct all necessary attributes for the TaskTimer context manager.
-
-        Parameters
-        ----------
-        task_durations : dict
-            Dictionary containing iinterval data and their corresponding tasks
-        task_description : str
-            description of current task
-        """
-        self.start_time = 0.0
-        self.task_durations = task_durations
-        self.task_description = task_description
-
-    def __enter__(self):
-        """
-        Set reference start time.
-        """
-        self.start_time = perf_counter()
-
-    def __exit__(self, *args, **kwargs):
-        """
-        Mutate duration dict with time interval of current task.
-        """
-        time_interval = perf_counter() - self.start_time
-
-        if self.task_description not in self.task_durations:
-            self.task_durations[self.task_description] = []
-
-        self.task_durations[self.task_description].append(time_interval)
-
-
-class IPCA:
     def __init__(
         self,
         exp,
@@ -104,7 +54,7 @@ class IPCA:
             self.num_components,
             self.batch_size,
             self.num_features,
-        ) = self.set_ipca_params(num_images, num_components, batch_size, bin_factor)
+        ) = self.set_params(num_images, num_components, batch_size, bin_factor)
 
         # compute number of counts in and start indices over ranks
         self.split_indices, self.split_counts = distribute_indices(
@@ -117,7 +67,7 @@ class IPCA:
         self.num_incorporated_images = 0
         self.outliers, self.pc_data = [], []
 
-    def get_ipca_params(self):
+    def get_params(self):
         """
         Method to retrieve iPCA params.
 
@@ -139,7 +89,7 @@ class IPCA:
             self.num_features,
         )
 
-    def set_ipca_params(self, num_images, num_components, batch_size, bin_factor):
+    def set_params(self, num_images, num_components, batch_size, bin_factor):
         """
         Method to initialize iPCA parameters.
 
@@ -198,6 +148,78 @@ class IPCA:
 
         return n, q, m, d
 
+    def run(self):
+        """
+        Perform iPCA on run subject to initialization parameters.
+        """
+        m = self.batch_size
+        num_images = self.num_images
+
+        # initialize and prime model, if specified
+        if self.priming and not self.benchmarking:
+            img_batch = self.get_formatted_images(
+                self.num_components, 0, self.num_features
+            )
+            self.prime_model(img_batch)
+        else:
+            self.U = np.zeros((self.split_counts[self.rank], self.num_components))
+            self.S = np.ones(self.num_components)
+            self.mu = np.zeros((self.split_counts[self.rank], 1))
+            self.total_variance = np.zeros((self.split_counts[self.rank], 1))
+
+        # divide remaining number of images into batches
+        # will become redundant in a streaming setting, need to change
+        rem_imgs = num_images - self.num_incorporated_images
+        batch_sizes = np.array(
+            [m] * np.floor(rem_imgs / m).astype(int)
+            + ([rem_imgs % m] if rem_imgs % m else [])
+        )
+
+        # update model with remaining batches
+        for batch_size in batch_sizes:
+            self.fetch_and_update_model(batch_size)
+
+        if self.benchmarking:
+            self.save_interval_data()
+
+    def get_formatted_images(self, n, start_index, end_index):
+        """
+        Fetch n - x image segments from run, where x is the number of 'dead' images.
+
+        Parameters
+        ----------
+        n : int
+            number of images to retrieve
+        start_index : int
+            start index of subsection of data to retrieve
+        end_index : int
+            end index of subsection of data to retrieve
+
+        Returns
+        -------
+        ndarray, shape (end_index-start_index, n-x)
+            n-x retrieved image segments of dimension end_index-start_index
+        """
+
+        bin_factor = self.bin_factor
+        downsample = self.downsample
+
+        # may have to rewrite eventually when number of images becomes large,
+        # i.e. streamed setting, either that or downsample aggressively
+        imgs = self.psi.get_images(n, assemble=False)
+
+        if downsample:
+            imgs = bin_data(imgs, bin_factor)
+
+        imgs = imgs[
+            [i for i in range(imgs.shape[0]) if not np.isnan(imgs[i : i + 1]).any()]
+        ]
+
+        num_valid_imgs, p, x, y = imgs.shape
+        formatted_imgs = np.reshape(imgs, (num_valid_imgs, p * x * y)).T
+
+        return formatted_imgs[start_index:end_index, :]
+
     def prime_model(self, X):
         """
         Initialiize model on sample of data using batch PCA.
@@ -211,12 +233,125 @@ class IPCA:
         if self.rank == 0:
             print(f"Priming model with {self.num_components} samples...")
 
-        self.mu, self.total_variance = calculate_sample_mean_and_variance(X)
+        self.mu, self.total_variance = self.calculate_sample_mean_and_variance(X)
 
         centered_data = X - np.tile(self.mu, self.num_components)
         self.U, self.S, _ = np.linalg.svd(centered_data, full_matrices=False)
 
         self.num_incorporated_images += self.num_components
+
+    def fetch_and_update_model(self, n):
+        """
+        Fetch images and update model.
+
+        Parameters
+        ----------
+        n : int
+            number of images to incorporate
+        """
+
+        rank = self.rank
+        start_index, end_index = self.split_indices[rank], self.split_indices[rank + 1]
+
+        img_batch = self.get_formatted_images(n, start_index, end_index)
+
+        self.update_model(img_batch)
+
+    def update_model(self, X):
+        """
+        Update model with new batch of observations using iPCA.
+
+        Parameters
+        ----------
+        X : ndarray, shape (d x m)
+            batch of m (d x 1) observations
+
+        Notes
+        -----
+        Implementation of iPCA algorithm from [1].
+
+        References
+        ----------
+        [1] Ross DA, Lim J, Lin RS, Yang MH. Incremental learning for robust visual tracking.
+        International journal of computer vision. 2008 May;77(1):125-41.
+        """
+        _, m = X.shape
+        n = self.num_incorporated_images
+        q = self.num_components
+
+        with TaskTimer(self.task_durations, "total update"):
+
+            if self.rank == 0:
+                print(
+                    "Factoring {m} sample{s} into {n} sample, {q} component model...".format(
+                        m=m, s="s" if m > 1 else "", n=n, q=q
+                    )
+                )
+
+            with TaskTimer(self.task_durations, "record pc data"):
+                if n > 0:
+                    self.record_loadings(X)
+
+            with TaskTimer(self.task_durations, "update mean and variance"):
+                mu_n = self.mu
+                mu_m, s_m = self.calculate_sample_mean_and_variance(X)
+
+                self.total_variance = self.update_sample_variance(
+                    self.total_variance, s_m, mu_n, mu_m, n, m
+                )
+                self.mu = self.update_sample_mean(mu_n, mu_m, n, m)
+
+            with TaskTimer(
+                self.task_durations, "center data and compute augment vector"
+            ):
+                X_centered = X - np.tile(mu_m, m)
+                mean_augment_vector = np.sqrt(n * m / (n + m)) * (mu_m - mu_n)
+
+                X_augmented = np.hstack((X_centered, mean_augment_vector))
+
+            with TaskTimer(self.task_durations, "first matrix product U@S"):
+                US = self.U @ np.diag(self.S)
+
+            with TaskTimer(self.task_durations, "QR concatenate"):
+                A = np.hstack((US, X_augmented))
+
+            with TaskTimer(self.task_durations, "parallel QR"):
+                Q_r, U_tilde, S_tilde = self.parallel_qr(A)
+
+            # concatenating first preserves the memory contiguity
+            # of U_prime and thus self.U
+            with TaskTimer(self.task_durations, "compute local U_prime"):
+                self.U = Q_r @ U_tilde[:, :q]
+                self.S = S_tilde[:q]
+
+            self.num_incorporated_images += m
+
+
+    def calculate_sample_mean_and_variance(self, imgs):
+        """
+        Compute the sample mean and variance of a flattened stack of n images.
+
+        Parameters
+        ----------
+        imgs : ndarray, shape (d x n)
+            horizonally stacked batch of flattened images
+
+        Returns
+        -------
+        mu_m : ndarray, shape (d x 1)
+            mean of imgs
+        su_m : ndarray, shape (d x 1)
+            sample variance of imgs (1 dof)
+        """
+        d, m = imgs.shape
+
+        mu_m = np.reshape(np.mean(imgs, axis=1), (d, 1))
+        s_m = np.zeros((d, 1))
+
+        if m > 1:
+            s_m = np.reshape(np.var(imgs, axis=1, ddof=1), (d, 1))
+
+        return mu_m, s_m
 
     def parallel_qr(self, A):
         """
@@ -304,74 +439,66 @@ class IPCA:
 
         return Q_r, U_tilde, S_tilde
 
-    def update_model(self, X):
+    def update_sample_mean(self, mu_n, mu_m, n, m):
         """
-        Update model with new batch of observations using iPCA.
+        Compute combined mean of two blocks of data.
 
         Parameters
         ----------
-        X : ndarray, shape (d x m)
-            batch of m (d x 1) observations
+        mu_n : ndarray, shape (d x 1)
+            mean of first block of data
+        mu_m : ndarray, shape (d x 1)
+            mean of second block of data
+        n : int
+            number of observations in first block of data
+        m : int
+            number of observations in second block of data
 
-        Notes
-        -----
-        Implementation of iPCA algorithm from [1].
-
-        References
-        ----------
-        [1] Ross DA, Lim J, Lin RS, Yang MH. Incremental learning for robust visual tracking.
-        International journal of computer vision. 2008 May;77(1):125-41.
+        Returns
+        -------
+        mu_nm : ndarray, shape (d x 1)
+            combined mean of both blocks of input data
         """
-        _, m = X.shape
-        n = self.num_incorporated_images
-        q = self.num_components
+        mu_nm = mu_m
 
-        with TaskTimer(self.task_durations, "total update"):
+        if n != 0:
+            mu_nm = (1 / (n + m)) * (n * mu_n + m * mu_m)
 
-            if self.rank == 0:
-                print(
-                    "Factoring {m} sample{s} into {n} sample, {q} component model...".format(
-                        m=m, s="s" if m > 1 else "", n=n, q=q
-                    )
-                )
+        return mu_nm
 
-            with TaskTimer(self.task_durations, "record pc data"):
-                if n > 0:
-                    self.record_loadings(X)
+    def update_sample_variance(self, s_n, s_m, mu_n, mu_m, n, m):
+        """
+        Compute combined sample variance of two blocks
+        of data described by input parameters.
 
-            with TaskTimer(self.task_durations, "update mean and variance"):
-                mu_n = self.mu
-                mu_m, s_m = calculate_sample_mean_and_variance(X)
+        Parameters
+        ----------
+        s_n : ndarray, shape (d x 1)
+            sample variance of first block of data
+        s_m : ndarray, shape (d x 1)
+            sample variance of second block of data
+        mu_n : ndarray, shape (d x 1)
+            mean of first block of data
+        mu_m : ndarray, shape (d x 1)
+            mean of second block of data
+        n : int
+            number of observations in first block of data
+        m : int
+            number of observations in second block of data
 
-                self.total_variance = update_sample_variance(
-                    self.total_variance, s_m, mu_n, mu_m, n, m
-                )
-                self.mu = update_sample_mean(mu_n, mu_m, n, m)
+        Returns
+        -------
+        s_nm : ndarray, shape (d x 1)
+            combined sample variance of both blocks of data described by input parameters
+        """
+        s_nm = s_m
 
-            with TaskTimer(
-                self.task_durations, "center data and compute augment vector"
-            ):
-                X_centered = X - np.tile(mu_m, m)
-                mean_augment_vector = np.sqrt(n * m / (n + m)) * (mu_m - mu_n)
+        if n != 0:
+            s_nm = (
+                           ((n - 1) * s_n + (m - 1) * s_m) + (n * m * (mu_n - mu_m) ** 2) / (n + m)
+                   ) / (n + m - 1)
 
-                X_augmented = np.hstack((X_centered, mean_augment_vector))
-
-            with TaskTimer(self.task_durations, "first matrix product U@S"):
-                US = self.U @ np.diag(self.S)
-
-            with TaskTimer(self.task_durations, "QR concatenate"):
-                A = np.hstack((US, X_augmented))
-
-            with TaskTimer(self.task_durations, "parallel QR"):
-                Q_r, U_tilde, S_tilde = self.parallel_qr(A)
-
-            # concatenating first preserves the memory contiguity
-            # of U_prime and thus self.U
-            with TaskTimer(self.task_durations, "compute local U_prime"):
-                self.U = Q_r @ U_tilde[:, :q]
-                self.S = S_tilde[:q]
-
-            self.num_incorporated_images += m
+        return s_nm
 
     def get_model(self):
         """
@@ -498,6 +625,87 @@ class IPCA:
                 else batch_outliers
             )
 
+    def compression_loss(self, X, U, normalized=False):
+        """
+        Calculate the compression loss between centered observation matrix X
+        and its rank-q reconstruction.
+
+        Parameters
+        ----------
+        X : ndarray, shape (d x n)
+            flattened, centered image data from n run events
+        U : ndarray, shape (d x q)
+            first q singular vectors of X, forming orthonormal basis
+            of q-dimensional subspace of R^d
+
+        Returns
+        -------
+        Ln : float
+            compression loss of X
+        """
+        _, n = X.shape
+
+        UX = U.T @ X
+        UUX = U @ UX
+
+        Ln = ((np.linalg.norm(X - UUX, "fro")) ** 2) / n
+
+        if normalized:
+            Ln /= np.linalg.norm(X, "fro") ** 2
+
+        return L
+
+    def display_image(self, idx, output_dir="", save_image=False):
+        """
+        Method to retrieve single image from run subject to model binning constraints.
+
+        Parameters
+        ----------
+        idx : int
+            Run index of image to be retrieved.
+        output_dir : str, optional
+            File path to output directory, by default ""
+        save_image : bool, optional
+            Whether to save image to file, by default False
+        """
+
+        U, S, mu, var = self.get_model()
+
+        if self.rank != 0:
+            return
+
+        n, q, m, d = self.get_params()
+
+        a, b, c = self.psi.det.shape()
+        b = int(b / self.bin_factor)
+        c = int(c / self.bin_factor)
+
+        fig, ax = plt.subplots(1)
+
+        counter = self.psi.counter
+        self.psi.counter = idx
+        img = self.get_formatted_images(1, 0, d)
+        self.psi.counter = counter
+
+        img = img - mu
+        img = np.reshape(img, (a, b, c))
+
+        pixel_index_map = retrieve_pixel_index_map(self.psi.det.geometry(self.psi.run))
+        binned_pim = bin_pixel_index_map(pixel_index_map, self.bin_factor)
+
+        img = assemble_image_stack_batch(img, binned_pim)
+
+        vmin = np.min(img.flatten())
+        vmax = np.max(img.flatten())
+        ax.imshow(
+            img, norm=colors.SymLogNorm(linthresh=1.0, linscale=1.0, vmin=0, vmax=vmax)
+        )
+
+        if save_image:
+            plt.savefig(output_dir)
+
+        plt.show()
+
     def verify_model_accuracy(self):
         """
         Run benchmarking to verify model accuracy.
@@ -542,14 +750,15 @@ class IPCA:
 
             q_pca = min(q, x)
 
+
             # calculate compression loss, normalized if given flag
             norm = True
             norm_str = "Normalized " if norm else ""
 
-            ipca_loss = compression_loss(X, U[:, :q_pca], normalized=norm)
+            ipca_loss = self.compression_loss(X, U[:, :q_pca], normalized=norm)
             print(f"iPCA {norm_str}Compression Loss: {ipca_loss}")
 
-            pca_loss = compression_loss(X, U_pca[:, :q_pca], normalized=norm)
+            pca_loss = self.compression_loss(X, U_pca[:, :q_pca], normalized=norm)
             print(f"PCA {norm_str}Compression Loss: {pca_loss}")
 
             print("\n")
@@ -600,145 +809,6 @@ class IPCA:
             # reset counter
             self.psi.counter = event_index
 
-    def run_ipca(self):
-        """
-        Perform iPCA on run subject to initialization parameters.
-        """
-        m = self.batch_size
-        num_images = self.num_images
-
-        # initialize and prime model, if specified
-        if self.priming and not self.benchmarking:
-            img_batch = self.get_formatted_images(
-                self.num_components, 0, self.num_features
-            )
-            self.prime_model(img_batch)
-        else:
-            self.U = np.zeros((self.split_counts[self.rank], self.num_components))
-            self.S = np.ones(self.num_components)
-            self.mu = np.zeros((self.split_counts[self.rank], 1))
-            self.total_variance = np.zeros((self.split_counts[self.rank], 1))
-
-        # divide remaning number of images into batches
-        # will become redundant in a streaming setting, need to change
-        rem_imgs = num_images - self.num_incorporated_images
-        batch_sizes = np.array(
-            [m] * np.floor(rem_imgs / m).astype(int)
-            + ([rem_imgs % m] if rem_imgs % m else [])
-        )
-
-        # update model with remaining batches
-        for batch_size in batch_sizes:
-            self.fetch_and_update(batch_size)
-
-        if self.benchmarking:
-            self.save_interval_data()
-
-    def get_formatted_images(self, n, start_index, end_index):
-        """
-        Fetch n - x image segments from run, where x is the number of 'dead' images.
-
-        Parameters
-        ----------
-        n : int
-            number of images to retrieve
-        start_index : int
-            start index of subsection of data to retrieve
-        end_index : int
-            end index of subsection of data to retrieve
-
-        Returns
-        -------
-        ndarray, shape (end_index-start_index, n-x)
-            n-x retrieved image segments of dimension end_index-start_index
-        """
-
-        bin_factor = self.bin_factor
-        downsample = self.downsample
-
-        # may have to rewrite eventually when number of images becomes large,
-        # i.e. streamed setting, either that or downsample aggressively
-        imgs = self.psi.get_images(n, assemble=False)
-
-        if downsample:
-            imgs = bin_data(imgs, bin_factor)
-
-        imgs = imgs[
-            [i for i in range(imgs.shape[0]) if not np.isnan(imgs[i : i + 1]).any()]
-        ]
-
-        num_valid_imgs, p, x, y = imgs.shape
-        formatted_imgs = np.reshape(imgs, (num_valid_imgs, p * x * y)).T
-
-        return formatted_imgs[start_index:end_index, :]
-
-    def fetch_and_update(self, n):
-        """
-        Fetch images and update model.
-
-        Parameters
-        ----------
-        n : int
-            number of images to incorporate
-        """
-
-        rank = self.rank
-        start_index, end_index = self.split_indices[rank], self.split_indices[rank + 1]
-
-        img_batch = self.get_formatted_images(n, start_index, end_index)
-
-        self.update_model(img_batch)
-
-    def display_image(self, idx, output_dir="", save_image=False):
-        """
-        Method to retrieve single image from run subject to model binning constraints.
-
-        Parameters
-        ----------
-        idx : int
-            Run index of image to be retrieved.
-        output_dir : str, optional
-            File path to output directory, by default ""
-        save_image : bool, optional
-            Whether to save image to file, by default False
-        """
-
-        U, S, mu, var = self.get_model()
-
-        if self.rank != 0:
-            return
-
-        n, q, m, d = self.get_ipca_params()
-
-        a, b, c = self.psi.det.shape()
-        b = int(b / self.bin_factor)
-        c = int(c / self.bin_factor)
-
-        fig, ax = plt.subplots(1)
-
-        counter = self.psi.counter
-        self.psi.counter = idx
-        img = self.get_formatted_images(1, 0, d)
-        self.psi.counter = counter
-
-        img = img - mu
-        img = np.reshape(img, (a, b, c))
-
-        pixel_index_map = retrieve_pixel_index_map(self.psi.det.geometry(self.psi.run))
-        binned_pim = bin_pixel_index_map(pixel_index_map, self.bin_factor)
-
-        img = assemble_image_stack_batch(img, binned_pim)
-
-        vmin = np.min(img.flatten())
-        vmax = np.max(img.flatten())
-        ax.imshow(
-            img, norm=colors.SymLogNorm(linthresh=1.0, linscale=1.0, vmin=0, vmax=vmax)
-        )
-
-        if save_image:
-            plt.savefig(output_dir)
-
-        plt.show()
 
     def report_interval_data(self):
         """
@@ -929,7 +999,7 @@ if __name__ == "__main__":
     params = parse_input()
     kwargs = {k: v for k, v in vars(params).items() if v is not None}
 
-    ipca = IPCA(**kwargs)
-    ipca.run_ipca()
+    pipca = PiPCA(**kwargs)
+    pipca.run()
     # fe.verify_model_accuracy()
-    ipca.get_loss_stats()
+    pipca.get_loss_stats()
