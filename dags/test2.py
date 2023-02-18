@@ -4,7 +4,7 @@ from airflow import DAG
 from plugins.jid import JIDSlurmOperator
 
 # DAG SETUP
-description='BTX update mask DAG'
+description='BTX test DAG'
 dag_name = os.path.splitext(os.path.basename(__file__))[0]
 
 dag = DAG(
@@ -16,9 +16,12 @@ dag = DAG(
 
 
 # Tasks SETUP
+task_id='visualize_sample'
+visualize_sample = JIDSlurmOperator( task_id=task_id, dag=dag)
 
-task_id='build_mask'
-build_mask = JIDSlurmOperator( task_id=task_id, dag=dag)
+task_id='determine_cell'
+determine_cell = JIDSlurmOperator( task_id=task_id, dag=dag)
 
 # Draw the DAG
-build_mask
+visualize_sample
+determine_cell

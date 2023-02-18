@@ -28,12 +28,13 @@ class AgBehenate:
             beam wavelength in Angstrom
         """
         self.q0 = 0.1076 # |q| of first peak in Angstrom
-        self.delta_qs = np.arange(0.015,0.05,0.00005) # q-spacings to scan over
+        self.delta_qs = np.arange(0.01,0.03,0.00005) # q-spacings to scan over
         self.powder = powder
         self.mask = mask
         self.pixel_size = pixel_size
         self.wavelength = wavelength
-        self.centers, self.distances = [], []
+        self.centers, self.distances, self.npeaks = [], [], []
+        self.scores_min, self.scores_mean, self.scores_std = [], [], []
         
     def ideal_rings(self, qPeaks):
         """
@@ -62,6 +63,9 @@ class AgBehenate:
             scores.append(score)
         deltaq_current = self.delta_qs[np.argmin(scores)] 
         rings = np.arange(deltaq_current, deltaq_current*(order_max+1), deltaq_current)
+        self.scores_min.append(np.min(scores))
+        self.scores_mean.append(np.mean(scores))
+        self.scores_std.append(np.std(scores))
         return rings, np.array(scores)
 
     def detector_distance(self, est_q0):
@@ -83,12 +87,14 @@ class AgBehenate:
         print("Detector distance inferred from powder rings: %s mm" % (np.round(distance,2)))
         return distance
     
-    def opt_distance(self, plot=None, vmax=None):
+    def opt_distance(self, distance_i=None, plot=None, vmax=None):
         """
         Optimize the sample-detector distance based on the powder image.
         
         Parameters
         ----------
+        distance_i : float 
+            initial estimated distance in mm
         plot : str or None
             output path for figure; if '', plot but don't save; if None, don't plot
         vmax : float 
@@ -102,15 +108,18 @@ class AgBehenate:
             intensities associated with peaks_observed
         """
         from scipy.signal import find_peaks
+
+        if distance_i is None:
+            distance_i = self.distances[-1]
         
         # determine peaks in radial intensity profile and associated positions in q
         iprofile = radial_profile(self.powder, center=self.centers[-1], mask=self.mask)
         peaks_observed, properties = find_peaks(iprofile, prominence=1, distance=10)
-        qprofile = pix2q(np.arange(iprofile.shape[0]), self.wavelength, self.distances[-1], self.pixel_size)
+        qprofile = pix2q(np.arange(iprofile.shape[0]), self.wavelength, distance_i, self.pixel_size)
         
         # optimize the detector distance based on inter-peak distances
         rings, scores = self.ideal_rings(qprofile[peaks_observed])
-        peaks_predicted = q2pix(rings, self.wavelength, self.distances[-1], self.pixel_size)
+        peaks_predicted = q2pix(rings, self.wavelength, distance_i, self.pixel_size)
         opt_distance = self.detector_distance(peaks_predicted[0])
         
         if plot is not None:
@@ -178,8 +187,7 @@ class AgBehenate:
         vmax : float
             vmax value for powder plot
         """
-        # store initial distance and center
-        self.distances.append(distance_i)
+        # store initial center, setting it to center of image if not provided
         if center_i is None:
             self.centers.append((int(self.powder.shape[1]/2), int(self.powder.shape[0]/2)))
         else:
@@ -188,14 +196,16 @@ class AgBehenate:
         # optionally threshold powder values since some high intensity pixels may escape mask
         if threshold is not None:
             self.powder[self.powder>threshold] = 0
+        self.npeaks.append(n_peaks)
             
         # iterate over distance and center estimation
-        peaks_obs, peak_vals = self.opt_distance(plot=plot, vmax=vmax)
+        peaks_obs, peak_vals = self.opt_distance(distance_i=distance_i, plot=plot, vmax=vmax)
         for niter in range(n_iterations):
             peaks_obs_sel = peaks_obs[np.argsort(peak_vals[:8])[::-1][:n_peaks]] # highest intensity peaks from first 8 in q.
             self.opt_center(peaks_obs_sel)
             peaks_obs, peak_vals = self.opt_distance(plot=plot, vmax=vmax)
-    
+            self.npeaks.append(n_peaks)
+
     def visualize_results(self, image, mask=None, vmax=None,
                           center=None, peaks_predicted=None, peaks_observed=None,
                           scores=None, Dq=None,

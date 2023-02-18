@@ -18,10 +18,13 @@ dag = DAG(
 # Tasks SETUP
 
 task_id='run_analysis'
-run_analysis = JIDSlurmOperator( task_id=task_id, dag=dag, run_at='SRCF_FFB')
+run_analysis = JIDSlurmOperator( task_id=task_id, dag=dag)
 
 task_id='opt_geom'
-opt_geom = JIDSlurmOperator( task_id=task_id, dag=dag, run_at='SRCF_FFB')
+opt_geom = JIDSlurmOperator( task_id=task_id, dag=dag)
+
+task_id='elog_display'
+elog_display = JIDSlurmOperator(task_id=task_id, dag=dag)
 
 # Draw the DAG
-run_analysis >> opt_geom
+run_analysis >> opt_geom >> elog_display

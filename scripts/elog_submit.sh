@@ -94,6 +94,14 @@ esac
 
 QUEUE=${QUEUE:='ffbh3q'}
 CORES=${CORES:=1}
+# TODO: find_peaks needs to be handled from ischeduler. For now we do this...
+if [ ${TASK} != 'find_peaks' ] &&\
+   [ ${TASK} != 'stream_analysis' ] &&\
+   [ ${TASK} != 'determine_cell' ] &&\
+   [ ${TASK} != 'opt_geom' ]; then
+  CORES=1
+fi
+
 EXPERIMENT=${EXPERIMENT:='None'}
 RUN_NUM=${RUN_NUM:='None'}
 THIS_CONFIGFILE=${CONFIGFILE}
@@ -104,12 +112,19 @@ fi
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 MAIN_PY="${SCRIPT_DIR}/main.py"
 if [ ${CORES} -gt 1 ]; then
-MAIN_PY="/cds/sw/ds/ana/conda1/inst/envs/ana-4.0.38-py3/bin/mpirun ${MAIN_PY}"
+MAIN_PY="/cds/sw/ds/ana/conda1/inst/envs/ana-4.0.47-py3/bin/mpirun ${MAIN_PY}"
 else
-MAIN_PY="/cds/sw/ds/ana/conda1/inst/envs/ana-4.0.38-py3/bin/python ${MAIN_PY}"
+MAIN_PY="/cds/sw/ds/ana/conda1/inst/envs/ana-4.0.47-py3/bin/python ${MAIN_PY}"
 fi
+
 UUID=$(cat /proc/sys/kernel/random/uuid)
-TMP_EXE="${SCRIPT_DIR}/task_${UUID}.sh"
+if [ "${HOME}" == '' ]; then
+  TMP_DIR="${SCRIPT_DIR}"
+else
+  TMP_DIR="${HOME}/.btx/"
+fi
+mkdir -p $TMP_DIR
+TMP_EXE="${TMP_DIR}/task_${UUID}.sh"
 
 #Submit to SLURM
 sbatch << EOF
@@ -130,7 +145,7 @@ export PATH=/cds/sw/package/crystfel/crystfel-dev/bin:$PATH
 export PYTHONPATH="${PYTHONPATH}:$( dirname -- ${SCRIPT_DIR})"
 export NCORES=${CORES}
 export TMP_EXE=${TMP_EXE}
-export WHICHPYTHON='/cds/sw/ds/ana/conda1/inst/envs/ana-4.0.38-py3/bin/python'
+export WHICHPYTHON='/cds/sw/ds/ana/conda1/inst/envs/ana-4.0.47-py3/bin/python'
 
 if [ ${RUN_NUM} != 'None' ]; then
   echo "new config file: ${THIS_CONFIGFILE}"
@@ -142,7 +157,6 @@ $MAIN_PY -c ${THIS_CONFIGFILE} -t $TASK
 if [ ${RUN_NUM} != 'None' ]; then
   rm -f ${THIS_CONFIGFILE}
 fi
-if [ -f ${TMP_EXE} ]; then chmod +x ${TMP_EXE}; . ${TMP_EXE}; rm -f ${TMP_EXE}; fi
 EOF
 
 echo "Job sent to queue"

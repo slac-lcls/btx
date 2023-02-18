@@ -17,9 +17,9 @@ class PeakFinder:
     """
     
     def __init__(self, exp, run, det_type, outdir, event_receiver=None, event_code=None, event_logic=True,
-                 tag='', mask=None, psana_mask=True, camera_length=None,
+                 tag='', mask=None, psana_mask=True, pv_camera_length=None,
                  min_peaks=2, max_peaks=2048, npix_min=2, npix_max=30, amax_thr=80., atot_thr=120., 
-                 son_min=7.0, peak_rank=3, r0=3.0, dr=2.0, nsigm=7.0):
+                 son_min=7.0, peak_rank=3, r0=3.0, dr=2.0, nsigm=7.0, calibdir=None):
         
         self.comm = MPI.COMM_WORLD
         self.rank = self.comm.Get_rank()
@@ -39,17 +39,17 @@ class PeakFinder:
         self.nsigm = nsigm # intensity threshold to include pixel in connected group, float
         self.min_peaks = min_peaks # int, min number of peaks per image
         self.max_peaks = max_peaks # int, max number of peaks per image
-        self.clen = camera_length # float, clen distance in mm, or str for a pv code
+        self.clen = pv_camera_length # float, clen distance in mm, or str for a pv code
         self.outdir = outdir # str, path for saving cxi files
 
         # set up class
         self.set_up_psana_interface(exp, run, det_type,
-                                    event_receiver, event_code, event_logic)
+                                    event_receiver, event_code, event_logic, calibdir=calibdir)
         self.set_up_cxi(tag)
         self.set_up_algorithm(mask_file=mask, psana_mask=psana_mask)
         
     def set_up_psana_interface(self, exp, run, det_type,
-                               event_receiver=None, event_code=None, event_logic=True):
+                               event_receiver=None, event_code=None, event_logic=True, calibdir=None):
         """
         Set up PsanaInterface object and distribute events between ranks.
         
@@ -61,16 +61,19 @@ class PeakFinder:
             run number
         det_type : str
             detector name, e.g. jungfrau4M or epix10k2M
+        calibdir : str
+            directory to alternative calibration files
         """
         self.psi = PsanaInterface(exp=exp, run=run, det_type=det_type,
-                                  event_receiver=event_receiver, event_code=event_code, event_logic=event_logic)
+                                  event_receiver=event_receiver, event_code=event_code, event_logic=event_logic,
+                                  calibdir=calibdir)
         self.psi.distribute_events(self.rank, self.size)
         self.n_events = self.psi.max_events
 
         # additional self variables for tracking peak stats
         self.iX = self.psi.det.indexes_x(self.psi.run).astype(np.int64)
         self.iY = self.psi.det.indexes_y(self.psi.run).astype(np.int64)
-        if det_type == 'Rayonix':
+        if det_type.lower() == 'rayonix':
             self.iX = np.expand_dims(self.iX, axis=0)
             self.iY = np.expand_dims(self.iY, axis=0)
         print(f"self.iX.shape = {self.iX.shape}")
@@ -79,7 +82,7 @@ class PeakFinder:
 
         # retrieve clen from psana if None or a PV code is supplied
         if type(self.clen) != float:
-            self.clen = self.psi.get_camera_length(pv=self.clen)
+            self.clen = self.psi.get_camera_length(pv_camera_length=self.clen)
             print(f"Value of clen parameter is: {self.clen} mm")
 
     def _generate_mask(self, mask_file=None, psana_mask=True):
@@ -95,7 +98,7 @@ class PeakFinder:
             if True, retrieve mask from psana Detector object
         """
         mask = np.ones(self.psi.det.shape()).astype(np.uint16)  
-        if psana_mask and self.psi.det_type!='Rayonix':
+        if psana_mask and self.psi.det_type.lower() != 'rayonix':
             mask = self.psi.det.mask(self.psi.run, calib=False, status=True, 
                                      edges=False, centra=False, unbond=False, 
                                      unbondnbrs=False).astype(np.uint16)
@@ -118,7 +121,7 @@ class PeakFinder:
                                          atot_thr=self.atot_thr,
                                          son_min=self.son_min)
         self.n_hits = 0
-        self.powder_hits, self.powder_misses = None, None
+        self.powder_hits, self.powder_misses = np.zeros(self.psi.det.shape()), np.zeros(self.psi.det.shape())
 
     def set_up_cxi(self, tag=''):
         """
@@ -146,7 +149,7 @@ class PeakFinder:
         
         # for storing images in crystFEL format
         det_shape = self.psi.det.shape()
-        if self.psi.det_type == 'Rayonix':
+        if self.psi.det_type.lower() == 'rayonix':
             dim0, dim1 = det_shape[0], det_shape[1]
         else:
             dim0, dim1 = det_shape[0] * det_shape[1], det_shape[2]
@@ -154,7 +157,7 @@ class PeakFinder:
                                         maxshape=(None, dim0, dim1),dtype=np.float32)
         data_1.attrs["axes"] = "experiment_identifier"
         
-        for key in ['powderHits', 'powderMisses', 'mask', 'powderHitsRank', 'powderMissesRank']:
+        for key in ['powderHits', 'powderMisses', 'mask']:
             entry_1.create_dataset(f'/entry_1/data_1/{key}', (dim0, dim1), chunks=(dim0, dim1), maxshape=(dim0, dim1), dtype=float)
                 
         # peak-related keys
@@ -250,10 +253,8 @@ class PeakFinder:
             outh5[f'/LCLS/{key}'].resize((self.n_hits,))
 
         # add powders and mask, reshaping to match crystfel conventions
-        if self.powder_hits is not None:
-            outh5["/entry_1/data_1/powderHitsRank"][:] = self.powder_hits.reshape(-1, self.powder_hits.shape[-1])
-        if self.powder_misses is not None:
-            outh5["/entry_1/data_1/powderMissesRank"][:] = self.powder_misses.reshape(-1, self.powder_misses.shape[-1])
+        outh5["/entry_1/data_1/powderHits"][:] = self.powder_hits.reshape(-1, self.powder_hits.shape[-1])
+        outh5["/entry_1/data_1/powderMisses"][:] = self.powder_misses.reshape(-1, self.powder_misses.shape[-1])
         outh5["/entry_1/data_1/mask"][:] = (1-self.mask).reshape(-1, self.mask.shape[-1]) # crystfel expects inverted values
 
         outh5.close()
@@ -361,9 +362,7 @@ class PeakFinder:
         self.n_hits_per_rank = self.comm.gather(self.n_hits, root=0)
         self.n_hits_total = self.comm.reduce(self.n_hits, MPI.SUM)
         self.n_events_per_rank = self.comm.gather(self.n_events, root=0)
-        powder_hits_all = np.array(self.comm.gather(self.powder_hits, root=0))
-        powder_misses_all = np.array(self.comm.gather(self.powder_misses, root=0))
-        
+
         if self.rank == 0:
             # write summary file
             with open(os.path.join(self.outdir, f'peakfinding{self.tag}.summary'), 'w') as f:
@@ -371,12 +370,6 @@ class PeakFinder:
                 f.write(f"Number of hits found: {self.n_hits_total}\n")
                 f.write(f"Fractional hit rate: {(self.n_hits_total/self.n_events_per_rank[-1]):.2f}\n")
                 f.write(f'No. hits per rank: {self.n_hits_per_rank}')
-
-            # add final powders, only needed in first and virtual cxis
-            outh5 = h5py.File(self.fname, "r+")
-            outh5["/entry_1/data_1/powderHits"][:] = powder_hits_all.reshape(-1, powder_hits_all.shape[-1])
-            outh5["/entry_1/data_1/powderMisses"][:] = powder_misses_all.reshape(-1, powder_misses_all.shape[-1])
-            outh5.close()
 
             # generate virtual dataset and list for
             vfname = os.path.join(self.outdir, f'{self.psi.exp}_r{self.psi.run:04}{self.tag}.cxi')
@@ -398,6 +391,35 @@ class PeakFinder:
                                             { "key": "Number of hits found", "value": f"{self.n_hits_total}"},
                                             { "key": "Fractional hit rate", "value": f"{(self.n_hits_total/self.n_events_per_rank[-1]):.2f}"}, ])
 
+    def compute_powders(self, fnames):
+        """
+        Compute the powder hits and misses by iterating through valid files.
+        We use this rather than comm.gather to avoid memory errors. 
+    
+        Parameters
+        ----------
+        fnames : list of str
+            list of individual CXI file names
+        """
+        powder_hits, powder_misses = None, None
+        for fn in fnames:
+            f = h5py.File(fn, 'r')
+            if powder_hits is None:
+                powder_hits = f['entry_1/data_1/powderHits'][:].copy()
+                powder_misses = f['entry_1/data_1/powderMisses'][:].copy()
+            else:
+                powder_hits = np.maximum(powder_hits, f['entry_1/data_1/powderHits'][:].copy())
+                powder_misses = np.maximum(powder_misses, f['entry_1/data_1/powderMisses'][:].copy())
+            f.close()
+
+        for fn in fnames:
+            f = h5py.File(fn, 'r+')
+            phits = f['entry_1/data_1/powderHits']
+            phits[...] = powder_hits
+            pmisses = f['entry_1/data_1/powderMisses']
+            pmisses[...] = powder_misses
+            f.close()
+
     def add_virtual_dataset(self, vfname, fnames, dname, shape, dtype, mode='a'):
         """
         Add a virtual dataset to the hdf5 file.
@@ -417,6 +439,7 @@ class PeakFinder:
         mode : str
             'w' if first dataset, 'a' otherwise
         """
+        self.compute_powders(fnames)
         layout = h5py.VirtualLayout(shape=(self.n_hits_total,) + shape[1:], dtype=dtype)
         cursor = 0
         for i,fn in enumerate(fnames):
@@ -507,9 +530,12 @@ def visualize_hits(fname, exp, run, det_type, savepath=None, vmax_ind=3, vmax_po
     mask = 1 - f["/entry_1/data_1/mask"][:] # need to invert from CrystFEL convention
     powder_hits = f['entry_1/data_1/powderHits'][:]
     powder_misses = f['entry_1/data_1/powderMisses'][:]
-    hits = f['entry_1/data_1/data'][:]
+    shape = f['entry_1/data_1/data'].shape
+    rng = np.random.default_rng()
+    indices = np.sort(rng.choice(shape[0], 9, replace=False))
+    hits = f['entry_1/data_1/data'][indices]
     
-    if det_type is not 'Rayonix':
+    if det_type.lower() != 'rayonix':
         hits = hits.reshape(hits.shape[0], *psi.det.shape())
         hits = assemble_image_stack_batch(hits, pixel_index_map)
         mask = assemble_image_stack_batch(mask.reshape(psi.det.shape()), pixel_index_map)
@@ -518,22 +544,20 @@ def visualize_hits(fname, exp, run, det_type, savepath=None, vmax_ind=3, vmax_po
     
     # individual hits
     fig1, axs = plt.subplots(nrows=3, ncols=3, figsize=(6,6),dpi=180)
-    n_hits = hits.shape[0]
-    rand_sel = np.random.randint(0, high=n_hits, size=9)
     
     k=0
     for i in np.arange(3):
         for j in np.arange(3):
-            if k >= n_hits:
+            if k >= len(indices):
                 break
             axs[i,j].imshow(hits[k] * mask, vmin=0,vmax=vmax_ind*hits[k].mean(),cmap='Greys')
             axs[i,j].axis('off')
-            npeaks = f['entry_1/result_1/nPeaks'][rand_sel[k]]
+            npeaks = f['entry_1/result_1/nPeaks'][indices[k]]
             axs[i,j].set_title(f'# of peaks: {npeaks}')
             for ipeak in np.arange(npeaks):
-                panel_num = f['entry_1/result_1/peakYPosRaw'][rand_sel[k]] // psi.det.shape()[1]
-                panel_row = f['entry_1/result_1/peakYPosRaw'][rand_sel[k]] % psi.det.shape()[1]
-                panel_col = f['entry_1/result_1/peakXPosRaw'][rand_sel[k]]
+                panel_num = f['entry_1/result_1/peakYPosRaw'][indices[k]] // psi.det.shape()[1]
+                panel_row = f['entry_1/result_1/peakYPosRaw'][indices[k]] % psi.det.shape()[1]
+                panel_col = f['entry_1/result_1/peakXPosRaw'][indices[k]]
                 pixel = pixel_index_map[int(panel_num[ipeak]), int(panel_row[ipeak]), int(panel_col[ipeak])]
                 circle = plt.Circle((pixel[1],pixel[0]),20, color='blue', alpha=0.2)
                 axs[i,j].add_patch(circle)
@@ -545,8 +569,8 @@ def visualize_hits(fname, exp, run, det_type, savepath=None, vmax_ind=3, vmax_po
     # 'powder' hits and misses
     fig2, (ax1, ax2) = plt.subplots(1, 2, figsize=(12,6))
     
-    ax1.imshow(mask*powder_hits, vmin=0, vmax=vmax_powder)
-    ax2.imshow(mask*powder_misses, vmin=0, vmax=vmax_powder)
+    ax1.imshow(mask*powder_hits, vmin=0, vmax=vmax_powder*powder_hits.mean())
+    ax2.imshow(mask*powder_misses, vmin=0, vmax=vmax_powder*powder_hits.mean())
     ax1.set_title("Powder Hits", fontsize=18)
     ax2.set_title("Powder Misses", fontsize=18)
     
@@ -572,6 +596,7 @@ def parse_input():
     parser.add_argument('--event_code', help='Event code', required=False, type=int, default='None')
     parser.add_argument('--event_logic', help='True if only the event code is processed. False if it is ignored.', type=bool, default=True)
     parser.add_argument('--psana_mask', help='If True, apply mask from psana Detector object', required=False, type=bool, default=True)
+    parser.add_argument('--pv_camera_length', help='PV associated with camera length', required=False, type=str)
     parser.add_argument('--min_peaks', help='Minimum number of peaks per image', required=False, type=int, default=2)
     parser.add_argument('--max_peaks', help='Maximum number of peaks per image', required=False, type=int, default=2048)
     parser.add_argument('--npix_min', help='Minimum number of pixels per peak', required=False, type=int, default=2)
@@ -583,6 +608,7 @@ def parse_input():
     parser.add_argument('--r0', help='Radius of ring for background evaluation in pixels', required=False, type=float, default=3.0)
     parser.add_argument('--dr', help='Width of ring for background evaluation in pixels', required=False, type=float, default=2.0)
     parser.add_argument('--nsigm', help='Intensity threshold to include pixel in connected group', required=False, type=float, default=7.0)
+    parser.add_argument('--calibdir', help='Alternative calibration directory', required=False, type=str)
     
     return parser.parse_args()
 
@@ -590,10 +616,11 @@ if __name__ == '__main__':
     
     params = parse_input()
     pf = PeakFinder(exp=params.exp, run=params.run, det_type=params.det_type, outdir=params.outdir,
-                    event_receiver=None, event_code=None, event_logic=True, tag=params.tag,
+                    event_receiver=None, event_code=None, event_logic=True, tag=params.tag, pv_camera_length=params.pv_camera_length,
                     mask=params.mask, psana_mask=params.psana_mask, min_peaks=params.min_peaks, max_peaks=params.max_peaks,
                     npix_min=params.npix_min, npix_max=params.npix_max, amax_thr=params.amax_thr, atot_thr=params.atot_thr, 
-                    son_min=params.son_min, peak_rank=params.peak_rank, r0=params.r0, dr=params.dr, nsigm=params.nsigm)
+                    son_min=params.son_min, peak_rank=params.peak_rank, r0=params.r0, dr=params.dr, nsigm=params.nsigm,
+                    calibdir=params.calibdir)
     pf.find_peaks()
     pf.curate_cxi()
     pf.summarize()
