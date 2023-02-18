@@ -675,7 +675,7 @@ class PiPCA:
             return
 
         bin_factor = 1
-        if downsample:
+        if self.downsample:
             bin_factor = self.bin_factor
 
         n, q, m, d = self.get_params()
