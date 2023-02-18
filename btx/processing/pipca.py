@@ -702,7 +702,9 @@ class PiPCA:
         #vmin = np.min(img.flatten())
         vmax = np.max(img.flatten())
         ax.imshow(
-            img, norm=colors.SymLogNorm(linthresh=1.0, linscale=1.0, vmin=0, vmax=vmax)
+            img,
+            norm=colors.SymLogNorm(linthresh=1.0, linscale=1.0, vmin=0, vmax=vmax),
+            interpolation=None
         )
 
         if save_image:
