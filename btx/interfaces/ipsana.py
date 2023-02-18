@@ -109,7 +109,7 @@ class PsanaInterface:
             wavelength in Angstrom
         """
         photon_energy = self.get_photon_energy_eV_evt(evt)
-        if np.isinf(photon_energy):
+        if np.isinf(photon_energy) or photon_energy is None:
             return self.get_wavelength()
         else:
             lambda_m =  1.23984197386209e-06 / photon_energy # convert to meters using e=hc/lambda
@@ -128,7 +128,10 @@ class PsanaInterface:
         photon_energy : float
             photon energy in eV
         """
-        return psana.Detector('EBeam').get(evt).ebeamPhotonEnergy()
+        try:
+            return psana.Detector('EBeam').get(evt).ebeamPhotonEnergy()
+        except AttributeError as e:
+            print("Warning: event does not have an ebeamPhotonEnergy value.")
 
     def get_fee_gas_detector_energy_mJ_evt(self, evt, mode=None):
         """
