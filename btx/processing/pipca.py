@@ -674,12 +674,15 @@ class PiPCA:
         if self.rank != 0:
             return
 
+        bin_factor = 1
+        if downsample:
+            bin_factor = self.bin_factor
+
         n, q, m, d = self.get_params()
 
         a, b, c = self.psi.det.shape()
-        if self.downsample:
-            b = int(b / self.bin_factor)
-            c = int(c / self.bin_factor)
+        b = int(b / bin_factor)
+        c = int(c / bin_factor)
 
         fig, ax = plt.subplots(1)
 
@@ -692,11 +695,11 @@ class PiPCA:
         img = np.reshape(img, (a, b, c))
 
         pixel_index_map = retrieve_pixel_index_map(self.psi.det.geometry(self.psi.run))
-        binned_pim = bin_pixel_index_map(pixel_index_map, self.bin_factor)
+        binned_pim = bin_pixel_index_map(pixel_index_map, bin_factor)
 
         img = assemble_image_stack_batch(img, binned_pim)
 
-        vmin = np.min(img.flatten())
+        #vmin = np.min(img.flatten())
         vmax = np.max(img.flatten())
         ax.imshow(
             img, norm=colors.SymLogNorm(linthresh=1.0, linscale=1.0, vmin=0, vmax=vmax)
