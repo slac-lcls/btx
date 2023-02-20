@@ -1,6 +1,5 @@
 import numpy as np
 import psana
-
 from psana import setOption
 from psana import EventId
 from PSCalib.GeometryAccess import GeometryAccess
@@ -33,7 +32,6 @@ class PsanaInterface:
             detector type, e.g. epix10k2M or jungfrau4M
         ffb_mode : bool
             if True, set up in an FFB-compatible style
-
         calibdir: str
             directory to alternative calibration files
         """
@@ -48,10 +46,8 @@ class PsanaInterface:
         self.runner = next(self.ds.runs())
         self.times = self.runner.times()
         self.max_events = len(self.times)
-
         if calibdir is not None:
             setOption('psana.calib_dir', calibdir)
-
         self._calib_data_available()
 
     def _calib_data_available(self):
@@ -69,7 +65,7 @@ class PsanaInterface:
         Do not apply calibration to images.
         """
         self.calibrate = False
-    
+
     def get_pixel_size(self):
         """
         Retrieve the detector's pixel size in millimeters.
@@ -79,7 +75,6 @@ class PsanaInterface:
         pixel_size : float
             detector pixel size in mm
         """
-
         if self.det_type.lower() == 'rayonix':
             env = self.ds.env()
             cfg = env.configStore()
@@ -92,7 +87,6 @@ class PsanaInterface:
     def get_wavelength(self):
         """
         Retrieve the detector's wavelength in Angstrom.
-        
 
         Returns
         -------
@@ -105,7 +99,6 @@ class PsanaInterface:
         """
         Retrieve the detector's wavelength for a specific event.
 
-
         Parameters
         ----------
         evt : psana.Event object
@@ -116,7 +109,6 @@ class PsanaInterface:
         wavelength : float
             wavelength in Angstrom
         """
-
         photon_energy = self.get_photon_energy_eV_evt(evt)
         if np.isinf(photon_energy):
             return self.get_wavelength()
@@ -174,7 +166,6 @@ class PsanaInterface:
             else:
                 return 0.5 * (gdet_before_attenuation + gdet_after_attenuation)
 
-
     def estimate_distance(self):
         """
         Retrieve an estimate of the detector distance in mm.
@@ -195,7 +186,6 @@ class PsanaInterface:
         ----------
         pv_camera_length : str
             PV associated with camera length
-
 
         Returns
         -------
@@ -321,7 +311,6 @@ class PsanaInterface:
         Retrieve a fixed number of images from the run. If the pedestal or gain 
         information is unavailable and unassembled images are requested, return
         uncalibrated images. 
-        
 
         Parameters
         ---------
@@ -336,7 +325,6 @@ class PsanaInterface:
             images retrieved sequentially from run, optionally assembled
         """
         # set up storage array
-
         if 'opal' not in self.det_type.lower():
             if assemble:
                 images = np.zeros((num_images, 
@@ -356,8 +344,6 @@ class PsanaInterface:
                 images = images[:counter_batch]
                 print("No more events to retrieve")
                 break
-
-                
             else:
                 evt = self.runner.event(self.times[self.counter])
                 if assemble and self.det_type.lower()!='rayonix':
@@ -405,7 +391,6 @@ def retrieve_pixel_index_map(geom):
         geom = GeometryAccess(geom)
 
     temp_index = [np.asarray(t) for t in geom.get_pixel_coord_indexes()]
-
     pixel_index_map = np.zeros((np.array(temp_index).shape[2:]) + (2,))
     pixel_index_map[:,:,:,0] = temp_index[0][0]
     pixel_index_map[:,:,:,1] = temp_index[1][0]
@@ -418,11 +403,9 @@ def assemble_image_stack_batch(image_stack, pixel_index_map):
     Assemble the image stack to obtain a 2D pattern according to the index map.
     Either a batch or a single image can be provided. Modified from skopi.
 
-    
     Parameters
     ----------
-    image_stack : numpy.ndarray, 3d or 4d 
-
+    image_stack : numpy.ndarray, 3d or 4d
         stack of images, shape (n_images, n_panels, fs_panel_shape, ss_panel_shape)
         or (n_panels, fs_panel_shape, ss_panel_shape)
     pixel_index_map : numpy.ndarray, 4d
@@ -449,9 +432,7 @@ def assemble_image_stack_batch(image_stack, pixel_index_map):
 
     # loop through the panels
     for l in range(panel_num):
-
         images[:, pixel_index_map[l, :, :, 0], pixel_index_map[l, :, :, 1]] = image_stack[:, l, :, :]
-        
 
     if images.shape[0] == 1:
         images = images[0]
@@ -463,7 +444,6 @@ def disassemble_image_stack_batch(images, pixel_index_map):
     """
     Diassemble a series of 2D diffraction patterns into their consituent panels. 
     Function modified from skopi.
-        
 
     Parameters
     ----------
@@ -475,7 +455,6 @@ def disassemble_image_stack_batch(images, pixel_index_map):
 
     Returns
     -------
-
     image_stack_batch : numpy.ndarray, 3d or 4d 
 
         stack of images, shape (n_images, n_panels, fs_panel_shape, ss_panel_shape)
@@ -488,7 +467,6 @@ def disassemble_image_stack_batch(images, pixel_index_map):
     for panel in range(pixel_index_map.shape[0]):
         idx_map_1 = pixel_index_map[panel, :, :, 0]
         idx_map_2 = pixel_index_map[panel, :, :, 1]
-
         image_stack_batch[:, panel] = images[:, idx_map_1, idx_map_2]
 
     if image_stack_batch.shape[0] == 1:
@@ -496,9 +474,7 @@ def disassemble_image_stack_batch(images, pixel_index_map):
 
     return image_stack_batch
 
-
 #### binning methods ####
-
 
 def bin_data(arr, bin_factor, det_shape=None):
     """

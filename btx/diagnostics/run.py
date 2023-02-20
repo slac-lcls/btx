@@ -10,7 +10,6 @@ from btx.interfaces.ipsana import *
 from btx.interfaces.ischeduler import JobScheduler
 
 from psana import EventId
-
 from Detector.UtilsEpix10ka import find_gain_mode
 from Detector.UtilsEpix10ka import info_pixel_gain_mode_statistics_for_raw
 from Detector.UtilsEpix10ka import map_pixel_gain_mode_for_raw
