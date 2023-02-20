@@ -4,7 +4,7 @@ from airflow import DAG
 from plugins.jid import JIDSlurmOperator
 
 # DAG SETUP
-description='BTX update mask DAG'
+description='BTX process SFX DAG'
 dag_name = os.path.splitext(os.path.basename(__file__))[0]
 
 dag = DAG(
@@ -16,9 +16,14 @@ dag = DAG(
 
 
 # Tasks SETUP
+task_id='merge'
+merge = JIDSlurmOperator( task_id=task_id, dag=dag)
 
-task_id='build_mask'
-build_mask = JIDSlurmOperator( task_id=task_id, dag=dag)
+task_id='solve'
+solve = JIDSlurmOperator( task_id=task_id, dag=dag)
+
+task_id='elog_display'
+elog_display = JIDSlurmOperator(task_id=task_id, dag=dag)
 
 # Draw the DAG
-build_mask
+merge >> solve >> elog_display

@@ -9,15 +9,17 @@ import time
 import yaml
 from btx.misc.shortcuts import AttrDict
 from btx.misc.metrology import offset_geom
-from btx.interfaces.stream_interface import *
-from btx.processing.merge import wrangle_shells_dat
+from btx.interfaces.istream import *
+from btx.interfaces.ischeduler import *
+from btx.processing.indexer import Indexer
+from btx.processing.merge import *
 
 class Geoptimizer:
     """
     Class for refining the geometry. 
     """
     def __init__(self, queue, task_dir, scan_dir, runs, input_geom, dx_scan, dy_scan, dz_scan):
-        
+
         self.queue = queue # queue to submit jobs to, str
         self.task_dir = task_dir # path to indexing directory, str
         self.scan_dir = scan_dir # path to scan directory, str
@@ -25,11 +27,7 @@ class Geoptimizer:
         
         self.timeout = 64800 # number of seconds to allow sbatch'ed jobs to run before exiting, float
         self.frequency = 5 # frequency in seconds to check on job completion, float
-        self.crystfel_export="export PATH=/cds/sw/package/crystfel/crystfel-dev/bin:$PATH" 
-        
         self._write_geoms(input_geom, dx_scan, dy_scan, dz_scan)
-        self.logdir = os.path.join(self.scan_dir, "log")
-        os.makedirs(self.logdir, exist_ok=True)
         
     def _write_geoms(self, input_geom, dx_scan, dy_scan, dz_scan):
         """
@@ -53,37 +51,12 @@ class Geoptimizer:
             output_geom = os.path.join(self.scan_dir, f"geom/shift{i}.geom")
             offset_geom(input_geom, output_geom, deltas[0], deltas[1], deltas[2])
             
-        self.scan_results = np.zeros((len(shifts_list), 12))
-        self.scan_results[:,:3] = shifts_list
-        self.cols = ['dx', 'dy', 'dz']
+        self.scan_results = np.zeros((len(shifts_list), 7))
+        self.scan_results[:,0] = np.arange(len(shifts_list))
+        self.scan_results[:,1:4] = shifts_list
+        self.cols = ['num', 'dx', 'dy', 'dz']
             
-    def _submit_bash_file(self, jobfile, jobname, command):
-        """
-        Submit a job submission script to run input command.
-        
-        Parameters
-        ----------
-        jobfile : str
-            path to submission script
-        jobname : str
-            name of job to submit
-        command : str
-            bash command to run
-        """
-        with open(jobfile, "w") as fh:
-            fh.writelines("#!/bin/bash\n")
-            fh.writelines(f"#SBATCH -p {self.queue}\n")
-            fh.writelines(f"#SBATCH --job-name={jobname}\n")
-            fh.writelines(f"#SBATCH --output={self.logdir}/{jobname}.out\n")
-            fh.writelines(f"#SBATCH --output={self.logdir}/{jobname}.err\n")
-            fh.writelines("#SBATCH --time=0:30:00\n")
-            fh.writelines("#SBATCH --exclusive\n")
-            fh.writelines(f"{self.crystfel_export}\n")
-            fh.writelines(f"{command}\n")
-        
-        os.system(f"sbatch {jobfile}")
-
-    def check_status(self, statusfile, jobnames, debug=False):
+    def check_status(self, statusfile, jobnames):
         """
         Check whether all launched jobs have completed.
         
@@ -111,82 +84,91 @@ class Geoptimizer:
                         break                    
                 time.sleep(self.frequency)
 
-    def launch_indexing(self, params, ncores_per_job=4):
-        """
-        Launch indexing jobs.
-        
-        Parameters
+    def launch_indexing(self, exp, det_type, params, cell_file):
+        """                                                                                         
+        Launch indexing jobs.                                                        
+
+        Parameters                                                                       
         ----------
-        params : btx.misc.shortcuts.AttrDict
+        exp : str
+            name of experiment
+        det_type : str
+            name of detector
+        params : btx.misc.shortcuts.AttrDict 
             config.index object containing indexing parameters
-        n_cores_per_job : int
-            number of cores per indexing job
-        """      
-        jobnames = list()        
+        cell_file : str 
+            path to cell file 
+        """
+        jobnames = list()
         statusfile = os.path.join(self.scan_dir,"status.sh")
 
         for run in self.runs:
-            
+
             os.makedirs(os.path.join(self.scan_dir, f"r{run:04}"), exist_ok=True)
-            lst_file = os.path.join(self.task_dir ,f'r{run:04}/r{run:04}.lst')
-            
             for num in range(self.scan_results.shape[0]):
-                
+
                 jobname = f"r{run}_g{num}"
-                jobfile = os.path.join(self.scan_dir,"temp.sh")
+                jobfile = os.path.join(self.scan_dir, f"idx_{jobname}.sh")
                 stream = os.path.join(self.scan_dir, f'r{run:04}/r{run:04}_g{num}.stream')
                 gfile = os.path.join(self.scan_dir, f"geom/shift{num}.geom")
-                
-                command=f"indexamajig -i {lst_file} -o {stream} -j {ncores_per_job} -g {gfile} --peaks=cxi --int-rad={params.int_radius} --indexing={params.methods} --tolerance={params.tolerance}"
-                if params.cell is not None: command += f' --pdb={params.cell}'
-                if params.no_revalidate: command += ' --no-revalidate'
-                if params.multi: command += ' --multi'
-                if params.profile: command += ' --profile'
-                command += '\n'
-                
-                command += f"echo {jobname} | tee -a {statusfile}\n"
 
-                self._submit_bash_file(jobfile, jobname, command)
+                idxr = Indexer(exp=exp, run=run, det_type=det_type, tag=params.tag, tag_cxi=params.get('tag_cxi'), taskdir=self.task_dir, 
+                               geom=gfile, cell=cell_file, int_rad=params.int_radius, methods=params.methods, tolerance=params.tolerance, no_revalidate=params.no_revalidate, 
+                               multi=params.multi, profile=params.profile, queue=self.queue, ncores=params.get('ncores') if params.get('ncores') is not None else 64,
+                               time=params.get('time') if params.get('time') is not None else '1:00:00')
+                idxr.tmp_exe = jobfile
+                idxr.stream = stream
+                idxr.launch(addl_command=f"echo {jobname} | tee -a {statusfile}\n",
+                            dont_report=True)                
                 jobnames.append(jobname)
 
         self.check_status(statusfile, jobnames)
 
-    def launch_stream_analysis(self, cell_file):
+    def launch_stream_wrangling(self, params):
         """
-        Compute the number of indexed crystals and standard deviations of unit
-        cell parameters and concatenate, with one stream file per geometry file. 
+        Compute the number of indexed crystals and concatenate, 
+        with one stream file per geometry file. 
         
         Parameters
         ----------
-        cell_file : str
-            path to cell file used during indexing
+        params : btx.misc.shortcuts.AttrDict
+            config.merge dictionary containing stream_analysis parameters
         """
         celldir = os.path.join(self.scan_dir, "cell")
         os.makedirs(celldir, exist_ok=True)
+        os.makedirs(os.path.join(self.scan_dir, "figs"))
 
-        for num in range(self.scan_results.shape[0]):
-            stream_files = os.path.join(self.scan_dir, f"r*/r*_g{num}.stream")
-            st = StreamInterface(glob.glob(stream_files), cell_only=True)
-            write_cell_file(st.cell_params, os.path.join(celldir, f"g{num}.cell"), input_file=cell_file)
-            stream_cat = os.path.join(self.scan_dir, f'g{num}.stream')
-            os.system(f"cat {stream_files} >> {stream_cat}")
-            
-            self.scan_results[num,3:10] = np.append(np.array(len(st.unq_inds)), st.cell_params_std) # num indexed, cell std devs
+        jobnames = list()
+        statusfile = os.path.join(self.scan_dir,"status.sh")
         
-        self.cols.extend(['n_indexed', 'a', 'b', 'c', 'alpha', 'beta', 'gamma'])
+        for num in range(self.scan_results.shape[0]):
             
-    def launch_merging(self, params, ncores_per_job=4):
+            jobname = f"gs{num}"
+            jobfile = os.path.join(self.scan_dir, f"merge_{jobname}.sh")
+            launch_stream_analysis(os.path.join(self.scan_dir, f"r*/r*_g{num}.stream"),
+                                   os.path.join(self.scan_dir, f'g{num}.stream'),
+                                   os.path.join(self.scan_dir, "figs"),
+                                   jobfile,
+                                   self.queue,
+                                   ncores=params.get('ncores') if params.get('ncores') is not None else 16,
+                                   cell_out=os.path.join(celldir, f"g{num}.cell"),
+                                   cell_ref=params.get('ref_cell'),
+                                   addl_command=f"echo {jobname} | tee -a {statusfile}\n")
+            jobnames.append(jobname)
+            time.sleep(self.frequency)
+            
+        self.check_status(statusfile, jobnames)
+        for fname in glob.glob(os.path.join(self.scan_dir, "r*", "stream*summary")):
+            shutil.move(fname, self.scan_dir)
+            
+    def launch_merging(self, params):
         """
         Launch merging and hkl stats jobs.
         
         Parameters
         ----------
         params : btx.misc.shortcuts.AttrDict
-            config.merge dictinoary containing merging parameters
-        n_cores_per_job : int
-            number of cores per indexing job
-        queue : str
-            queue for submitting indexing jobs
+            config.merge dictionary containing merging parameters
         """
         mergedir = os.path.join(self.scan_dir, "merge")
         os.makedirs(mergedir, exist_ok=True)
@@ -202,70 +184,115 @@ class Geoptimizer:
         for num in range(self.scan_results.shape[0]):
                 
             jobname = f"g{num}"
-            jobfile = os.path.join(self.scan_dir,"temp.sh")
+            jobfile = os.path.join(self.scan_dir, f"merge_{jobname}.sh")
             instream = os.path.join(self.scan_dir, f'g{num}.stream')
-            outhkl = os.path.join(mergedir, f"g{num}.hkl")
             cellfile = os.path.join(self.scan_dir, f"cell/g{num}.cell")
             
-            command=f"partialator -j {ncores_per_job} -i {instream} -o {outhkl} --iterations={params.iterations} -y {params.symmetry} --model={params.model}"
-            if params.get('min_res') is not None:
-                command += f" --min-res={min_res}"
-                if params.get('push_res') is not None:
-                    command += f" --push-res={push_res}"
-            command += '\n'
-            
-            for fom in params.foms.split(' '):
-                shell_file = os.path.join(mergedir, f"g{num}_{fom}.dat")
-                command += f'compare_hkl -y {params.symmetry} --fom {fom} {outhkl}1 {outhkl}2 -p {cellfile} --shell-file={shell_file} --nshells=1'
-                if params.get('highres') is not None:
-                    command += f" --highres={params.highres}"
-                command += '\n'
+            stream_to_mtz = StreamtoMtz(instream, params.symmetry, mergedir, cellfile, queue=self.queue, tmp_exe=jobfile,
+                                        ncores=params.get('ncores') if params.get('ncores') is not None else 16)
+            stream_to_mtz.cmd_partialator(iterations=params.iterations, model=params.model, 
+                                          min_res=params.get('min_res'), push_res=params.get('push_res'))
+            stream_to_mtz.cmd_compare_hkl(foms=['CCstar','Rsplit'], nshells=1, highres=params.get('highres'))
+            stream_to_mtz.cmd_hkl_to_mtz(space_group=params.get('space_group') if params.get('space_group') is not None else 1,
+                                         highres=params.get('highres'), 
+                                         xds_style=False)
+            stream_to_mtz.js.write_main(f"echo {jobname} | tee -a {statusfile}\n")
+            stream_to_mtz.launch()
 
-            command += f"echo {jobname} | tee -a {statusfile}\n"
-            #command += f"echo {jobname} >> {statusfile}\n"
-
-            self._submit_bash_file(jobfile, jobname, command)
             jobnames.append(jobname)
             time.sleep(self.frequency)
             
-        self.check_status(statusfile, jobnames, debug=True)
-        self.extract_stats(mergedir, params.foms.split(' '))
+        self.check_status(statusfile, jobnames)
+        self.extract_stats(['CCstar','Rsplit'])
         
-    def extract_stats(self, mergedir, foms):
+    def extract_stats(self, foms):
         """
         Extract the overall figure of merit statistics.
         
         Parameters
         ----------
-        mergedir : str
-            directory containing results of crystfel's compare_hkl
         foms : list of str
             figures of merit that were calculated
         """
+        self.cols.append('n_indexed')
+        n_indexed = np.zeros(self.scan_results.shape[0])
+        for num in range(self.scan_results.shape[0]):
+            fname = os.path.join(self.scan_dir, f"stream_g{num}.summary")
+            with open(fname, "r") as f:
+                lines = f.readlines()
+                for line in lines:
+                    if "Number of indexed events" in line:
+                        n_indexed[num] = int(line.split(":")[1])
+        self.scan_results[:,4] = n_indexed
+        
+        statsdir = os.path.join(self.scan_dir, "merge", "hkl")
         for col,fom in enumerate(foms):
             self.cols.append(fom)
             overall_stat = np.zeros(self.scan_results.shape[0])
-            
             for num in range(self.scan_results.shape[0]):
-                shells_file = os.path.join(mergedir, f"g{num}_{fom}.dat")
+                shells_file = os.path.join(statsdir, f"g{num}_{fom}_n1.dat")
                 fom_from_shell_file, stat = wrangle_shells_dat(shells_file)
                 overall_stat[num] = stat
-            self.scan_results[:,10+col] = overall_stat
+            self.scan_results[:,5+col] = overall_stat
 
-    def save_results(self, savepath=None):
+    def _transfer(self, root_dir, tag, num):
+        """
+        Transfer the mtz and associated geom and cell to their 
+        main associated folders.
+        
+        Parameters
+        ----------
+        root_dir : str 
+             path to root directory containing geom, cell, mtz folders
+        tag : str
+            prefix to use when naming transferred files / sample name 
+        num : int 
+            index of the scan result to transfer 
+        """
+        geom_opt = os.path.join(self.scan_dir, f"geom/shift{num}.geom")
+        geom_new = os.path.join(root_dir, "geom", f"r{self.runs[0]:04}.geom")
+
+        cell_opt = os.path.join(self.scan_dir, f"cell/g{num}.cell")
+        cell_new = os.path.join(root_dir, "cell", f"{tag}.cell")
+        
+        mtz_opt = os.path.join(self.scan_dir, f"merge/g{num}.mtz")
+        mtz_new = os.path.join(root_dir, "solve", f"{tag}", f"{tag}.mtz")
+        os.makedirs(os.path.join(root_dir, "solve", f"{tag}"), exist_ok=True)
+
+        for opt,new in zip([geom_opt,cell_opt,mtz_opt],[geom_new,cell_new,mtz_new]):
+            if os.path.exists(new):
+                shutil.move(new, f"{new}.old")
+            shutil.copy2(opt, new)
+
+    def save_results(self, root_dir, tag, savepath=None, metric='Rsplit'):
         """
         Save the results of the scan to a text file.
 
         Parameters
         ----------
+        root_dir : str 
+             path to root directory containing geom, cell, mtz folders
+        tag : str
+            prefix to use when naming transferred files / sample name 
         savepath : str
             text file to save results to
+        metric : str
+            choose optimal mtz based on max CCstar or min Rsplit
         """
         if savepath is None:
             savepath = os.path.join(self.scan_dir, "results.txt")
 
-        fmt=['%.2f', '%.2f', '%.4f', '%d', '%.5f', '%.5f', '%.5f', '%.5f', '%.5f', '%.5f', '%.2f', '%.2f']
+        fmt=['%d', '%.2f', '%.2f', '%.4f', '%d', '%.2f', '%.2f']
         np.savetxt(savepath, self.scan_results, header=' '.join(self.cols), fmt=fmt)
+
+        col_index = self.cols.index(metric)
+        if metric=='Rsplit':
+            min_val = min([val for val in self.scan_results[:,col_index] if val>0])
+            row_index = np.where(self.scan_results[:,col_index] == min_val)[0][0]
+        elif metric == 'CCstar':
+            row_index = np.nanargmax(self.scan_results[:,col_index])
+        print(f"Selected g{row_index}.hkl, with {metric} of {self.scan_results[row_index,col_index]}")
+        self._transfer(root_dir, tag, row_index)
 
 def parse_input():
     """
@@ -275,7 +302,7 @@ def parse_input():
     parser.add_argument('-c', '--config', required=True, type=str, help='Config file in yaml format')
     parser.add_argument('-g', '--geom', required=True, type=str, help='CrystFEL .geom file with starting metrology')
     parser.add_argument('-q', '--queue', required=True, type=str, help='Queue to submit jobs to')
-    parser.add_argument('--runs', required=True, type=int, nargs=2, help='Runs to process: [start,end)')
+    parser.add_argument('--runs', required=True, type=int, nargs=2, help='Runs to process: [start,end]')
     parser.add_argument('--dx', required=False, type=float, nargs=3, default=[0,0,1], help='xoffset translational scan in pixels: start, stop, n_points')
     parser.add_argument('--dy', required=False, type=float, nargs=3, default=[0,0,1], help='yoffset translational scan in pixels: start, stop, n_points')
     parser.add_argument('--dz', required=False, type=float, nargs=3, default=[0,0,1], help='coffset (distance) scan in mm: start, stop, n_points')
@@ -296,13 +323,16 @@ if __name__ == '__main__':
     geopt = Geoptimizer(params.queue,
                         taskdir,
                         scandir,
-                        np.arange(params.runs[0], params.runs[1]),
+                        np.arange(params.runs[0], params.runs[1]+1),
                         params.geom,
                         np.linspace(params.dx[0], params.dx[1], int(params.dx[2])),
                         np.linspace(params.dy[0], params.dy[1], int(params.dy[2])),
                         np.linspace(params.dz[0], params.dz[1], int(params.dz[2])))
     if not params.merge_only:
-        geopt.launch_indexing(config.index)
-        geopt.launch_stream_analysis(config.index.cell)
+        cell_file = os.path.join(config.setup.root_dir, "cell", f"{config.index.tag}.cell")
+        if not os.path.isfile(cell_file):
+            cell_file = config.index.get('cell')
+        geopt.launch_indexing(config.setup.exp, config.setup.det_type, config.index, cell_file)
+        geopt.launch_stream_analysis(cell_file)
     geopt.launch_merging(config.merge)
-    geopt.save_results()
+    geopt.save_results(config.setup.root_dir, config.merge.tag)

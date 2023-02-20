@@ -4,5 +4,5 @@ adhoc/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 
-# IDE config
-.vscode
+# cli -tmp yaml
+tutorial/*-tmp.yaml
