@@ -439,7 +439,6 @@ def assemble_image_stack_batch(image_stack, pixel_index_map):
 
     return images
 
-
 def disassemble_image_stack_batch(images, pixel_index_map):
     """
     Diassemble a series of 2D diffraction patterns into their consituent panels. 
