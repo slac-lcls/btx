@@ -489,14 +489,14 @@ class PiPCA:
         Returns
         -------
         s_nm : ndarray, shape (d x 1)
-            combined sample variance of both blocks of data described by input parameters
+            combined sample variance of both blocks of data described by input
+            parameters
         """
         s_nm = s_m
 
         if n != 0:
-            s_nm = (
-                           ((n - 1) * s_n + (m - 1) * s_m) + (n * m * (mu_n - mu_m) ** 2) / (n + m)
-                   ) / (n + m - 1)
+            s_nm = (((n - 1) * s_n + (m - 1) * s_m)
+                    + (n * m * (mu_n - mu_m) ** 2) / (n + m)) / (n + m - 1)
 
         return s_nm
 
