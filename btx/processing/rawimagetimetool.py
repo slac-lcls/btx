@@ -1,36 +1,8 @@
 import numpy as np
-import matplotlib.pyplot as plt # Figure creation
-import psana # Data retrieval
-from scipy.signal import fftconvolve # Edge detection
-import subprocess # Use has been deprecated
-import os # Directory creation
-# from btx.misc.shortcuts import fetch_latest # Retrieving latest calibration
-import glob
-
-def fetch_latest(fnames, run):
-    """! Fetch the most recently created (in terms of run numbers) file.
-    Here we assume that files are named /{base_path}/r{run:04}.* .
-    
-    Parameters
-    ----------
-    @param fnames (str) glob-expandable string pointing to geom or mask files
-    @param run (int) run number
-    
-    Returns
-    -------
-    @return fname (str) filename of relevant geom or mask file
-    """
-    fnames = glob.glob(fnames)
-    avail = [os.path.basename(f)[1:].split('.')[0] for f in fnames]
-    avail = np.array([int(a) for a in avail])
-    sort_idx = np.argsort(avail)
-    idx = np.searchsorted(avail[sort_idx], run, side='right') - 1
-    return fnames[sort_idx[idx]]
-    try:
-        return fnames[sort_idx[idx]]
-    except IndexError:
-        print('File not found.')
-        return ''
+import matplotlib.pyplot as plt
+import psana
+from scipy.signal import fftconvolve
+import os
 
 class RawImageTimeTool:
     """! Class to reimplement time tool analysis at LCLS from raw images.
@@ -361,7 +333,7 @@ class RawImageTimeTool:
 
         @param run (str) Run(s) to correct with timetool. Single string, e.g. '17' or range '16-20'.
         @param nominal (float) Nominal time being corrected for in ps. E.g. .5 (500 fs)
-        @param model (None | str | array-like) Polynomial coefficients of the timetool calibration model. Searches for the latest model if none is provided.
+        @param model (None | str | array-like) Polynomial coefficients of the timetool calibration model.
         @param figs (bool) Whether or not to produce diagnostic figures.
         """
         self.open_run(run)
@@ -369,12 +341,7 @@ class RawImageTimeTool:
         if model:
             self.model = model
         else:
-            latest = fetch_latest(f'{self.savedir}/calib/r*.out', int(run.split('-')[0]))
-            if latest:
-                self.model = latest
-                print(f'Using model: {latest}')
-            else:
-                print('No model found!')
+            print('No model provided!')
 
         delays, edges, ampls, stamps = self.process_run(calib=False)
         times = self.actual_time_ps(edges, nominal)
