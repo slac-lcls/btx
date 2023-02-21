@@ -2,31 +2,6 @@ import csv, os
 import numpy as np
 from matplotlib import pyplot as plt
 
-def compare_basis_vectors(U_1, U_2, q):
-    """
-    Quantitatively compare the first q basis vectors of U and U_prime.
-
-    Parameters
-    ----------
-    U_1 : ndarray, shape (d x a), a >= q
-        first matrix of orthonormal basis vectors
-    U_2 : ndarray, shape (d x b), b >= q
-        second matrix of orthonormal basis vectors
-    q : int
-        number of vectors to compare
-
-    Returns
-    -------
-    acc : float, 0 <= acc <= 1
-        quantitative measure of distance between basis vectors
-    """
-    if q > min(U_1.shape[1], U_2.shape[1]):
-        print("Desired number of vectors is greater than matrix dimension.")
-        return 0.0
-
-    acc = np.trace(np.abs(U_1[:, :q].T @ U_2[:, :q])) / q
-    return acc
-
 def parse_single_run(data_dir, file_name):
     """
     Method to parse and retrive data from a single file in an iPCA benchmark run.
