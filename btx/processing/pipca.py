@@ -290,7 +290,7 @@ class PiPCA:
 
             with TaskTimer(self.task_durations, "record pc data"):
                 if n > 0:
-                    self.record_loadings(X)
+                    self.record_loadings(X, 5)
 
             with TaskTimer(self.task_durations, "update mean and variance"):
                 mu_n = self.mu
@@ -571,7 +571,7 @@ class PiPCA:
         if self.rank == 0:
             print(self.outliers)
 
-    def record_loadings(self, X):
+    def record_loadings(self, X, q_sig):
         """
         Method to store all loadings, ΣV^T, from present batch using past
         model iteration.
@@ -580,6 +580,9 @@ class PiPCA:
         ----------
         X : ndarray, shape (_ x m)
             Local subdivision of current image data batch.
+
+        q_sig : int
+            The q_sig components used in generating the loadings for 
         """
         _, m = X.shape
         n, d = self.num_incorporated_images, self.num_features
@@ -616,7 +619,7 @@ class PiPCA:
                 else pcs
             )
 
-            pc_dist = np.linalg.norm(pcs[:5], axis=0)
+            pc_dist = np.linalg.norm(pcs[:q_sig], axis=0)
             std = np.std(pc_dist)
             mu = np.mean(pc_dist)
 
