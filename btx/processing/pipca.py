@@ -643,6 +643,9 @@ class PiPCA:
         U : ndarray, shape (d x q)
             first q singular vectors of X, forming orthonormal basis
             of q-dimensional subspace of R^d
+        normalized : bool
+            whether to normalize compression loss of X by
+            the Frobenius norm of X
 
         Returns
         -------
