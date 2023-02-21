@@ -851,11 +851,6 @@ class PiPCA:
     def save_interval_data(self):
         """
         Save time interval data gathered during iPCA.
-
-        Parameters
-        ----------
-        save_data : bool, optional
-            if True, save interval data to file in self.output_dir, by default False
         """
 
         if self.rank != 0:
