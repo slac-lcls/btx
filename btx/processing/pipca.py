@@ -563,7 +563,10 @@ class PiPCA:
 
         return U_tot, S_tot, mu_tot, var_tot
 
-    def get_loss_stats(self):
+    def get_outliers(self):
+        """
+        Method to retrieve and print outliers on root process.
+        """
 
         if self.rank == 0:
             print(self.outliers)
@@ -653,7 +656,7 @@ class PiPCA:
         if normalized:
             Ln /= np.linalg.norm(X, "fro") ** 2
 
-        return L
+        return Ln
 
     def display_image(self, idx, output_dir="", save_image=False):
         """
@@ -1008,4 +1011,4 @@ if __name__ == "__main__":
     pipca = PiPCA(**kwargs)
     pipca.run()
     # fe.verify_model_accuracy()
-    pipca.get_loss_stats()
+    pipca.get_outliers()
