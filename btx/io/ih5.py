@@ -5,10 +5,10 @@ Functions:
 lock_file(path, timeout) : Decorator to prevent concurrent write operations.
 """
 
-import os, signal
+import os, signal, time
 import h5py
 
-def lock_file(path:str, timeout: int = 10) -> callable:
+def lock_file(path:str, timeout: int = 5, wait: float = 0.5) -> callable:
     """! Decorator mainly for write functions. Will not allow the decorated
     function to execute if an associated '.lock' file exists. If no lock file
     exists one will be created, preventing other decorated functions from
@@ -24,6 +24,7 @@ def lock_file(path:str, timeout: int = 10) -> callable:
 
     @param path (str) Path including filename of the file to be locked.
     @param timeout (int) The timeout time in seconds to abandon execution attempt.
+    @param wait (float) Time in seconds to wait between write attempts.
     """
     def decorator_lock(write_func: callable) -> callable:
         """! Inner decorator for file locking.
@@ -47,9 +48,12 @@ def lock_file(path:str, timeout: int = 10) -> callable:
                         written = True
                         sendMsg = False
                         print('Unlocking file.')
-                    if sendMsg:
-                        print(f'File {path} is locked.')
-                        sendMsg = False
+                    else:
+                        if sendMsg:
+                            print(f'File {path} is locked.')
+                            sendMsg = False
+                        print('test')
+                        time.sleep(wait)
             except TimeoutError as err:
                 print(err)
             signal.alarm(0)
