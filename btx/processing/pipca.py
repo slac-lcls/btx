@@ -106,47 +106,43 @@ class PiPCA:
 
         Returns
         -------
-        n : int
+        num_images : int
             Number of images to incorporate into model.
-        q : int
+        num_components : int
             Number of components for model to maintain.
-        m : int
+        batch_size : int
             Size of image block to be incorporated into model at each update.
-        d : int
+        num_features : int
             Number of features (dimension) in each image.
         """
         max_events = self.psi.max_events
         benchmarking = self.benchmarking
         downsample = self.downsample
 
-        # set n, q, and m
-        n = num_images
-        q = num_components
-        m = batch_size
-
         if benchmarking:
-            min_n = max(int(4 * q), 40)
-            n = min(min_n, max_events)
-            m = q
+            min_num_components = max(int(4 * num_components), 40)
+            num_images = min(min_num_components, max_events)
+            batch_size = num_components
 
-            print(f"In benchmarking mode, setting q = {q}, n = {n}, m = {m}.")
+            print(f"In benchmarking mode, setting num_components = {num_components}, \
+            num_images = {num_images}, batch_size = {batch_size}.")
         else:
-            n = min(n, max_events) if n != -1 else max_events
-            q = min(q, n)
-            m = min(m, n)
+            num_images = min(num_images, max_events) if num_images != -1 else max_events
+            num_components = min(num_components, num_images)
+            batch_size = min(batch_size, num_images)
 
         # set d
         det_shape = self.psi.det.shape()
-        d = np.prod(det_shape).astype(int)
+        num_features = np.prod(det_shape).astype(int)
 
         if downsample:
             if det_shape[-1] % bin_factor or det_shape[-2] % bin_factor:
                 print("Invalid bin factor, toggled off downsampling.")
                 self.downsample = False
             else:
-                d = int(d / bin_factor**2)
+                num_features = int(num_features / bin_factor**2)
 
-        return n, q, m, d
+        return num_images, num_components, batch_size, num_features
 
     def run(self):
         """
