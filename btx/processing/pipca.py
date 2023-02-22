@@ -202,7 +202,7 @@ class PiPCA:
 
     def prime_model(self, X):
         """
-        Initialiize model on sample of data using batch PCA.
+        Initialize model on sample of data using batch PCA.
 
         Parameters
         ----------
@@ -298,8 +298,6 @@ class PiPCA:
             with TaskTimer(self.task_durations, "parallel QR"):
                 Q_r, U_tilde, S_tilde = self.parallel_qr(A)
 
-            # concatenating first preserves the memory contiguity
-            # of U_prime and thus self.U
             with TaskTimer(self.task_durations, "compute local U_prime"):
                 self.U = Q_r @ U_tilde[:, :q]
                 self.S = S_tilde[:q]
@@ -390,7 +388,6 @@ class PiPCA:
             with TaskTimer(self.task_durations, "qr - global qr"):
                 Q_2, R_tilde = np.linalg.qr(R, mode="reduced")
 
-            # compute SVD of R_tilde, from iPCA algorithm
             with TaskTimer(self.task_durations, "qr - global svd"):
                 U_tilde, S_tilde, _ = np.linalg.svd(R_tilde)
         else:
