@@ -30,7 +30,6 @@ class PiPCA:
         num_components=10,
         batch_size=10,
         priming=False,
-        benchmarking=False,
         downsample=False,
         bin_factor=2,
         output_dir="",
@@ -44,7 +43,6 @@ class PiPCA:
         self.psi.counter = start_offset
 
         self.priming = priming
-        self.benchmarking = benchmarking
         self.downsample = downsample
         self.bin_factor = bin_factor
         self.output_dir = output_dir
@@ -56,12 +54,10 @@ class PiPCA:
             self.num_features,
         ) = self.set_params(num_images, num_components, batch_size, bin_factor)
 
-        # compute number of counts in and start indices over ranks
-        self.split_indices, self.split_counts = distribute_indices(
+        self.split_indices, self.split_counts = distribute_indices_over_ranks(
             self.num_features, self.size
         )
 
-        # attribute for storing interval data
         self.task_durations = dict({})
 
         self.num_incorporated_images = 0
@@ -116,20 +112,11 @@ class PiPCA:
             Number of features (dimension) in each image.
         """
         max_events = self.psi.max_events
-        benchmarking = self.benchmarking
         downsample = self.downsample
 
-        if benchmarking:
-            min_num_components = max(int(4 * num_components), 40)
-            num_images = min(min_num_components, max_events)
-            batch_size = num_components
-
-            print(f"In benchmarking mode, setting num_components = {num_components}, \
-            num_images = {num_images}, batch_size = {batch_size}.")
-        else:
-            num_images = min(num_images, max_events) if num_images != -1 else max_events
-            num_components = min(num_components, num_images)
-            batch_size = min(batch_size, num_images)
+        num_images = min(num_images, max_events) if num_images != -1 else max_events
+        num_components = min(num_components, num_images)
+        batch_size = min(batch_size, num_images)
 
         # set d
         det_shape = self.psi.det.shape()
@@ -152,7 +139,7 @@ class PiPCA:
         num_images = self.num_images
 
         # initialize and prime model, if specified
-        if self.priming and not self.benchmarking:
+        if self.priming:
             img_batch = self.get_formatted_images(
                 self.num_components, 0, self.num_features
             )
@@ -174,9 +161,6 @@ class PiPCA:
         # update model with remaining batches
         for batch_size in batch_sizes:
             self.fetch_and_update_model(batch_size)
-
-        if self.benchmarking:
-            self.save_interval_data()
 
     def get_formatted_images(self, n, start_index, end_index):
         """
@@ -683,9 +667,9 @@ class PiPCA:
 
         plt.show()
 
-    def save_interval_data(self):
+    def save_task_durations(self):
         """
-        Save time interval data gathered during iPCA.
+        Save task duration data gathered during iPCA.
         """
 
         if self.rank != 0:
@@ -726,8 +710,8 @@ class PiPCA:
                 writer.writerows(values_transposed)
 
 
-def distribute_indices(d, size):
-    """_summary_
+def distribute_indices_over_ranks(d, size):
+    """
 
     Parameters
     ----------
@@ -807,19 +791,13 @@ def parse_input():
     )
     parser.add_argument(
         "--output_dir",
-        help="Path to output directory for recording interval data.",
+        help="Path to output directory for recording task duration data.",
         required=False,
         type=str,
     )
     parser.add_argument(
         "--priming",
         help="Initialize model with PCA.",
-        required=False,
-        action="store_true",
-    )
-    parser.add_argument(
-        "--benchmarking",
-        help="Run algorithm in benchmarking mode.",
         required=False,
         action="store_true",
     )
