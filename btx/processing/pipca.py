@@ -631,39 +631,6 @@ class PiPCA:
                 else batch_outliers
             )
 
-    def compression_loss(self, X, U, normalized=False):
-        """
-        Calculate the compression loss between centered observation matrix X
-        and its rank-q reconstruction.
-
-        Parameters
-        ----------
-        X : ndarray, shape (d x n)
-            flattened, centered image data from n run events
-        U : ndarray, shape (d x q)
-            first q singular vectors of X, forming orthonormal basis
-            of q-dimensional subspace of R^d
-        normalized : bool
-            whether to normalize compression loss of X by
-            the Frobenius norm of X
-
-        Returns
-        -------
-        Ln : float
-            compression loss of X
-        """
-        _, n = X.shape
-
-        UX = U.T @ X
-        UUX = U @ UX
-
-        Ln = ((np.linalg.norm(X - UUX, "fro")) ** 2) / n
-
-        if normalized:
-            Ln /= np.linalg.norm(X, "fro") ** 2
-
-        return Ln
-
     def display_image(self, idx, output_dir="", save_image=False):
         """
         Method to retrieve single image from run subject to model binning constraints.
@@ -708,7 +675,6 @@ class PiPCA:
 
         img = assemble_image_stack_batch(img, binned_pim)
 
-        #vmin = np.min(img.flatten())
         vmax = np.max(img.flatten())
         ax.imshow(
             img,
@@ -720,133 +686,6 @@ class PiPCA:
             plt.savefig(output_dir)
 
         plt.show()
-
-    def verify_model_accuracy(self):
-        """
-        Run benchmarking to verify model accuracy.
-        """
-        self.comm.Barrier()
-        U, S, mu, var = self.get_model()
-
-        if self.rank != 0:
-            return
-
-        d = self.num_features
-        m = self.batch_size
-        q = self.num_components
-        num_images = self.num_images
-
-        # store current event index from self.psi and reset
-        event_index = self.psi.counter
-        self.psi.counter = event_index - num_images
-
-        try:
-            print("\nVerifying Model Accuracy\n------------------------\n")
-            print(f"q = {q}")
-            print(f"d = {d}")
-            print(f"n = {num_images}")
-            print(f"m = {m}")
-            print("\n")
-
-            # run svd on centered image batch
-            print("Gathering images for batch PCA...")
-            X = self.get_formatted_images(num_images, 0, d)
-            y, x = X.shape
-
-            print("Performing batch PCA...")
-            mu_pca = np.reshape(np.mean(X, axis=1), (y, 1))
-            var_pca = np.reshape(np.var(X, ddof=1, axis=1), (y, 1))
-
-            mu_n = np.tile(mu_pca, x)
-            X_centered = X - mu_n
-
-            U_pca, S_pca, _ = np.linalg.svd(X_centered, full_matrices=False)
-            print("\n")
-
-            q_pca = min(q, x)
-
-
-            # calculate compression loss, normalized if given flag
-            norm = True
-            norm_str = "Normalized " if norm else ""
-
-            ipca_loss = self.compression_loss(X, U[:, :q_pca], normalized=norm)
-            print(f"iPCA {norm_str}Compression Loss: {ipca_loss}")
-
-            pca_loss = self.compression_loss(X, U_pca[:, :q_pca], normalized=norm)
-            print(f"PCA {norm_str}Compression Loss: {pca_loss}")
-
-            print("\n")
-            ipca_tot_var = np.sum(var)
-            pca_tot_var = np.sum(var_pca)
-
-            print(f"iPCA Total Variance: {ipca_tot_var}")
-            print(f"PCA Total Variance: {pca_tot_var}")
-            print("\n")
-
-            ipca_exp_var = (np.sum(S[:q_pca] ** 2) / (x - 1)) / np.sum(var)
-            print(f"iPCA Explained Variance: {ipca_exp_var}")
-
-            pca_exp_var = (np.sum(S_pca[:q_pca] ** 2) / (x - 1)) / np.sum(var_pca)
-            print(f"PCA Explained Variance: {pca_exp_var}")
-            print("\n")
-
-            print("iPCA Singular Values: \n")
-            print(S)
-            print("\n")
-
-            print("PCA Singular Values: \n")
-            print(S_pca[:q_pca])
-            print("\n")
-
-            mean_inner_prod = np.inner(mu.flatten(), mu_pca.flatten()) / (
-                np.linalg.norm(mu) * np.linalg.norm(mu_pca)
-            )
-
-            print("Normalized Mean Inner Product: " + f"{mean_inner_prod}")
-            print("\n")
-
-            print("Basis Inner Product: \n")
-            print(np.diagonal(np.abs(U[:, :q_pca].T @ U_pca[:, :q_pca])))
-
-            ipca_mu_u = np.hstack((mu / np.linalg.norm(mu), U[:, :q_pca]))
-            pca_mu_u = np.hstack((mu_pca / np.linalg.norm(mu_pca), U_pca[:, :q_pca]))
-
-            b = plt.imshow(np.abs(ipca_mu_u.T @ pca_mu_u))
-            plt.colorbar(b)
-            plt.savefig(f"fig_{q}_{self.size}.png")
-            plt.show()
-
-            print("\n")
-            self.report_interval_data()
-
-        finally:
-            # reset counter
-            self.psi.counter = event_index
-
-
-    def report_interval_data(self):
-        """
-        Method to print out iPCA time interval data.
-        """
-
-        if self.rank != 0:
-            return
-
-        task_durations = self.task_durations
-
-        if not len(task_durations):
-            print("No model updates or initialization recorded.")
-            return
-
-        # log data
-        print("\n")
-        for key in list(task_durations.keys()):
-            interval_mean = np.mean(task_durations[key])
-            print(
-                "Mean per-batch compute time of step "
-                + f"'{key}': {interval_mean:.4g}s"
-            )
 
     def save_interval_data(self):
         """
@@ -1011,5 +850,4 @@ if __name__ == "__main__":
 
     pipca = PiPCA(**kwargs)
     pipca.run()
-    # fe.verify_model_accuracy()
     pipca.get_outliers()
