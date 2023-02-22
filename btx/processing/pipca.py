@@ -664,48 +664,6 @@ class PiPCA:
 
         plt.show()
 
-    def save_task_durations(self):
-        """
-        Save task duration data gathered during iPCA.
-        """
-
-        if self.rank != 0:
-            return
-
-        q = self.num_components
-        d = self.num_features
-        n = self.num_incorporated_images
-        m = self.batch_size
-
-        size = self.size
-        dir_path = self.output_dir
-        task_durations = self.task_durations
-
-        file_name = "task_" + str(q) + str(d) + str(n) + str(size) + ".csv"
-
-        with open(
-            os.path.join(dir_path, file_name),
-            "x",
-            newline="",
-            encoding="utf-8",
-        ) as f:
-
-            if len(task_durations):
-                writer = csv.writer(f)
-
-                writer.writerow(["q", q])
-                writer.writerow(["d", d])
-                writer.writerow(["n", n])
-                writer.writerow(["ranks", size])
-                writer.writerow(["m", m])
-
-                keys = list(task_durations.keys())
-                values = list(task_durations.values())
-                values_transposed = np.array(values).T
-
-                writer.writerow(keys)
-                writer.writerows(values_transposed)
-
 
 def distribute_indices_over_ranks(d, size):
     """
