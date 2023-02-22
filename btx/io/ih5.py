@@ -52,7 +52,6 @@ def lock_file(path:str, timeout: int = 5, wait: float = 0.5) -> callable:
                         if sendMsg:
                             print(f'File {path} is locked.')
                             sendMsg = False
-                        print('test')
                         time.sleep(wait)
             except TimeoutError as err:
                 print(err)
