@@ -206,19 +206,22 @@ class PiPCA:
 
         Parameters
         ----------
-        X : ndarray, shape (d x m)
-            set of m (d x 1) observations
+        X : ndarray, shape (d x n)
+            set of n (d x 1) observations
         """
 
+        d, n = X.shape
+
         if self.rank == 0:
-            print(f"Priming model with {self.num_components} samples...")
+            print(f"Priming model with {n} samples...")
 
         self.mu, self.total_variance = self.calculate_sample_mean_and_variance(X)
+        centered_data = X - np.tile(self.mu, n)
 
-        centered_data = X - np.tile(self.mu, self.num_components)
-        self.U, self.S, _ = np.linalg.svd(centered_data, full_matrices=False)
+        U, self.S, _ = np.linalg.svd(centered_data, full_matrices=False)
+        self.U = U[self.split_indices[self.rank]:self.split_indices[self.rank+1], :]
 
-        self.num_incorporated_images += self.num_components
+        self.num_incorporated_images += n
 
     def fetch_and_update_model(self, n):
         """
