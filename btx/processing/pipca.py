@@ -221,7 +221,7 @@ class PiPCA:
         self.mu = mu_full[self.split_indices[self.rank]:self.split_indices[self.rank+1]]
         self.total_variance = total_variance_full[self.split_indices[self.rank]:self.split_indices[self.rank+1]]
         
-        centered_data = X - np.tile(self.mu, n)
+        centered_data = X - np.tile(mu_full, n)
 
         U, self.S, _ = np.linalg.svd(centered_data, full_matrices=False)
         self.U = U[self.split_indices[self.rank]:self.split_indices[self.rank+1], :]
