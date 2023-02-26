@@ -215,7 +215,12 @@ class PiPCA:
         if self.rank == 0:
             print(f"Priming model with {n} samples...")
 
-        self.mu, self.total_variance = self.calculate_sample_mean_and_variance(X)
+
+        mu_full, total_variance_full = self.calculate_sample_mean_and_variance(X)
+
+        self.mu = mu_full[self.split_indices[self.rank]:self.split_indices[self.rank+1]]
+        self.total_variance = total_variance_full[self.split_indices[self.rank]:self.split_indices[self.rank+1]]
+        
         centered_data = X - np.tile(self.mu, n)
 
         U, self.S, _ = np.linalg.svd(centered_data, full_matrices=False)
