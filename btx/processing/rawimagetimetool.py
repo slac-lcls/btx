@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import psana
 from scipy.signal import fftconvolve
+from scipy.interpolate import UnivariateSpline
 import os
 
 class RawImageTimeTool:
@@ -205,7 +206,11 @@ class RawImageTimeTool:
 
         @return fwhm (float) Full-width half-max of signal in pixel space.
         """
-        return 10
+        x = np.linspace(0, len(trace) - 1, len(trace))
+        spline = UnivariateSpline(x, (trace - np.max(trace)/2), s=0)
+        lb, rb = spline.roots()
+        fwhm = rb - lb
+        return fwhm
 
     def crop_image(self, img: np.array) -> np.array:
         """! Crop image. Currently done by inspection by specifying a range of
