@@ -350,3 +350,48 @@ def clean_up(config):
     if os.path.isdir(taskdir):
         os.system(f"rm -f {taskdir}/r*/*{task.tag}.cxi")
     logger.debug('Done!')
+
+def calibrate_timetool(config):
+    from btx.processing.rawimagetimetool import RawImageTimeTool
+    setup = config.setup
+    task = config.calibrate_timetool
+    savedir = os.path.join(setup.root_dir, 'timetool')
+
+    expmt = config.exp
+    run = task.run
+    order = int(task.order)
+    figs = bool(task.figs)
+
+    tt = RawImageTimeTool(expmt, savedir)
+    logger.info(f'Calibrating timetool on run {run}')
+    tt.calibrate(run, order, figs)
+    logger.info(f'Writing calibration data to {savedir}/calib.')
+    if figs:
+        logger.info(f'Writing figures to {savedir}/figs.')
+
+def timetool_correct(config):
+    from btx.processing.rawimagetimetool import RawImageTimeTool
+    from btx.misc.shortcuts import fetch_latest
+    setup = config.setup
+    task= config.timetool_correct
+    savedir = os.path.join(setup.root_dir, 'timetool')
+
+    expmt = config.exp
+    run = task.run
+    nominal = float(task.run)
+    model = task.model
+    figs = bool(task.figs)
+    tt = RawImageTimeTool(expmt, savedir)
+
+    logger.info('Attempting to correct nominal delays using the timetool data.')
+    if model:
+        logger.info(f'Using model {model} for the correction.')
+    else:
+        latest_model = fetch_latest(f'{savedir}/calib/r*.out', int(run.split('-')[0]))
+        if latest_model:
+            model = latest_model
+            logger.info(f'Most recent calibration model, {model}, will be used for timetool correction.')
+        else:
+            logger.info('No model found! Will return the nominal delay uncorrected!')
+
+    tt.timetool_correct(run, nominal, model, figs)
