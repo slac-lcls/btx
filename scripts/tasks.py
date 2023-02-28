@@ -378,7 +378,7 @@ def timetool_correct(config):
 
     expmt = config.exp
     run = task.run
-    nominal = float(task.run)
+    nominal = float(task.nominal_ps)
     model = task.model
     figs = bool(task.figs)
     tt = RawImageTimeTool(expmt, savedir)
