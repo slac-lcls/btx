@@ -385,7 +385,7 @@ class RawImageTimeTool:
         ax.hexbin(edges, delays, gridsize=50, vmax=500, mincnt=1)
         ax.plot(edges, poly, 'ko', markersize=2)
         ax.set_xlabel('Edge Pixel')
-        ax.set_ylabel('Delay')
+        ax.set_ylabel('Delay (ns)')
         run = self.format_run()
         fname = f'TTCalib_{run}.png'
         self.write_file(fig, fname, f'{self.savedir}/figs')
