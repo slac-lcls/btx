@@ -387,7 +387,7 @@ def timetool_correct(config):
     if model:
         logger.info(f'Using model {model} for the correction.')
     else:
-        latest_model = fetch_latest(f'{savedir}/calib/r*.out', int(run.split('-')[0]))
+        latest_model = fetch_latest(f'{savedir}/calib/r*.out', int(str(run).split('-')[0]))
         if latest_model:
             model = latest_model
             logger.info(f'Most recent calibration model, {model}, will be used for timetool correction.')
