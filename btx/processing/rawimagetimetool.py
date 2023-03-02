@@ -10,6 +10,8 @@ class RawImageTimeTool:
 
     Uses psana to interface with experimental data to retrieve raw camera images.
     Edge detection is implemented in order to perform jitter correction.
+    Refer to the documentation located at https://lcls-users.readthedocs.org/during/timetool
+    for information on the theory and usage of this class.
 
     Properties:
     -----------
