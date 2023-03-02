@@ -33,7 +33,7 @@ class RawImageTimeTool:
     plot_calib
     plot_hist
     """
-    def __init__(self, expmt: str, savedir: str):
+    def __init__(self, expmt: str, savedir: str, debug: bool = False):
         """! Initializer for the time tool analysis object.
 
         @param expmt (str) Experiment accession name. E.g. cxilr1234.
@@ -54,6 +54,10 @@ class RawImageTimeTool:
         ## @var savedir
         # (str) Directory to save output files to. Figures may be placed in a subdirectory of this one.
         self.savedir = savedir
+
+        ## @var debug
+        # (bool) Whether to enable debug features e.g. early processing break.
+        self.debug = debug
 
     def open_run(self, run: str):
         """! Open the psana DataSource and time tool detector for the specified
@@ -137,8 +141,8 @@ class RawImageTimeTool:
         @return ampls (np.array) Convolution amplitudes for the detected edges.
         @return stamps (np.array) Unique event identifier stamps. NOT returned in calibration.
         """
-        kernel = np.zeros([300])
-        kernel[:150] = 1
+        kernel = np.zeros([200])
+        kernel[:100] = 1
 
         delays = []
         edges = []
@@ -151,6 +155,9 @@ class RawImageTimeTool:
         stage_code = self.ttstage_code(self.hutch)
 
         for idx, evt in enumerate(self.ds.events()):
+            if idx > 10000 and self.debug:
+                break
+            
             delays.append(self.ds.env().epicsStore().value(stage_code))
             try:
                 img = self.det.image(evt=evt)

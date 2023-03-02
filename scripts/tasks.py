@@ -357,7 +357,7 @@ def calibrate_timetool(config):
     task = config.calibrate_timetool
     savedir = os.path.join(setup.root_dir, 'timetool')
 
-    expmt = config.exp
+    expmt = setup.exp
     run = task.run
     order = int(task.order)
     figs = bool(task.figs)
@@ -373,10 +373,10 @@ def timetool_correct(config):
     from btx.processing.rawimagetimetool import RawImageTimeTool
     from btx.misc.shortcuts import fetch_latest
     setup = config.setup
-    task= config.timetool_correct
+    task = config.timetool_correct
     savedir = os.path.join(setup.root_dir, 'timetool')
 
-    expmt = config.exp
+    expmt = setup.exp
     run = task.run
     nominal = float(task.nominal_ps)
     model = task.model
