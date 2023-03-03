@@ -144,7 +144,7 @@ def offset_geom(input_file, output_file, dx, dy, dz):
             
     outfile.close()
     
-def generate_geom_file(exp, run, det_type, input_file, output_file, det_dist=None):
+def generate_geom_file(exp, run, det_type, input_file, output_file, det_dist=None, pv_camera_length=None):
     """
     Generate a Crystfel .geom file from either a psana .data or another
     Crystfel .geom file and set the coffset field for each panel based 
@@ -167,6 +167,8 @@ def generate_geom_file(exp, run, det_type, input_file, output_file, det_dist=Non
         output .geom file
     det_dist : float
         estimated sample-detector distance in mm
+    pv_camera_length : str
+        PV associated with the camera length
     """
     if 'CsPad' in det_type:
         sys.exit("Currently this function does not support the CsPad detector")
@@ -182,7 +184,7 @@ def generate_geom_file(exp, run, det_type, input_file, output_file, det_dist=Non
     psi = PsanaInterface(exp=exp, run=run, det_type=det_type)
     if det_dist is None:
         det_dist = psi.estimate_distance()
-    coffset = (det_dist - psi.get_camera_length()) / 1000.
+    coffset = (det_dist - psi.get_camera_length(pv_camera_length)) / 1000.
     
     geom.to_crystfel_file(output_file, coffset=coffset)
     

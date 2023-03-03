@@ -68,7 +68,7 @@ def run_analysis(config):
     from btx.misc.shortcuts import fetch_latest
     setup = config.setup
     task = config.run_analysis
-    """ Generate the max, avg, and std powders for a given run. """
+    """ Generate powders for a given run and plot traces of run statistics. """
     taskdir = os.path.join(setup.root_dir, 'powder')
     os.makedirs(taskdir, exist_ok=True)
     os.makedirs(os.path.join(taskdir, 'figs'), exist_ok=True)
@@ -76,12 +76,16 @@ def run_analysis(config):
     script_path = os.path.join(os.path.dirname(os.path.realpath(__file__)),  "../btx/diagnostics/run.py")
     command = f"python {script_path}"
     command += f" -e {setup.exp} -r {setup.run} -d {setup.det_type} -o {taskdir} -m {mask_file}"
+    if task.get('mean_threshold') is not None:
+        command += f" --mean_threshold={task.mean_threshold}"
     if task.get('gain_mode') is not None:
         command += f" --gain_mode={task.gain_mode}"
     if task.get('raw_img') is not None:
         if task.raw_img:
             command += f" --raw_img"
-    js = JobScheduler(os.path.join(".", f'ra_{setup.run:04}.sh'),
+    if task.get('outlier_threshold') is not None:
+        command += f" --outlier_threshold={task.outlier_threshold}" 
+    js = JobScheduler(os.path.join(".", f'ra_{setup.run:04}.sh'), 
                       queue=setup.queue,
                       ncores=task.ncores,
                       jobname=f'ra_{setup.run:04}')
@@ -136,8 +140,8 @@ def opt_geom(config):
             logger.debug("Could not communicate with the elog update url")
         logger.info(f'Refined detector distance in mm: {geom_opt.distance}')
         logger.info(f'Refined detector center in pixels: {geom_opt.center}')
-        logger.info(f'Detector edge resolution in Angstroms: {geom_opt.edge_resolution}')
-        geom_opt.deploy_geometry(taskdir)
+        logger.info(f'Detector edge resolution in Angstroms: {geom_opt.edge_resolution}')    
+        geom_opt.deploy_geometry(taskdir, pv_camera_length=setup.get('pv_camera_length'))
         logger.info(f'Updated geometry files saved to: {taskdir}')
         logger.debug('Done!')
 
@@ -155,7 +159,7 @@ def find_peaks(config):
                     tag=task.tag, mask=mask_file, psana_mask=task.psana_mask, min_peaks=task.min_peaks, max_peaks=task.max_peaks,
                     npix_min=task.npix_min, npix_max=task.npix_max, amax_thr=task.amax_thr, atot_thr=task.atot_thr,
                     son_min=task.son_min, peak_rank=task.peak_rank, r0=task.r0, dr=task.dr, nsigm=task.nsigm,
-                    calibdir=task.get('calibdir'))
+                    calibdir=task.get('calibdir'), pv_camera_length=setup.get('pv_camera_length'))
     logger.debug(f'Performing peak finding for run {setup.run} of {setup.exp}...')
     pf.find_peaks()
     pf.curate_cxi()

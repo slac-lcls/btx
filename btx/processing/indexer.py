@@ -87,7 +87,7 @@ class Indexer:
 
         js = JobScheduler(self.tmp_exe, ncores=self.ncores, jobname=f'idx_r{self.run:04}', queue=self.queue, time=self.time)
         js.write_header()
-        js.write_main(command, dependencies=['crystfel', 'xds', 'xgandalf'])
+        js.write_main(command, dependencies=['crystfel'] + self.methods.split(','))
         js.clean_up()
         js.submit()
         print(f"Indexing executable written to {self.tmp_exe}")
