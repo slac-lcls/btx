@@ -280,9 +280,6 @@ def refine_geometry(config, task=None):
         task.dy = np.linspace(task.dy[0], task.dy[1], int(task.dy[2]))
         task.dz = tuple([float(elem) for elem in task.dz.split()])
         task.dz = np.linspace(task.dz[0], task.dz[1], int(task.dz[2]))
-        print("task.dx: ", task.dx)
-        print("task.dy: ", task.dy)
-        print("task.dz: ", task.dz)
     """ Refine detector center and/or distance based on the geometry that minimizes Rsplit. """
     taskdir = os.path.join(setup.root_dir, 'index')
     os.makedirs(task.scan_dir, exist_ok=True)
