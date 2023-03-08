@@ -85,7 +85,7 @@ class JobScheduler:
 
         if self.account is not None:
             with open(self.jobfile, 'a') as jfile:
-                jfile.write(f"SBATCH -A {self.account}")
+                jfile.write(f"SBATCH -A {self.account}\n\n")
 
     def _write_dependencies(self, dependencies):
         """ Source dependencies."""
