@@ -31,8 +31,8 @@ class JobScheduler:
             self.ana_conda_dir = '/cds/sw/ds/ana/'
             self.ana_tools_dir = '/cds/sw/package/'
         elif(computing_facility == 'S3DF'):
-            self.ana_conda_dir = '/sdf/data/lcls/ds/ana/'
-            self.ana_tools_dir = '/sdf/data/lcls/ds/tools/'
+            self.ana_conda_dir = '/sdf/group/lcls/ds/ana/'
+            self.ana_tools_dir = '/sdf/group/lcls/ds/tools/'
         else:
             raise NotImplementedError('Unknown computing facility.')
 
