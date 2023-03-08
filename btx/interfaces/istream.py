@@ -68,7 +68,7 @@ class StreamInterface:
                     for narr in range(1, len(stream_data[key])):
                         stream_data[key][narr] += stream_data[key][narr-1][-1]+1
                 stream_data[key] = np.concatenate(np.array(stream_data[key], dtype=object))
-                if key in ['n_crystal','n_chunk', 'n_crystal_cell', 'n_lattice', 'h', 'k', 'l']:
+                if key in ['n_crystal','n_chunk', 'n_crystal_cell', 'n_lattice', 'image_num', 'h', 'k', 'l']:
                     stream_data[key] = stream_data[key].astype(int)
                 else:
                     stream_data[key] = stream_data[key].astype(float)
@@ -126,7 +126,8 @@ class StreamInterface:
         """
         # set up storage arrays
         single_stream_data = {}
-        keys = ['a','b','c','alpha','beta','gamma','n_crystal','n_chunk', 'n_crystal_cell', 'n_lattice']
+        keys = ['a','b','c','alpha','beta','gamma','n_crystal','n_chunk', 
+                'n_crystal_cell','n_lattice','image_num','highres_A']
         if not self.cell_only:
             keys.extend(['h','k','l','sumI','sigI','maxI'])
         for key in keys:
@@ -146,6 +147,9 @@ class StreamInterface:
                     if in_refl:
                         in_refl = False
                         print(f"Warning! Line {lc} associated with chunk {n_chunk} is problematic: {line}")
+                        
+                if line.find("Image serial number") != -1:
+                    single_stream_data['image_num'].append(int(line.split()[-1]))
 
                 if line.find("Cell parameters") != -1:
                     cell = line.split()[2:5] + line.split()[6:9]
@@ -158,7 +162,10 @@ class StreamInterface:
                     if self.cell_only:
                         single_stream_data['n_crystal'].append(self.n_crystal)
                     n_lattice += 1
-
+                    
+                if line.find("diffraction_resolution_limit") != -1:
+                    single_stream_data['highres_A'].append(float(line.split()[-2]))
+                    
                 if line.find("End chunk") != -1:
                     single_stream_data['n_lattice'].append(n_lattice)
 
