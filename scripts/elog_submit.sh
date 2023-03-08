@@ -102,7 +102,7 @@ case $FACILITY in
     ;;
   'S3DF')
     SIT_PSDM_DATA_DIR='/sdf/data/lcls/ds/'
-    ANA_CONDA_DIR='/sdf/group/lcls/ds/ana/'
+    ANA_CONDA_DIR='/sdf/group/lcls/ds/ana/sw/'
     ANA_TOOLS_DIR='/sdf/group/lcls/ds/tools/'
     SBATCH_CMD_ACCOUNT="#SBATCH -A ${SLURM_ACCOUNT}"
     ;;
