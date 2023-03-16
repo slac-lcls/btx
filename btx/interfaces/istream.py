@@ -127,7 +127,8 @@ class StreamInterface:
         # set up storage arrays
         single_stream_data = {}
         keys = ['a','b','c','alpha','beta','gamma','n_crystal','n_chunk', 
-                'n_crystal_cell','n_lattice','image_num','highres_A']
+                'n_crystal_cell','n_lattice','image_num','highres_A',
+                'residual','det_shift_x','det_shift_y']
         if not self.cell_only:
             keys.extend(['h','k','l','sumI','sigI','maxI'])
         for key in keys:
@@ -165,6 +166,13 @@ class StreamInterface:
                     
                 if line.find("diffraction_resolution_limit") != -1:
                     single_stream_data['highres_A'].append(float(line.split()[-2]))
+
+                if line.find("final_residual") != -1:
+                    single_stream_data['residual'].append(float(line.split()[-1]))
+                    
+                if line.find("det_shift") != -1:
+                    single_stream_data['det_shift_x'].append(float(line.split()[3]))
+                    single_stream_data['det_shift_y'].append(float(line.split()[-2]))
                     
                 if line.find("End chunk") != -1:
                     single_stream_data['n_lattice'].append(n_lattice)
