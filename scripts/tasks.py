@@ -274,9 +274,12 @@ def refine_geometry(config, task=None):
     if task is None:
         task = config.refine_geometry
         task.scan_dir = os.path.join(setup.root_dir, f'scan_{config.merge.tag}')
-        for var in [task.dx, task.dy, task.dz]:
-            var = tuple([float(elem) for elem in var.split()])
-            var = np.linspace(var[0], var[1], int(var[2]))
+        task.dx = tuple([float(elem) for elem in task.dx.split()])
+        task.dx = np.linspace(task.dx[0], task.dx[1], int(task.dx[2]))
+        task.dy = tuple([float(elem) for elem in task.dy.split()])
+        task.dy = np.linspace(task.dy[0], task.dy[1], int(task.dy[2]))
+        task.dz = tuple([float(elem) for elem in task.dz.split()])
+        task.dz = np.linspace(task.dz[0], task.dz[1], int(task.dz[2]))
     """ Refine detector center and/or distance based on the geometry that minimizes Rsplit. """
     taskdir = os.path.join(setup.root_dir, 'index')
     os.makedirs(task.scan_dir, exist_ok=True)
