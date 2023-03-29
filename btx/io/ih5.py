@@ -162,7 +162,41 @@ class SmallDataReader:
         axs[2].set_title('Convolution FWHM')
         axs[2].set_xlabel('FWHM (a.u.)')
         fig.tight_layout()
-        fig.savefig(f'{self.savedir}/tt_histograms_r{self.run:04d}.png')
+        fig.savefig(f'{self.savedir}/ttHistograms_r{self.run:04d}.png')
+
+    def timetool_amplitude_correlation(self, xrayinode: Optional[str] = None):
+        """! Plot the 2D histogram of x-ray intensity and convolution amplitude.
+
+        The timetool convolution amplitude should be correlated with the x-ray
+        intensity. The 2D histogram of these events provides a visual metric
+        that the timetool results are reasonable. The correlations hould appear
+        to be ~linear.
+
+        @param xrayinode (str) : Specific node with X-ray intensity recordings.
+        """
+        ampl = self.h5['tt/AMPL'][:]
+
+        if xrayinode:
+            xray_i = self.h5[f'{xrayinode}/sum'][:]
+        elif (xrayinodes := self.find_xray_intensity_nodes()):
+            xray_i = self.h5[f'{xrayinodes[0]}/sum'][:]
+        else:
+            xray_i = []
+
+        if len(xray_i) > 0: # Test length explicitly when ndarray (ie not list)
+            fig, ax = plt.subplots(1, 1, figsize=(3, 3), dpi=200)
+            ax.hexbin(xray_i, ampl, mincnt=1)
+            ax.set_xlabel('X-ray Intensity (ipm5)')
+            ax.set_ylabel('Timetool Convolution Amplitude')
+            fig.tight_layout()
+            fig.savefig(f'{self.savedir}/ttAmplXrayICorr_r{self.run:04d}.png')
+
+    def find_xray_intensity_nodes(self) -> list:
+        """! Determines the available readouts of X-ray intensity."""
+        keys = [key for key in self.h5.keys()
+                if 'ipm' in key and 'sum' in self.h5[key].keys()]
+        # keys is an empty list if no nodes found
+        return keys
 
     def print_all_nodes(self):
         """! Print all groups and datasets in the HDF5 file."""
@@ -177,14 +211,14 @@ class SmallDataReader:
                 print('\t'*(level - 1) + f'{key}\n')
                 self.traverse_nodes(node[key], level=level + 1)
 
-    def write_stamped_values(self, node_list: list):
+    def timestamped_data_totext(self, node_list: list):
         """! Write a text file of unique event identifiers and h5 node values.
 
         This can be used to write out e.g. specific evr codes per event. Data
         is written in a space separated format, with one event per line. The
         first column contains event identifiers, followed by the values for
         each node in subsequent columns. E.g.:
-        unique-identifier node1        node2 ...
+        unique-identifier node1        node2        ...
                 id_event1 event1-node1 event1-node2
                 id_event2 event2-node1 event2-node2
                    ...
