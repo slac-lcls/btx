@@ -16,9 +16,9 @@ import h5py
 import tables
 import socket
 import matplotlib.pyplot as plt
-from typing import Union, Optional
+from typing import Union, Optional, Callable, Any
 
-def lock_file(path:str, timeout: int = 5, wait: float = 0.5) -> callable:
+def lock_file(path:str, timeout: int = 5, wait: float = 0.5) -> Callable:
     """! Decorator mainly for write functions. Will not allow the decorated
     function to execute if an associated '.lock' file exists. If no lock file
     exists one will be created, preventing other decorated functions from
@@ -36,7 +36,7 @@ def lock_file(path:str, timeout: int = 5, wait: float = 0.5) -> callable:
     @param timeout (int) Timeout time in seconds to abandon execution attempt.
     @param wait (float) Time in seconds to wait between write attempts.
     """
-    def decorator_lock(write_func: callable) -> callable:
+    def decorator_lock(write_func: Callable) -> Callable:
         """! Inner decorator for file locking.
 
         @param write_func (function) The function to run while file is locked.
@@ -110,8 +110,11 @@ class SmallDataReader:
         self.run = run
         self.savedir = savedir
 
-        self.root = tables.File(self._path).root
-        self.h5 = h5py.File(self._path)
+        try:
+            self.root = tables.File(self._path).root
+            self.h5 = h5py.File(self._path)
+        except FileNotFoundError:
+            print("No small data available for this run.")
 
     def image_sums(self):
         """! Plots the sums of the images over a run for the used detectors.
@@ -119,21 +122,26 @@ class SmallDataReader:
         The image sums (powder patterns for crystallography) can be used to
         verify that data was collected during a run.
         """
-        imgList = [self.h5[f'Sums/{img}'] for img in self.h5['Sums'].keys()]
+        if 'Sums' in self.h5:
+            imgList = [self.h5[f'Sums/{img}']
+                       for img in self.h5['Sums'].keys()]
 
-        for img in imgList:
-            squeezed = img[:].squeeze()
-            if len(squeezed.shape) > 2:
-                self.construct_img_panels(img)
-            else:
-                lims = (np.nanpercentile(squeezed, 5),
-                        np.nanpercentile(squeezed, 95))
-                title = img.name.split('/')[2]
-                fig, ax = plt.subplots(1, 1, figsize=(4, 4), dpi=200)
-                ax.imshow(squeezed, clim=lims)
-                ax.set_title(title)
-                fig.tight_layout()
-                fig.savefig(f'{self.savedir}/{title}_Sum_r{self.run:04d}')
+            for img in imgList:
+                squeezed = img[:].squeeze()
+                if len(squeezed.shape) > 2:
+                    self.construct_img_panels(img)
+                else:
+                    lims = (np.nanpercentile(squeezed, 5),
+                            np.nanpercentile(squeezed, 95))
+                    title = img.name.split('/')[2]
+                    fig, ax = plt.subplots(1, 1, figsize=(4, 4), dpi=200)
+                    ax.imshow(squeezed, clim=lims)
+                    ax.set_title(title)
+                    fig.tight_layout()
+                    fig.savefig(f'{self.savedir}/{title}_Sum_r{self.run:04d}')
+        else:
+            print('Image sums are not available.')
+
 
     def construct_img_panels(self):
         """! Assemble multipanel detector images."""
@@ -146,23 +154,26 @@ class SmallDataReader:
         amplitudes, and the full-width half-maximums (FWHMs) of the
         convolutions.
         """
-        fltpos_ps = self.h5['tt/FLTPOS_PS'][:]
-        ampl = self.h5['tt/AMPL'][:]
-        fwhm = self.h5['tt/FLTPOSFWHM'][:]
+        if 'tt' in self.h5:
+            fltpos_ps = self.h5['tt/FLTPOS_PS'][:]
+            ampl = self.h5['tt/AMPL'][:]
+            fwhm = self.h5['tt/FLTPOSFWHM'][:]
 
-        fig, axs = plt.subplots(1, 3, figsize=(6, 4), dpi=200)
-        axs[0].hist(fltpos_ps, bins=30, density=True)
-        axs[0].set_title('Timetool Correction')
-        axs[0].set_xlabel('Correction (ps)')
-        axs[0].set_ylabel('Density')
-        axs[1].hist(ampl, bins=30, density=True)
-        axs[1].set_title('Convolution\nAmplitude')
-        axs[1].set_xlabel('Amplitude (a.u.)')
-        axs[2].hist(fwhm, bins=30, density=True)
-        axs[2].set_title('Convolution FWHM')
-        axs[2].set_xlabel('FWHM (a.u.)')
-        fig.tight_layout()
-        fig.savefig(f'{self.savedir}/ttHistograms_r{self.run:04d}.png')
+            fig, axs = plt.subplots(1, 3, figsize=(6, 4), dpi=200)
+            axs[0].hist(fltpos_ps, bins=30, density=True)
+            axs[0].set_title('Timetool Correction')
+            axs[0].set_xlabel('Correction (ps)')
+            axs[0].set_ylabel('Density')
+            axs[1].hist(ampl, bins=30, density=True)
+            axs[1].set_title('Convolution\nAmplitude')
+            axs[1].set_xlabel('Amplitude (a.u.)')
+            axs[2].hist(fwhm, bins=30, density=True)
+            axs[2].set_title('Convolution FWHM')
+            axs[2].set_xlabel('FWHM (a.u.)')
+            fig.tight_layout()
+            fig.savefig(f'{self.savedir}/ttHistograms_r{self.run:04d}.png')
+        else:
+            print('No timetool data available.')
 
     def timetool_amplitude_correlation(self, xrayinode: Optional[str] = None):
         """! Plot the 2D histogram of x-ray intensity and convolution amplitude.
@@ -174,22 +185,25 @@ class SmallDataReader:
 
         @param xrayinode (str) : Specific node with X-ray intensity recordings.
         """
-        ampl = self.h5['tt/AMPL'][:]
+        try:
+            ampl = self.h5['tt/AMPL'][:]
 
-        if xrayinode:
-            xray_i = self.h5[f'{xrayinode}/sum'][:]
-        elif (xrayinodes := self.find_xray_intensity_nodes()):
-            xray_i = self.h5[f'{xrayinodes[0]}/sum'][:]
-        else:
-            xray_i = []
+            if xrayinode:
+                xray_i = self.h5[f'{xrayinode}/sum'][:]
+            elif (xrayinodes := self.find_xray_intensity_nodes()):
+                xray_i = self.h5[f'{xrayinodes[0]}/sum'][:]
+            else:
+                xray_i = []
 
-        if len(xray_i) > 0: # Test length explicitly when ndarray (ie not list)
-            fig, ax = plt.subplots(1, 1, figsize=(3, 3), dpi=200)
-            ax.hexbin(xray_i, ampl, mincnt=1)
-            ax.set_xlabel('X-ray Intensity (ipm5)')
-            ax.set_ylabel('Timetool Convolution Amplitude')
-            fig.tight_layout()
-            fig.savefig(f'{self.savedir}/ttAmplXrayICorr_r{self.run:04d}.png')
+            if len(xray_i) > 0: # Test length explicitly when ndarray (ie not list)
+                fig, ax = plt.subplots(1, 1, figsize=(3, 3), dpi=200)
+                ax.hexbin(xray_i, ampl, mincnt=1)
+                ax.set_xlabel('X-ray Intensity')
+                ax.set_ylabel('Timetool Convolution Amplitude')
+                fig.tight_layout()
+                fig.savefig(f'{self.savedir}/ttAmplXrayICorr_r{self.run:04d}.png')
+        except KeyError as err:
+            print(f'Node not found: {str(err).split()[6]}')
 
     def find_xray_intensity_nodes(self) -> list:
         """! Determines the available readouts of X-ray intensity."""
@@ -228,3 +242,23 @@ class SmallDataReader:
         @param node_list (list[str])
         """
         pass
+
+
+    def unique_stamps(self):
+        """! Combine timestamps and fiducials for unique event identifiers."""
+        pass
+
+    def __getitem__(self, key: str) -> Any:
+        """! Overload subscripting operator, [], to access hdf5 file.
+
+        @param key (str) : Node to access.
+        @return value (Any) : The value living at the specified key in the hdf5.
+        """
+        try:
+            return self.h5[key]
+        except KeyError:
+            print('Incorrect node.')
+
+    def __setitem__(self, key, value):
+        """! Provided only to prevent accidental errors."""
+        print('Writing to hdf5 prohibited.')
