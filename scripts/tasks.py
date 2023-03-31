@@ -358,6 +358,23 @@ def clean_up(config):
         os.system(f"rm -f {taskdir}/r*/*{task.tag}.cxi")
     logger.debug('Done!')
 
+def timetool_diagnostics(config):
+    """! Plot timetool diagnostic figures from data in smalldata hdf5 file."""
+    from btx.io.ih5 import SmallDataReader
+    setup = config.setup
+    task = config.timetool_diagnostics
+    savedir = os.path.join(setup.root_dir, 'timetool')
+
+    expmt = setup.exp
+    run = setup.run
+
+    if not task.h5:
+        smdr = SmallDataReader(expmt, run, savedir)
+    else:
+        smdr = SmallDataReader(expmt, run, savedir, task.h5)
+
+    smdr.plot_timetool_diagnostics(output_type = 'png')
+
 def calibrate_timetool(config):
     from btx.processing.rawimagetimetool import RawImageTimeTool
     setup = config.setup
