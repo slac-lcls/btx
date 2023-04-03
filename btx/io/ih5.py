@@ -222,12 +222,11 @@ class SmallDataReader:
         info_to_write = np.array(info_to_write).T
         np.savetext(f'{self.savedir}/{filename}', '%s')
 
-
     def unique_stamps(self) -> np.ndarray:
         """! Combine timestamps and fiducials for unique event identifiers."""
         stamps = list(map(lambda x, y: f'{x}-{y}',
                           self.h5['event_time'][:],
-                          self.h5['fiducials']))
+                          self.h5['fiducials'][:]))
         return np.array(stamps)
 
     def h5_explorer(self):
