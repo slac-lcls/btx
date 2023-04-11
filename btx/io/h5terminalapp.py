@@ -5,6 +5,7 @@ try:
     import matplotlib.pyplot as plt
     import sys
     import time
+    from typing import Union
 
     DATASET = h5py._hl.dataset.Dataset
 
@@ -15,8 +16,8 @@ class H5TerminalApp:
     def __init__(self, path: str):
         self._path: str = path
         self._current_dir = '/'
-        self.arr1: np.ndarray = np.zeros([1])
-        self.arr2: np.ndarray = np.zeros([1])
+        self.arr1: Union[np.ndarray, None] = None
+        self.arr2: Union[np.ndarray, None] = None
         # Open h5 file
         try:
             self.h5 = h5py.File(path)
@@ -70,7 +71,7 @@ class H5TerminalApp:
         self._update_title_bar()
         self._refresh(self.title_bar)
 
-        self.update_main = True
+        self.update_maintext = True
         self._update_main_window(None)
         self._refresh(self.main_window)
 
@@ -101,17 +102,29 @@ class H5TerminalApp:
     def _update_main_window(self, keypress):
         curses.curs_set(1)
         keys: list = list(self.h5[self._current_dir].keys())
-        if self.update_main:
+        if self.update_maintext:
             self.main_window.clear()
             self.main_window.box()
             for i in range(len(keys)):
                 self.main_window.addstr(i + 1, 4, keys[i])
-            self.update_main = False
-        self._update_cursor(keypress)
+            self.update_maintext = False
+        self._parse_keypress(keypress)
 
-    def _update_cursor(self, keypress):
+    def _parse_keypress(self, keypress):
+        """! Updates display or performs action based on keypress.
+
+        Keypresses:
+        'w' : Move cursor up
+        's' : Move cursor down
+        'a' : Go up one level in hdf5 hierarchy (if not root)
+        'd' : Go down one level in hdf5 hierarchy at current position if not on
+              a dataset.
+        '1' : Store dataset in array 1. No action if cursor is over a group.
+        '2' : Store dataset in array 2. No action if cursor is over a group.
+        'p' : Plot function. Behaviour depends on stored datasets and following
+              keypresses.
+        """
         if keypress == ord('d'):
-            # self.cursor.right()
             keys = self.h5[self._current_dir].keys()
             item = list(keys)[self.cursor.row - 1]
             new_path = self._current_dir
@@ -123,16 +136,14 @@ class H5TerminalApp:
                 pass
             else:
                 self._current_dir = new_path
-                self.update_main = True
+                self.update_maintext = True
+
             ymax: int = len(self.h5[self._current_dir])
             ylims: list = [1, ymax]
             self.cursor.update_limits(ylims, self.cursor.xlim)
-            # self.cursor.row = len(self.h5[self._current_dir])
-            # self.cursor.ylim = [1,]
 
         elif keypress == ord('a'):
             keys = self.h5[self._current_dir].keys()
-            item = list(keys)[self.cursor.row - 1]
             new_path = '/'
             if self._current_dir == '/':
                 pass
@@ -140,7 +151,7 @@ class H5TerminalApp:
                 for item in self._current_dir.split('/')[1:-1]:
                     new_path += item
                 self._current_dir = new_path
-                self.update_main = True
+                self.update_maintext = True
                 ymax: int = len(self.h5[self._current_dir])
                 ylims: list = [1, ymax]
                 self.cursor.update_limits(ylims, self.cursor.xlim)
@@ -150,6 +161,15 @@ class H5TerminalApp:
 
         elif keypress == ord('w'):
             self.cursor.up()
+
+        elif keypress == ord('p'):
+            pass
+
+        elif keypress == ord('1'):
+            pass
+
+        elif keypress == ord('2'):
+            pass
 
         self.main_window.move(self.cursor.row, self.cursor.col)
         curses.doupdate()
@@ -169,7 +189,7 @@ class H5TerminalApp:
         self.stdscr.keypad(False)
         curses.echo()
         curses.endwin()
-        print(self._current_dir)
+        #print(self._current_dir)
 
     def __del__(self):
         self.__exit__()
