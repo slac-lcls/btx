@@ -14,6 +14,7 @@ except ModuleNotFoundError:
 class H5TerminalApp:
     def __init__(self, path: str):
         self._path: str = path
+        self._current_dir = '/'
         self.arr1: np.ndarray = np.zeros([1])
         self.arr2: np.ndarray = np.zeros([1])
         # Open h5 file
@@ -69,6 +70,7 @@ class H5TerminalApp:
         self._update_title_bar()
         self._refresh(self.title_bar)
 
+        self.update_main = True
         self._update_main_window(None)
         self._refresh(self.main_window)
 
@@ -98,20 +100,50 @@ class H5TerminalApp:
 
     def _update_main_window(self, keypress):
         curses.curs_set(1)
-        keys: list = list(self.h5.keys())
-        y: int = int(self._rows*0.15)
-        for i in range(len(keys)):
-            self.main_window.addstr(i + 1, 4, keys[i])
+        keys: list = list(self.h5[self._current_dir].keys())
+        if self.update_main:
+            self.main_window.clear()
+            self.main_window.box()
+            for i in range(len(keys)):
+                self.main_window.addstr(i + 1, 4, keys[i])
+            self.update_main = False
         self._update_cursor(keypress)
 
     def _update_cursor(self, keypress):
         if keypress == ord('d'):
             # self.cursor.right()
-            pass
+            keys = self.h5[self._current_dir].keys()
+            item = list(keys)[self.cursor.row - 1]
+            new_path = self._current_dir
+            if new_path == '/':
+                new_path += item
+            else:
+                new_path += '/' + item
+            if type(self.h5[new_path]) == DATASET:
+                pass
+            else:
+                self._current_dir = new_path
+                self.update_main = True
+            ymax: int = len(self.h5[self._current_dir])
+            ylims: list = [1, ymax]
+            self.cursor.update_limits(ylims, self.cursor.xlim)
+            # self.cursor.row = len(self.h5[self._current_dir])
+            # self.cursor.ylim = [1,]
 
         elif keypress == ord('a'):
-            # self.cursor.left()
-            pass
+            keys = self.h5[self._current_dir].keys()
+            item = list(keys)[self.cursor.row - 1]
+            new_path = '/'
+            if self._current_dir == '/':
+                pass
+            else:
+                for item in self._current_dir.split('/')[1:-1]:
+                    new_path += item
+                self._current_dir = new_path
+                self.update_main = True
+                ymax: int = len(self.h5[self._current_dir])
+                ylims: list = [1, ymax]
+                self.cursor.update_limits(ylims, self.cursor.xlim)
 
         elif keypress == ord('s'):
             self.cursor.down()
@@ -137,6 +169,7 @@ class H5TerminalApp:
         self.stdscr.keypad(False)
         curses.echo()
         curses.endwin()
+        print(self._current_dir)
 
     def __del__(self):
         self.__exit__()
@@ -175,6 +208,16 @@ class Cursor:
         """! Update the bounds of permitted x, y cursor positions."""
         self.ylim = ylim
         self.xlim = xlim
+
+        if self.row < self.ylim[0]:
+            self.row = self.ylim[0]
+        elif self.row > self.ylim[1]:
+            self.row = self.ylim[1]
+
+        if self.col < self.xlim[0]:
+            self.col = self.xlim[0]
+        elif self.col > self.xlim[1]:
+            self.col = self.xlim[1]
 
 if __name__ == '__main__':
     app = H5TerminalApp(sys.argv[1])
