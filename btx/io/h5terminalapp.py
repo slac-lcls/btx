@@ -1,6 +1,7 @@
 try:
     import h5py
     import curses
+    import numpy as np
     import matplotlib.pyplot as plt
     import sys
     import time
@@ -12,7 +13,9 @@ except ModuleNotFoundError:
 
 class H5TerminalApp:
     def __init__(self, path: str):
-        self._path = path
+        self._path: str = path
+        self.arr1: np.ndarray = np.zeros([1])
+        self.arr2: np.ndarray = np.zeros([1])
         # Open h5 file
         try:
             self.h5 = h5py.File(path)
@@ -30,7 +33,7 @@ class H5TerminalApp:
         self._cols = curses.COLS
         self._rows = curses.LINES
 
-        self.y_offset = int(self._rows*0.10)
+        self.y_offset: int = int(self._rows*0.10)
         self.title_bar = curses.newwin(self.y_offset, self._cols, 0, 0)
         self.main_window = curses.newwin(self._rows - self.y_offset,
                                          self._cols,
@@ -59,8 +62,8 @@ class H5TerminalApp:
                              xlim = [0, self._cols - 1])
 
         # Cursor positions
-        self.cursor_x = 10
-        self.cursor_y = 10
+        # self.cursor_x: int = 10
+        # self.cursor_y: int = 10
 
         # Display initial text.
         self._update_title_bar()
@@ -95,8 +98,8 @@ class H5TerminalApp:
 
     def _update_main_window(self, keypress):
         curses.curs_set(1)
-        keys = list(self.h5.keys())
-        y = int(self._rows*0.15)
+        keys: list = list(self.h5.keys())
+        y: int = int(self._rows*0.15)
         for i in range(len(keys)):
             self.main_window.addstr(i + 1, 4, keys[i])
         self._update_cursor(keypress)
