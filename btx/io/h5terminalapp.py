@@ -63,10 +63,6 @@ class H5TerminalApp:
                              ylim = [1, self._rows - self.y_offset - 2],
                              xlim = [0, self._cols - 1])
 
-        # Cursor positions
-        # self.cursor_x: int = 10
-        # self.cursor_y: int = 10
-
         # Display initial text.
         self._update_title_bar()
         self._refresh(self.title_bar)
@@ -103,7 +99,8 @@ class H5TerminalApp:
             self.main_window.clear()
             self.main_window.box()
             for i in range(len(keys)):
-                self.main_window.addstr(i + 1, 4, keys[i])
+                if i < self.cursor.ylim[1]:
+                    self.main_window.addstr(i + 1, 4, keys[i])
             self.update_maintext = False
         self._parse_keypress(keypress)
 
@@ -129,7 +126,8 @@ class H5TerminalApp:
                 self._current_dir = new_path
                 self.update_maintext = True
 
-            ymax: int = len(self.h5[self._current_dir])
+            ymax: int = min(len(self.h5[self._current_dir]),
+                            self._rows - self.y_offset - 2)
             ylims: list = [1, ymax]
             self.cursor.update_limits(ylims, self.cursor.xlim)
 
@@ -143,7 +141,8 @@ class H5TerminalApp:
                     new_path += item
                 self._current_dir = new_path
                 self.update_maintext = True
-                ymax: int = len(self.h5[self._current_dir])
+                ymax: int = min(len(self.h5[self._current_dir]),
+                                self._rows - self.y_offset - 2)
                 ylims: list = [1, ymax]
                 self.cursor.update_limits(ylims, self.cursor.xlim)
 
@@ -250,4 +249,3 @@ class Cursor:
 if __name__ == '__main__':
     app = H5TerminalApp(sys.argv[1])
     app.run()
-
