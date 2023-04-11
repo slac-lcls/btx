@@ -86,9 +86,6 @@ class H5TerminalApp:
         display the current text.
         """
         while ((keypress := self.main_window.getch()) != ord('q')):
-            self._update_title_bar()
-            self._refresh(self.title_bar)
-
             self._update_main_window(keypress)
             self._refresh(self.main_window)
 
@@ -125,13 +122,7 @@ class H5TerminalApp:
               keypresses.
         """
         if keypress == ord('d'):
-            keys = self.h5[self._current_dir].keys()
-            item = list(keys)[self.cursor.row - 1]
-            new_path = self._current_dir
-            if new_path == '/':
-                new_path += item
-            else:
-                new_path += '/' + item
+            new_path = self._cursor_over_path()
             if type(self.h5[new_path]) == DATASET:
                 pass
             else:
@@ -166,13 +157,31 @@ class H5TerminalApp:
             pass
 
         elif keypress == ord('1'):
-            pass
+            new_path = self._cursor_over_path()
+            if type(self.h5[new_path]) == DATASET:
+                self.arr1 = self.h5[new_path][()]
 
         elif keypress == ord('2'):
-            pass
+            new_path = self._cursor_over_path()
+            if type(self.h5[new_path]) == DATASET:
+                self.arr2 = self.h5[new_path][()]
 
         self.main_window.move(self.cursor.row, self.cursor.col)
         curses.doupdate()
+
+    def _cursor_over_path(self) -> str:
+        """! Return the path in the hdf5 file that the cursor is over.
+
+        @return new_path (str) The path that the cursor is currently over.
+        """
+        keys = self.h5[self._current_dir].keys()
+        item = list(keys)[self.cursor.row - 1]
+        new_path = self._current_dir
+        if new_path == '/':
+            new_path += item
+        else:
+            new_path += '/' + item
+        return new_path
 
     def _refresh(self, window):
         window.timeout(1)
@@ -189,7 +198,6 @@ class H5TerminalApp:
         self.stdscr.keypad(False)
         curses.echo()
         curses.endwin()
-        #print(self._current_dir)
 
     def __del__(self):
         self.__exit__()
