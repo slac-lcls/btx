@@ -139,7 +139,6 @@ class H5TerminalApp:
             self._shiftmax = self._calc_shiftmax()
 
         elif keypress == ord('a'):
-            keys = self.h5[self._current_dir].keys()
             new_path = '/'
             if self._current_dir == '/':
                 pass
