@@ -47,7 +47,7 @@ class H5TerminalApp:
 
         # Used to change which keys are shown if not all can be shown at once
         self._rowshift: int = 0
-        self._shiftmax: int = 0
+        self._shiftmax: int = self._calc_shiftmax()
 
         self.main_window.box()
 
