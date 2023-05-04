@@ -85,8 +85,16 @@ do
     esac
 done
 set -- "${POSITIONAL[@]}"
+if [[ -z ${SLURM_ACCOUNT} ]]; then
+    echo "Account not provided, using lcls."
+fi
 
-FACILITY=${FACILITY:='SRCF_FFB'}
+if [[ -z ${FACILITY} ]]; then
+    echo "Facility not provided, defaulting to S3DF."
+fi
+
+SLURM_ACCOUNT=${SLURM_ACCOUNT:='lcls'}
+FACILITY=${FACILITY:='S3DF'}
 case $FACILITY in
   'SLAC')
     SIT_PSDM_DATA_DIR='/cds/data/psdm/'
@@ -111,7 +119,13 @@ case $FACILITY in
     ;;
 esac
 
-QUEUE=${QUEUE:='ffbh3q'}
+if [[ -z ${TASK} || -z ${CONFIGFILE} ]]; then
+    echo "You must provide a config yaml and task choice."
+    usage
+    exit
+fi
+
+QUEUE=${QUEUE:='milano'}
 CORES=${CORES:=1}
 # TODO: find_peaks needs to be handled from ischeduler. For now we do this...
 if [ ${TASK} != 'find_peaks' ] &&\
