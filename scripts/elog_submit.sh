@@ -181,7 +181,7 @@ which mpirun
 which python
 export FACILITY=${FACILITY}
 export SIT_PSDM_DATA=${SIT_PSDM_DATA_DIR}
-export PATH="/sdf/group/lcls/ds/tools/crystfel/0.10.2/bin:$PATH"
+export PATH="${ANA_TOOLS_DIR}/crystfel/0.10.2/bin:$PATH"
 export PYTHONPATH="${PYTHONPATH}:$( dirname -- ${SCRIPT_DIR})"
 export NCORES=${CORES}
 export TMP_EXE=${TMP_EXE}
