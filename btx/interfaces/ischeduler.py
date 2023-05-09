@@ -6,7 +6,7 @@ import os
 class JobScheduler:
 
     def __init__(self, jobfile, logdir='./', jobname='btx',
-                 account=None, queue='ffbh3q', ncores=1, time='0:30:00'):
+                 account='lcls', queue='ffbh3q', ncores=1, time='0:30:00'):
         self.manager = 'SLURM'
         self.jobfile = jobfile
         self.logdir = logdir
@@ -83,9 +83,10 @@ class JobScheduler:
         with open(self.jobfile, 'w') as jfile:
             jfile.write(template.format(**context))
 
-        if self.account is not None:
+        facility = os.environ['FACILITY']
+        if self.account is not None and facility == 'S3DF':
             with open(self.jobfile, 'a') as jfile:
-                jfile.write(f"SBATCH -A {self.account}\n\n")
+                jfile.write(f"#SBATCH -A {self.account}\n\n")
 
     def _write_dependencies(self, dependencies):
         """ Source dependencies."""
@@ -93,7 +94,10 @@ class JobScheduler:
         if "psana" in dependencies:
             dep_paths += f"source {self.ana_conda_manage}psconda.sh \n"
         if "crystfel" in dependencies:
-            dep_paths += f"export PATH={self.ana_tools_dir}crystfel/crystfel-dev/bin:$PATH\n"
+            if (os.environ['FACILITY'] == 'S3DF'):
+                dep_paths += f"export PATH={self.ana_tools_dir}crystfel/0.10.2/bin:$PATH\n"
+            else:
+                dep_paths += f"export PATH={self.ana_tools_dir}crystfel/crystfel-dev/bin:$PATH\n"
         if "mosflm" in dependencies:
             if(os.environ['FACILITY'] == 'S3DF'):
                 dep_paths += f"export PATH={self.ana_tools_dir}:$PATH\n"
