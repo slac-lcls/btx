@@ -100,7 +100,10 @@ class JobScheduler:
             else:
                 dep_paths += f"export PATH={self.ana_tools_dir}autosfx:$PATH\n"
         if "ccp4" in dependencies:
-            dep_paths += f"source {self.ana_tools_dir}ccp4/ccp4-8.0/bin/ccp4.setup-sh\n"
+            if (os.environ['FACILITY'] == 'S3DF'):
+                dep_paths += f"source {self.ana_tools_dir}ccp4-8.0/bin/ccp4.setup-sh\n"
+            else:
+                dep_paths += f"source {self.ana_tools_dir}ccp4/ccp4-8.0/bin/ccp4.setup-sh\n"
         if "phenix" in dependencies:
             dep_paths += f"source {self.ana_tools_dir}phenix-1.13-2998/phenix_env.sh\n"
         if "xds" in dependencies:
