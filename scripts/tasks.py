@@ -75,7 +75,9 @@ def run_analysis(config):
     mask_file = fetch_latest(fnames=os.path.join(setup.root_dir, 'mask', 'r*.npy'), run=setup.run)
     script_path = os.path.join(os.path.dirname(os.path.realpath(__file__)),  "../btx/diagnostics/run.py")
     command = f"python {script_path}"
-    command += f" -e {setup.exp} -r {setup.run} -d {setup.det_type} -o {taskdir} -m {mask_file}"
+    command += f" -e {setup.exp} -r {setup.run} -d {setup.det_type} -o {taskdir}"
+    if mask_file:
+        command += f" -m {mask_file}"
     if task.get('mean_threshold') is not None:
         command += f" --mean_threshold={task.mean_threshold}"
     if task.get('gain_mode') is not None:
