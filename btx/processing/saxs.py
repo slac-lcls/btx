@@ -14,23 +14,66 @@ class SAXSProfile:
 
 class Integrate1D:
     """! Class to perform radial integration for SAXS analysis."""
-    def __init__(self, expmt: str, run: Union[str, int], detector_type: str):
+
+    def __init__(self,
+                 expmt: str,
+                 run: Union[str, int],
+                 detector_type: str,
+                 rootdir: str):
+        """! Integration class initializer.
+
+        Finds the associated files and computes radial profiles.
+
+        @param expmt (str) Experiment name.
+        @param run (str | int) Run number.
+        @param detector_type (str) Detector type used during the experiment.
+        @param rootdir (str) Root directory for btx processing.
+        """
         self.diagnostics = RunDiagnostics(exp=expmt,
                                           run=run,
                                           det_type=detector_type)
 
-        iprofile = radial_profile(self.powder,
-                                  center=self.centers[-1],
-                                  mask=self.mask)
-        peaks_observed, properties = find_peaks(iprofile,
-                                                prominence=1,
-                                                distance=10)
+        center = None # self.get_center()
+        distance = 0.089 # self.get_distance()
+
+        self.powder = self.find_powder(expmt=expmt, run=run, rootdir=rootdir)
+        # Need to update to get center
+        iprofile = radial_profile(self.powder)
+
         qprofile = pix2q(np.arange(iprofile.shape[0]),
-                         self.wavelength,
-                         distance_i,
-                         self.pixel_size)
+                         self.diagnostics.psi.get_wavelength(),
+                         distance,
+                         self.diagnostics.psi.get_pixel_size())
 
         saxsprofile = SAXSProfile(qprofile, iprofile)
+
+    def find_powder(self, expmt: str,
+                    run: Union[str, int],
+                    rootdir: str) -> np.ndarray:
+        """! Retrieve the powder pattern to be used for radial integration.
+
+        @param expmt (str) Experiment name.
+        @param run (str | int) Run number.
+        @param rootdir (str) Root directory for btx processing.
+        @return powder (np.ndarray) 2-D unassembled powder image.
+        """
+        try:
+            path = f'{rootdir}/powder/r{int(run):04}_avg.npy'
+            powder = np.load(path)
+        except FileNotFoundError as e:
+            print('Cannot find a powder image')
+
+    def get_center(self):
+        """! Determine the beam center based on the current geometry."""
+        pass
+
+    def get_distance(self):
+        """! Determine the detector distance based on the current geometry."""
+        pass
+
+    def plot_saxs_profile(self):
+        """! Plot the SAXS profile and associated metrics. """
+        pass
 
 class GuinierAnalyzer:
     """! Class to perform Guinier Analysis of a SAXS profile."""
