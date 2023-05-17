@@ -22,7 +22,7 @@ class JIDSlurmOperator( BaseOperator ):
     'SLAC': "http://psdm02:8446/jid_slac/jid/ws/",
     'SRCF_FFB': "http://drp-srcf-mds001:8446/jid_srcf_ffb/jid/ws/",
     'NERSC': "http://psdm02:8446/jid_nersc/jid/ws/",
-    'S3DF' : "https://psdm.slac.stanford.edu/arps3dfjid/ws/"
+    'S3DF' : "https://psdm.slac.stanford.edu/arps3dfjid/jid/ws/"
   }
 
   btx_locations = {

@@ -1,4 +1,4 @@
-#!/reg/g/psdm/sw/dm/conda/envs/psdm_ws_0_0_9/bin/python3
+#!/sdf/group/lcls/ds/ana/sw/conda1/inst/envs/ana-4.0.47-py3/bin/python
 
 import os
 import logging
