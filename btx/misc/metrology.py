@@ -4,7 +4,7 @@ import argparse
 from psgeom import camera, sensors
 from btx.interfaces.ipsana import PsanaInterface
 
-def retrieve_from_mrxv(det_type, out_geom, mrxv_path='/cds/sw/package/autosfx/mrxv/geometries'):
+def retrieve_from_mrxv(det_type, out_geom, mrxv_path='/sdf/group/lcls/ds/tools/mrxv/geometries'):
     """
     Fetch latest geom file for this detector from mrxv. Currently
     assume that the file is in CrystFEL geom format. C
