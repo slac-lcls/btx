@@ -1,6 +1,7 @@
 import os
 import numpy as np
 import shutil
+import errno
 from glob import glob
 
 class eLogInterface:
@@ -71,7 +72,11 @@ class eLogInterface:
         source_path = f'{self.source_dir(subdir=f"{source_subdir}")}{source_filename}'
         target_path = f'{self.target_dir(subdir=f"{target_subdir}")}{image}.png'
         if os.path.isfile(source_path):
-            shutil.copy2(source_path, target_path)
+            try:
+                shutil.copy2(source_path, target_path)
+            except OSError as err:
+                if err.errno != errno.EPERM:
+                    raise
 
     def btx_dir(self, subdir=''):
         import btx
