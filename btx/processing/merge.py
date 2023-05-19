@@ -4,6 +4,7 @@ import argparse
 import os
 import sys
 import requests
+import errno
 from btx.interfaces.ischeduler import *
 from btx.interfaces.istream import read_cell_file
 from btx.interfaces.imtz import *
@@ -207,8 +208,12 @@ class StreamtoMtz:
 
         # transfer mtz to new folder
         if self.mtz_dir is not None:
-            shutil.copy2(os.path.join(self.taskdir, f"{self.prefix}.mtz"), 
-                         os.path.join(self.mtz_dir, f"{self.prefix}.mtz"))
+            try:
+                shutil.copy2(os.path.join(self.taskdir, f"{self.prefix}.mtz"), 
+                             os.path.join(self.mtz_dir, f"{self.prefix}.mtz"))
+            except OSError as err:
+                if err.errno != errno.EPERM:
+                    raise
 
 def wrangle_shells_dat(shells_file, outfile=None):
     """

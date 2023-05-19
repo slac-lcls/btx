@@ -5,6 +5,7 @@ import shutil
 import sys
 import traceback
 import yaml
+import errno
 
 from btx.misc.shortcuts import AttrDict
 from scripts.tasks import *
@@ -26,9 +27,14 @@ def main():
         print(f"Error: cannot create root path.") 
         return -1 
 
-    # Copy config file to output directory.
-    shutil.copy2(config_filepath, config.setup.root_dir)
-    # Call 'task' function if it exists.
+    try:
+        # Copy config file to output directory.
+        shutil.copy2(config_filepath, config.setup.root_dir)
+        # Call 'task' function if it exists.
+    except OSError as err:
+        if err.errno != errno.EPERM:
+            raise
+        
     try:
         globals()[task]
     except Exception as e:
