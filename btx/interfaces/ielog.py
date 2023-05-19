@@ -4,15 +4,6 @@ import shutil
 import errno
 from glob import glob
 
-original_cpstat = shutil.copystat
-def monkey_cpstat(src, dst, *, follow_symlinks=True):
-    try:
-        original_cpstat(src, dst, follow_symlinks=follow_symlinks)
-    except OSError as err:
-        if err.errno != errno.EPERM:
-            raise
-shutil.copystat = monkey_cpstat
-
 class eLogInterface:
 
     def __init__(self, setup):
@@ -81,7 +72,11 @@ class eLogInterface:
         source_path = f'{self.source_dir(subdir=f"{source_subdir}")}{source_filename}'
         target_path = f'{self.target_dir(subdir=f"{target_subdir}")}{image}.png'
         if os.path.isfile(source_path):
-            shutil.copy2(source_path, target_path)
+            try:
+                shutil.copy2(source_path, target_path)
+            except OSError as err:
+                if err.errno != errno.EPERM:
+                    raise
 
     def btx_dir(self, subdir=''):
         import btx
