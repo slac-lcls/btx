@@ -1,7 +1,17 @@
 import os
 import numpy as np
 import shutil
+import errno
 from glob import glob
+
+original_cpstat = shutil.copystat
+def monkey_cpstat(src, dst, *, follow_symlinks=True):
+    try:
+        original_cpstat(src, dst, follow_symlinks=follow_symlinks)
+    except OSError as err:
+        if err.errno != errno.EPERM:
+            raise
+shutil.copystat = monkey_cpstat
 
 class eLogInterface:
 
