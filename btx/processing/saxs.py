@@ -5,6 +5,7 @@ from btx.diagnostics.run import RunDiagnostics
 from btx.misc.radial import (radial_profile, pix2q)
 from typing import Union
 from dataclasses import dataclass
+import os
 
 @dataclass
 class SAXSProfile:
@@ -37,6 +38,7 @@ class SAXSProfiler:
         @param rootdir (str) Root directory for btx processing.
         @param method (str) Which radial integration method to use.
         """
+        self.savedir = os.path.join(rootdir, 'SAXS')
         self.diagnostics = RunDiagnostics(exp=expmt,
                                           run=run,
                                           det_type=detector_type)
