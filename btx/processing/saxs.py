@@ -127,6 +127,34 @@ class SAXSProfiler:
                         rootdir: str) -> np.ndarray:
         raise NotImplementedError
 
+    def plot_all(self):
+        fig, axs = plt.subplots(2, 2, figsize=(6,6), dpi=150)
+        q = self._saxsprofile.q_vals
+        I = self._saxsprofile.intensity
+
+        axs[0, 0] = plt.plot(q, I)
+        axs[0, 0].set_xlabel(r'q (A$^{-1}$)')
+        axs[0, 0].set_ylabel(r'I(q) (a.u.)')
+        axs[0, 0].set_title(r'Scattering Profile')
+
+        axs[0, 1] = plt.plot(q**2, np.log(I))
+        axs[0, 1].set_xlabel(r'q$^{2}$ (A$^{-2}$)')
+        axs[0, 1].set_ylabel(r'ln(I)')
+        axs[0, 1].set_title('Guinier Plot')
+
+        axs[1, 0] = plt.plot(q, I*q**4)
+        axs[1, 0].set_xlabel(r'q (A$^{-1}$)')
+        axs[1, 0].set_ylabel(r'Iq$^{4}$')
+        axs[1, 0].set_title(r'Porod Plot')
+
+        axs[1, 1] = plt.plot(q, I*q**2)
+        axs[1, 1].set_xlabel(r'q (A$^{-1}$)')
+        axs[1, 1].set_ylabel(r'Iq$^{2}$')
+        axs[1, 1].set_title('Kratky Plot')
+
+        fig.tight_layout()
+
+
     def plot_saxs_profile(self):
         """! Plot the SAXS profile and associated metrics. """
         pass
@@ -184,7 +212,7 @@ class GuinierAnalyzer:
         else:
             optimum_qmaxRg: float = 1.0
 
-        self.guinier = self.guinier_fit
+        self.guinier = self.guinier_fit()
         qmax = self.profile.q_vals[self.idx_qmax]
         qmaxRg = qmax*self.guinier.Rg
         last_qmax = self.idx_qmax
