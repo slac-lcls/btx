@@ -3,6 +3,7 @@ from scipy.stats import linregress
 from scipy.stats._stats_mstats_common import LinregressResult
 import matplotlib.pyplot as plt
 from btx.diagnostics.run import RunDiagnostics
+from btx.interfaces.ipsana import assemble_image_stack_batch
 from btx.misc.radial import (radial_profile, pix2q)
 from typing import Union
 from dataclasses import dataclass
@@ -93,11 +94,13 @@ class SAXSProfiler:
             return powder
         except FileNotFoundError as e:
             print('Cannot find a powder image, attempting to recompute. '
-                  'This my take a while.')
+                  'This may take a while.')
 
         try:
             self.diagnostics.compute_run_stats(powder_only=True)
             powder = self.diagnostics.powders['sum']
+            powder = assemble_image_stack_batch(powder,
+                                                self.diagnostics.pixel_index_map)
             return powder
         except Exception as e:
             print(f'Unanticipated error: {e}')
@@ -156,6 +159,9 @@ class SAXSProfiler:
         axs[1, 1].set_title('Kratky Plot')
 
         fig.tight_layout()
+        os.makedirs(self.savedir, exist_ok=True)
+
+        fig.savefig(f'{self.savedir}/saxsplots.png')
 
 
     def plot_saxs_profile(self):
