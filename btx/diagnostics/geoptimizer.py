@@ -7,7 +7,6 @@ import sys
 import os
 import time
 import yaml
-import errno
 from btx.misc.shortcuts import AttrDict
 from btx.misc.metrology import offset_geom
 from btx.interfaces.istream import *
@@ -263,11 +262,7 @@ class Geoptimizer:
         for opt,new in zip([geom_opt,cell_opt,mtz_opt],[geom_new,cell_new,mtz_new]):
             if os.path.exists(new):
                 shutil.move(new, f"{new}.old")
-            try:
-                shutil.copy2(opt, new)
-            except OSError as err:
-                if err.errno != errno.EPERM:
-                    raise
+            shutil.copyfile(opt, new)
 
     def save_results(self, root_dir, tag, savepath=None, metric='Rsplit'):
         """
