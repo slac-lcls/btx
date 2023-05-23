@@ -1,5 +1,6 @@
 import numpy as np
-from scipyu.stats import linregress
+from scipy.stats import linregress
+from scipy.stats._stats_mstats_common import LinregressResult
 import matplotlib.pyplot as plt
 from btx.diagnostics.run import RunDiagnostics
 from btx.misc.radial import (radial_profile, pix2q)
@@ -15,7 +16,7 @@ class SAXSProfile:
 
 @dataclass
 class GuinierResult:
-    fit_result #: LinregressResult
+    fit_result: LinregressResult
     I0: float
     Rg: float
 
