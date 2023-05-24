@@ -422,22 +422,36 @@ def assemble_image_stack_batch(image_stack, pixel_index_map):
         stack of assembled images, shape (n_images, fs_panel_shape, ss_panel_shape)
         of shape (fs_panel_shape, ss_panel_shape) if ony one image provided
     """
+    multiple_panel_dimensions = False
     if len(image_stack.shape) == 3:
         image_stack = np.expand_dims(image_stack, 0)
-
+    elif len(image_stack.shape) == 5:
+        multiple_panel_dimensions = True
+        
     # get boundary
     index_max_x = np.max(pixel_index_map[..., 0]) + 1
     index_max_y = np.max(pixel_index_map[..., 1]) + 1
     # get stack number and panel number
     stack_num = image_stack.shape[0]
-    panel_num = image_stack.shape[1]
 
     # set holder
     images = np.zeros((stack_num, index_max_x, index_max_y))
 
-    # loop through the panels
-    for l in range(panel_num):
-        images[:, pixel_index_map[l, :, :, 0], pixel_index_map[l, :, :, 1]] = image_stack[:, l, :, :]
+    if multiple_panel_dimensions:
+        panel_dim1 = image_stack.shape[1]
+        panel_dim2 = image_stack.shape[2]
+        for i in range(panel_dim1):
+            for j in range(panel_dim2):
+                x = pixel_index_map[i, j, ..., 0]
+                y = pixel_index_map[i, j, ..., 1]
+                images[:, x, y] = image_stack[:, i, j]
+    else:
+        panel_num = image_stack.shape[1]
+        # loop through the panels
+        for l in range(panel_num):
+            x = pixel_index_map[l, ..., 0]
+            y = pixel_index_map[l, ..., 1]
+            images[:, x, y] = image_stack[:, l]
 
     if images.shape[0] == 1:
         images = images[0]
