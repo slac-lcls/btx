@@ -227,6 +227,8 @@ class PsanaInterface:
         if pv_beam_transmission is None:
             if self.hutch == 'mfx':
                 pv_beam_transmission = "MFX:ATT:COM:R_CUR"
+            elif self.hutch == 'cxi':
+                pv_beam_transmission = "CXI:DIA:ATT:COM:R_CUR"
             else:
                 raise NotImplementedError
 
@@ -395,8 +397,8 @@ def retrieve_pixel_index_map(geom):
 
     temp_index = [np.asarray(t) for t in geom.get_pixel_coord_indexes()]
     pixel_index_map = np.zeros((np.array(temp_index).shape[2:]) + (2,))
-    pixel_index_map[:,:,:,0] = temp_index[0][0]
-    pixel_index_map[:,:,:,1] = temp_index[1][0]
+    pixel_index_map[...,0] = temp_index[0][0]
+    pixel_index_map[...,1] = temp_index[1][0]
     
     return pixel_index_map.astype(np.int64)
 
@@ -424,8 +426,8 @@ def assemble_image_stack_batch(image_stack, pixel_index_map):
         image_stack = np.expand_dims(image_stack, 0)
 
     # get boundary
-    index_max_x = np.max(pixel_index_map[:, :, :, 0]) + 1
-    index_max_y = np.max(pixel_index_map[:, :, :, 1]) + 1
+    index_max_x = np.max(pixel_index_map[..., 0]) + 1
+    index_max_y = np.max(pixel_index_map[..., 1]) + 1
     # get stack number and panel number
     stack_num = image_stack.shape[0]
     panel_num = image_stack.shape[1]
