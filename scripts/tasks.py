@@ -369,6 +369,21 @@ def clean_up(config):
         os.system(f"rm -f {taskdir}/r*/*{task.tag}.cxi")
     logger.debug('Done!')
 
+def plot_saxs(config):
+    """! Plot the SAXS profile and associated diagnostic figures."""
+    from btx.processing.saxs import SAXSProfiler
+    setup = config.setup
+    task = config.plot_saxs
+
+    expmt = setup.exp
+    run = setup.run
+    detector_type = setup.det_type
+    rootdir = setup.root_dir
+    method = task.method
+
+    saxs = SAXSProfiler(expmt, run, detector_type, rootdir, method)
+    saxs.plot_all()
+
 def timetool_diagnostics(config):
     """! Plot timetool diagnostic figures from data in smalldata hdf5 file."""
     from btx.io.ih5 import SmallDataReader
