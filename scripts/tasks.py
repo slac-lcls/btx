@@ -367,7 +367,7 @@ def plot_saxs(config):
     task = config.plot_saxs
 
     expmt = setup.exp
-    run = task.run
+    run = setup.run
     detector_type = setup.det_type
     rootdir = setup.root_dir
     method = task.method

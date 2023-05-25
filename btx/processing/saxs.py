@@ -113,6 +113,9 @@ class SAXSProfiler:
         """! Determine the detector distance based on the current geometry."""
         pass
 
+    def integrate1d_psgeom(self):
+        pass
+
     def integrate1d_pyfai(self):
         """! Perform 1D radial integration using pyFAI."""
         raise NotImplementedError
