@@ -142,10 +142,17 @@ class SAXSProfiler:
                         rootdir: str) -> np.ndarray:
         raise NotImplementedError
 
-    def plot_all(self):
+    def plot_all(self, glim: float = 0.05):
+        """! Plot the basic SAXS plots with no further analysis.
+
+        @param glim (float) X-limit for the Guinier plot (maximum Q^2)
+        """
         fig, axs = plt.subplots(2, 2, figsize=(6,6), dpi=150)
         q = self._saxsprofile.q_vals
         I = self._saxsprofile.intensity
+
+        I = I[q < 0.35]
+        q = q[q < 0.35]
 
         axs[0, 0].plot(q, I)
         axs[0, 0].set_xlabel(r'q (A$^{-1}$)')
@@ -153,11 +160,12 @@ class SAXSProfiler:
         axs[0, 0].set_title(r'Scattering Profile')
 
         q2 = q**2
+        lnq = np.log(q)
         G = np.log(I)
         q2 = q2[G != -np.inf]
+        lnq = lnq[G != -np.inf]
         G = G[G != -np.inf]
-        glim = 0.05
-        idx = np.argmin(np.abs(q2 -glim))
+        idx = np.argmin(np.abs(q2 - glim))
         axs[0, 1].plot(q2, G)
         axs[0, 1].set_xlim([q2[0] - 0.001, glim])
         axs[0, 1].set_ylim([G[0] - .1, G[idx] + .1])
@@ -165,9 +173,12 @@ class SAXSProfiler:
         axs[0, 1].set_ylabel(r'ln(I)')
         axs[0, 1].set_title('Guinier Plot')
 
-        axs[1, 0].plot(q, I*q**4)
-        axs[1, 0].set_xlabel(r'q (A$^{-1}$)')
-        axs[1, 0].set_ylabel(r'Iq$^{4}$')
+        axs[1, 0].plot(lnq, G)
+        axs[1, 0].set_xlabel(r'ln(q)')
+        axs[1, 0].set_ylabel(r'ln(I)')
+        # axs[1, 0].plot(q, I*q**4)
+        # axs[1, 0].set_xlabel(r'q (A$^{-1}$)')
+        # axs[1, 0].set_ylabel(r'Iq$^{4}$')
         axs[1, 0].set_title(r'Porod Plot')
 
         axs[1, 1].plot(q, I*q**2)
