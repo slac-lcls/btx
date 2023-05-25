@@ -440,13 +440,14 @@ def assemble_image_stack_batch(image_stack, pixel_index_map):
     images = np.zeros((stack_num, index_max_x, index_max_y))
 
     if multiple_panel_dimensions:
-        panel_dim1 = pixel_index_map.shape[0]
-        panel_dim2 = pixel_index_map.shape[1]
-        for i in range(panel_dim1):
-            for j in range(panel_dim2):
+        pdim1 = pixel_index_map.shape[0]
+        pdim2 = pixel_index_map.shape[1]
+        for i in range(pdim1):
+            for j in range(pdim2):
                 x = pixel_index_map[i, j, ..., 0]
                 y = pixel_index_map[i, j, ..., 1]
-                images[:, x, y] = image_stack[:, i, j]
+                idx = i*pdim2 + j
+                images[:, x, y] = image_stack[:, idx]
     else:
         panel_num = image_stack.shape[1]
         # loop through the panels
