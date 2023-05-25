@@ -480,14 +480,29 @@ def disassemble_image_stack_batch(images, pixel_index_map):
         stack of images, shape (n_images, n_panels, fs_panel_shape, ss_panel_shape)
         or (n_panels, fs_panel_shape, ss_panel_shape)
     """
+    multiple_panel_dimensions = False
     if len(images.shape) == 2:
         images = np.expand_dims(images, axis=0)
 
-    image_stack_batch = np.zeros((images.shape[0],) + pixel_index_map.shape[:3])
-    for panel in range(pixel_index_map.shape[0]):
-        idx_map_1 = pixel_index_map[panel, :, :, 0]
-        idx_map_2 = pixel_index_map[panel, :, :, 1]
-        image_stack_batch[:, panel] = images[:, idx_map_1, idx_map_2]
+    if len(pixel_index_map.shape) == 5:
+        multiple_panel_dimensions = True
+
+    if multiple_panel_dimensions:
+        ishape = images.shape[0]
+        (pdim1, pdim2, fs_shape, ss_shape) = pixel_index_map.shape[:-1]
+        image_stack_batch = np.zeros((ishape, pdim1*pdim2, fs_shape, ss_shape))
+        for i in range(pdim1):
+            for j in range(pdim2):
+                x = pixel_index_map[i, j, ..., 0]
+                y = pixel_index_map[i, j, ..., 1]
+                idx = i*pdim2 + j
+                image_stack_batch[:, idx] = images[:, x, y]
+    else:
+        image_stack_batch = np.zeros((images.shape[0],) + pixel_index_map.shape[:3])
+        for panel in range(pixel_index_map.shape[0]):
+            idx_map_1 = pixel_index_map[panel, :, :, 0]
+            idx_map_2 = pixel_index_map[panel, :, :, 1]
+            image_stack_batch[:, panel] = images[:, idx_map_1, idx_map_2]
 
     if image_stack_batch.shape[0] == 1:
         image_stack_batch = image_stack_batch[0]
