@@ -59,8 +59,8 @@ class SAXSProfiler:
         @param rootdir (str) Root directory for btx processing.
         @return SAXSProfile (SAXSProfile) Object containing q's and intensities.
         """
-        center = None # self.get_center()
-        distance = 0.089 # self.get_distance()
+        center = self.get_center()
+        distance = self.get_distance(int(run))
 
         self.powder = self.find_powder_btx(expmt=expmt, run=run, rootdir=rootdir)
         # Need to update to get center
@@ -107,11 +107,17 @@ class SAXSProfiler:
 
     def get_center(self):
         """! Determine the beam center based on the current geometry."""
-        pass
+        return None
 
-    def get_distance(self):
-        """! Determine the detector distance based on the current geometry."""
-        pass
+    def get_distance(self, run: int) -> float:
+        """! Determine the detector distance based on the current geometry.
+
+        @param run (int) The run number currently under analysis.
+        @return distance (float) The detector distance in psana.
+        """
+        pixel_distances = self.diagnostics.psi.det.coords_z(run)
+        distance = np.mean(-pixel_distances / 1e3)
+        return distance
 
     def integrate1d_psgeom(self):
         pass
