@@ -152,7 +152,15 @@ class SAXSProfiler:
         axs[0, 0].set_ylabel(r'I(q) (a.u.)')
         axs[0, 0].set_title(r'Scattering Profile')
 
-        axs[0, 1].plot(q**2, np.log(I))
+        q2 = q**2
+        G = np.log(I)
+        q2 = q2[G != -np.inf]
+        G = G[G != -np.inf]
+        glim = 0.05
+        idx = np.argmin(np.abs(q2 -glim))
+        axs[0, 1].plot(q2, G)
+        axs[0, 1].set_xlim([q2[0] - 0.001, glim])
+        axs[0, 1].set_ylim([G[0] - .1, G[idx] + .1])
         axs[0, 1].set_xlabel(r'q$^{2}$ (A$^{-2}$)')
         axs[0, 1].set_ylabel(r'ln(I)')
         axs[0, 1].set_title('Guinier Plot')
