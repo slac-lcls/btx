@@ -17,6 +17,6 @@ task_id='run_analysis'
 run_analysis = JIDSlurmOperator(task_id=task_id, dag=dag)
 
 task_id='plot_saxs'
-plot_saxs = JIDSlurmOperator(task_id, dag=dag)
+plot_saxs = JIDSlurmOperator(task_id=task_id, dag=dag)
 
 run_analysis >> plot_saxs
