@@ -389,8 +389,9 @@ def retrieve_pixel_index_map(geom):
 
     Returns
     -------
-    pixel_index_map : numpy.ndarray, 4d
+    pixel_index_map : numpy.ndarray, 4d or 5d
         pixel coordinates, shape (n_panels, fs_panel_shape, ss_panel_shape, 2)
+                           shape (pidx1, pidx2, fs_shape, ss_shape, 2)
     """
     if type(geom) == str:
         geom = GeometryAccess(geom)
