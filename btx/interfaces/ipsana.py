@@ -425,7 +425,8 @@ def assemble_image_stack_batch(image_stack, pixel_index_map):
     multiple_panel_dimensions = False
     if len(image_stack.shape) == 3:
         image_stack = np.expand_dims(image_stack, 0)
-    elif len(image_stack.shape) == 5:
+
+    if len(pixel_index_map.shape) == 5:
         multiple_panel_dimensions = True
         
     # get boundary
@@ -438,8 +439,8 @@ def assemble_image_stack_batch(image_stack, pixel_index_map):
     images = np.zeros((stack_num, index_max_x, index_max_y))
 
     if multiple_panel_dimensions:
-        panel_dim1 = image_stack.shape[1]
-        panel_dim2 = image_stack.shape[2]
+        panel_dim1 = pixel_index_map.shape[0]
+        panel_dim2 = pixel_index_map.shape[1]
         for i in range(panel_dim1):
             for j in range(panel_dim2):
                 x = pixel_index_map[i, j, ..., 0]
