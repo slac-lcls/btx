@@ -26,7 +26,8 @@ class RunDiagnostics:
         self.stats = dict()
         self.gain_traj = None
         self.gain_map = None
-        
+        self.gain_mode = ''
+
         self.comm = MPI.COMM_WORLD
         self.rank = self.comm.Get_rank()
         self.size = self.comm.Get_size() 
@@ -44,10 +45,11 @@ class RunDiagnostics:
             for key in ['sum', 'sqr', 'max', 'min']:
                 self.powders[key] = img.copy()
         else:
-            self.powders['sum'] += img
-            self.powders['sqr'] += np.square(img)
-            self.powders['max'] = np.maximum(self.powders['max'], img)
-            self.powders['min'] = np.minimum(self.powders['min'], img)
+            if img is not None:
+                self.powders['sum'] += img
+                self.powders['sqr'] += np.square(img)
+                self.powders['max'] = np.maximum(self.powders['max'], img)
+                self.powders['min'] = np.minimum(self.powders['min'], img)
 
     def finalize_powders(self):
         """
@@ -111,6 +113,29 @@ class RunDiagnostics:
             for key in self.stats_final.keys():
                 np.save(os.path.join(outdir, f"r{self.psi.run:04}_trace_{key}{suffix}.npy"), self.stats_final[key])
 
+    def load_traces(self, outdir, raw_img=False):
+        """
+        Load previously saved trajectories of statistics.
+
+        Parameters
+        ----------
+        outdir: str
+            path to directory where traces have been saved
+        raw_img : bool
+            if True, load trace files with _raw nomenclature
+        """
+        self.stats_final = dict()
+        if self.rank == 0:
+            suffix=""
+            if raw_img:
+                suffix = "_raw"
+            for key in ['mean', 'std', 'max', 'min', 'beam_energy_eV', 'photon_energy_eV']:
+                filepath_key = os.path.join(outdir, f"r{self.psi.run:04}_trace_{key}{suffix}.npy")
+                try:
+                    self.stats_final[key] = np.load(filepath_key)
+                except FileNotFoundError as e:
+                    print(f"Error while attempting to read {filepath_key}")
+
     def compute_stats(self, evt, img):
         """
         Compute the following image stats: mean, std deviation, max, min.
@@ -137,12 +162,24 @@ class RunDiagnostics:
                       "Speak with a beamline scientist to find the proper PV")
             self.stats['photon_energy_eV'][self.n_proc] = photon_energy_eV
 
-            self.stats['mean'][self.n_proc] = np.mean(img)
-            self.stats['std'][self.n_proc] = np.std(img)
-            self.stats['max'][self.n_proc] = np.max(img)
-            self.stats['min'][self.n_proc] = np.min(img)
+            if img is None:
+                self.stats['mean'][self.n_proc] = np.nan
+                self.stats['std'][self.n_proc] = np.nan
+                self.stats['max'][self.n_proc] = np.nan
+                self.stats['min'][self.n_proc] = np.nan
+            else:
+                self.stats['mean'][self.n_proc] = np.mean(img)
+                self.stats['std'][self.n_proc] = np.std(img)
+                self.stats['max'][self.n_proc] = np.max(img)
+                self.stats['min'][self.n_proc] = np.min(img)
         else:
-            self.n_empty += 1
+            #self.n_empty += 1
+            self.stats['beam_energy_eV'][self.n_proc] = np.nan
+            self.stats['photon_energy_eV'][self.n_proc] = np.nan
+            self.stats['mean'][self.n_proc] = np.nan
+            self.stats['std'][self.n_proc] = np.nan
+            self.stats['max'][self.n_proc] = np.nan
+            self.stats['min'][self.n_proc] = np.nan
                 
     def finalize_stats(self, n_empty=0, n_empty_raw=0):
         """
@@ -241,15 +278,15 @@ class RunDiagnostics:
                     img = img & 0x3fff # exclude first two bits for powder calculation
             else:
                 img = self.psi.det.calib(evt=evt)
-            if img is None:
-                self.n_empty += 1
-                continue
+            #if img is None:
+            #    self.n_empty += 1
+                #continue
                 
-            if threshold:
-                if np.mean(img) > threshold:
-                    print(f"Excluding event {idx} with image mean: {np.mean(img)}")
-                    n_excluded += 1
-                    continue
+            #if threshold:
+            #    if np.mean(img) > threshold:
+            #        print(f"Excluding event {idx} with image mean: {np.mean(img)}")
+            #        n_excluded += 1
+            #        continue
 
             self.compute_base_powders(img)
             if not powder_only:
@@ -429,6 +466,71 @@ class RunDiagnostics:
             if output is not None:
                 fig.savefig(output, dpi=300, bbox_inches='tight')
     
+    def visualize_stats_interactive(self, y_key='mean', color_by='beam_energy_eV'):
+        """
+        Plot trajectories of run statistics, interactively.
+
+        Parameters
+        ----------
+        y_key : str
+            self.stats_final key to plot
+        color_by : str
+            self.stats_final key used to color
+        """
+        import holoviews as hv
+        hv.extension('bokeh')
+        from holoviews import opts
+        import pandas as pd
+
+        y = self.stats_final[y_key]
+
+        df = pd.DataFrame({
+            'evt_id' : np.arange(y.shape[0]), 
+            'y' : self.stats_final[y_key], 
+            'color_by' : self.stats_final[color_by]})
+        scatter = hv.Scatter(df, kdims=['evt_id'], vdims=['y', 'color_by'])
+        plot_opts = dict(width=800, color_index='color_by')
+        return scatter.opts(opts.Scatter(tools=['hover'])).opts(plot=plot_opts)
+
+    def display_img_evt(self, event_id, 
+            vmin=1, figsize=8, dpi=360, title=None, log=True, mask_negatives=True):
+        """
+        Display the detector image corresponding to a given event ID.
+
+        Parameters
+        ----------
+        event_id : int
+            Index of the desired event
+        vmin : float
+            Lowest pixel value
+        figsize : int
+            Figure size
+        dpi : int
+            Figure dots per inch
+        title : str or None
+            Figure title
+        log : bool
+            Whether the detector image is displayed on linear or log scale.
+        mask_negatives: bool
+            Whether negative intensity pixels should be masked.
+        """
+        evt = self.psi.runner.event(self.psi.times[event_id])
+        img = self.psi.det.image(evt=evt)
+
+        fig = plt.figure(figsize=(figsize,figsize),dpi=dpi)
+        img = np.ma.masked_where(img<=0,img)
+        if log:
+            plt.imshow(img, norm=LogNorm(vmin=vmin), interpolation='none')
+        else:
+            plt.imshow(img)
+        plt.colorbar()
+        if title is not None:
+            plt.title(title)
+        plt.xlabel('Y')
+        plt.ylabel('X')
+        plt.show()
+        
+
     def check_first_evt(self, mask=None, scale_factor=5, n_images=5):
         """
         Check whether the first event of the run should be excluded; it's 
