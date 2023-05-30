@@ -173,7 +173,7 @@ class RunDiagnostics:
                 self.stats['max'][self.n_proc] = np.max(img)
                 self.stats['min'][self.n_proc] = np.min(img)
         else:
-            #self.n_empty += 1
+            self.n_empty += 1
             self.stats['beam_energy_eV'][self.n_proc] = np.nan
             self.stats['photon_energy_eV'][self.n_proc] = np.nan
             self.stats['mean'][self.n_proc] = np.nan
@@ -181,21 +181,12 @@ class RunDiagnostics:
             self.stats['max'][self.n_proc] = np.nan
             self.stats['min'][self.n_proc] = np.nan
                 
-    def finalize_stats(self, n_empty=0, n_empty_raw=0):
+    def finalize_stats(self):
         """
         Gather stats from various ranks into single arrays in self.stats_final.
-
-        Parameters
-        ----------
-        n_empty : int
-            number of empty images in this rank
-        n_empty_raw : int
-            number of empty raw events in this rank
         """
         self.stats_final = dict()
         for key in self.stats.keys():
-            if n_empty != 0:
-                self.stats[key] = self.stats[key][:-n_empty]
             self.stats_final[key] = self.comm.gather(self.stats[key], root=0)
 
         self.stats_final['fiducials'] = self.comm.gather(np.array(self.psi.fiducials), root=0)
@@ -204,8 +195,6 @@ class RunDiagnostics:
                 self.stats_final[key] = np.hstack(self.stats_final[key])
                 
         if self.gain_traj is not None:
-            if n_empty_raw != 0:
-                self.gain_traj = self.gain_traj[:-n_empty_raw]
             self.stats_final['gain_mode_counts'] = self.comm.gather(self.gain_traj, root=0)
             if self.rank == 0:
                 self.stats_final['gain_mode_counts'] = np.hstack(self.stats_final['gain_mode_counts'])
@@ -278,15 +267,14 @@ class RunDiagnostics:
                     img = img & 0x3fff # exclude first two bits for powder calculation
             else:
                 img = self.psi.det.calib(evt=evt)
-            #if img is None:
-            #    self.n_empty += 1
-                #continue
+            if img is None:
+                self.n_empty += 1
                 
-            #if threshold:
-            #    if np.mean(img) > threshold:
-            #        print(f"Excluding event {idx} with image mean: {np.mean(img)}")
-            #        n_excluded += 1
-            #        continue
+            if threshold:
+                if np.mean(img) > threshold:
+                    print(f"Excluding event {idx} with image mean: {np.mean(img)}")
+                    n_excluded += 1
+                    img = None
 
             self.compute_base_powders(img)
             if not powder_only:
@@ -296,21 +284,18 @@ class RunDiagnostics:
                 
             if gain_mode is not None and self.psi.det_type == 'epix10k2M':
                 raw = self.psi.det.raw(evt)
-                if raw is None:
-                    n_empty_raw +=1
-                    continue
                 self.get_gain_statistics(raw, gain_mode)
             else:
                 self.gain_mode = ''
 
             self.n_proc += 1
-            if self.psi.counter + self.n_empty + n_excluded == self.psi.max_events:
+            if self.psi.counter == self.psi.max_events:
                 break
 
         self.comm.Barrier()
         self.finalize_powders()
         if not powder_only:
-            self.finalize_stats(self.n_empty + n_excluded, n_empty_raw)
+            self.finalize_stats()
             print(f"Rank {self.rank}, no. empty images: {self.n_empty}, no. excluded images: {n_excluded}")
 
     def visualize_powder(self, tag='max', vmin=-1e5, vmax=1e5, output=None, figsize=12, dpi=300):
@@ -489,8 +474,8 @@ class RunDiagnostics:
             'y' : self.stats_final[y_key], 
             'color_by' : self.stats_final[color_by]})
         scatter = hv.Scatter(df, kdims=['evt_id'], vdims=['y', 'color_by'])
-        plot_opts = dict(width=800, color_index='color_by')
-        return scatter.opts(opts.Scatter(tools=['hover'])).opts(plot=plot_opts)
+        #plot_opts = dict(width=800, color_index='color_by')
+        return scatter.opts(opts.Scatter(tools=['hover'])).opts(width=800, color_index='color_by')
 
     def display_img_evt(self, event_id, 
             vmin=1, figsize=8, dpi=360, title=None, log=True, mask_negatives=True):
