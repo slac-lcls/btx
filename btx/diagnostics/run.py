@@ -471,7 +471,7 @@ class RunDiagnostics:
 
         df = pd.DataFrame({
             'evt_id' : np.arange(y.shape[0]), 
-            'y' : self.stats_final[y_key], 
+            'y' : y, 
             'color_by' : self.stats_final[color_by]})
         scatter = hv.Scatter(df, kdims=['evt_id'], vdims=['y', 'color_by'])
         return scatter.opts(opts.Scatter(tools=['hover'])).opts(width=800, color_index='color_by')
