@@ -6,6 +6,9 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import matplotlib.colors as colors
 from matplotlib.colors import LogNorm
+import holoviews as hv
+from holoviews import opts
+import pandas as pd
 from btx.interfaces.ipsana import *
 from btx.interfaces.ischeduler import JobScheduler
 
@@ -462,10 +465,7 @@ class RunDiagnostics:
         color_by : str
             self.stats_final key used to color
         """
-        import holoviews as hv
         hv.extension('bokeh')
-        from holoviews import opts
-        import pandas as pd
 
         y = self.stats_final[y_key]
 
@@ -474,11 +474,11 @@ class RunDiagnostics:
             'y' : self.stats_final[y_key], 
             'color_by' : self.stats_final[color_by]})
         scatter = hv.Scatter(df, kdims=['evt_id'], vdims=['y', 'color_by'])
-        #plot_opts = dict(width=800, color_index='color_by')
         return scatter.opts(opts.Scatter(tools=['hover'])).opts(width=800, color_index='color_by')
 
     def display_img_evt(self, event_id, 
-            vmin=1, figsize=8, dpi=360, title=None, log=True, mask_negatives=True):
+            vmin=1, vmax=1e3, figsize=8, dpi=360, title=None, log=True, mask_negatives=True,
+            method='pyplot'):
         """
         Display the detector image corresponding to a given event ID.
 
@@ -498,22 +498,31 @@ class RunDiagnostics:
             Whether the detector image is displayed on linear or log scale.
         mask_negatives: bool
             Whether negative intensity pixels should be masked.
+        method: str
+            options: 'pyplot' (default) or 'holoviews'
         """
         evt = self.psi.runner.event(self.psi.times[event_id])
         img = self.psi.det.image(evt=evt)
+        if mask_negatives:
+            img = np.ma.masked_where(img<=0,img)
 
-        fig = plt.figure(figsize=(figsize,figsize),dpi=dpi)
-        img = np.ma.masked_where(img<=0,img)
-        if log:
-            plt.imshow(img, norm=LogNorm(vmin=vmin), interpolation='none')
+        if method is 'pyplot':
+            fig = plt.figure(figsize=(figsize,figsize),dpi=dpi)
+            if log:
+                plt.imshow(img, norm=LogNorm(vmin=vmin), interpolation='none')
+            else:
+                plt.imshow(img)
+            plt.colorbar()
+            if title is not None:
+                plt.title(title)
+            plt.xlabel('Y')
+            plt.ylabel('X')
+            plt.show()
         else:
-            plt.imshow(img)
-        plt.colorbar()
-        if title is not None:
-            plt.title(title)
-        plt.xlabel('Y')
-        plt.ylabel('X')
-        plt.show()
+            hv.extension('bokeh')
+            hvimg = hv.Image(img)
+            return hvimg.opts(width=800, height=800, logz=log, zlim=(vmin,vmax), 
+                    colorbar=True, cmap='inferno', tools=['hover'])
         
 
     def check_first_evt(self, mask=None, scale_factor=5, n_images=5):
