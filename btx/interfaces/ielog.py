@@ -15,12 +15,24 @@ class eLogInterface:
         for sample in self.list_processed_samples():
             self.update_sample(sample)
 
-    def update_run(self, run):
+    def update_run(self, run, plot_type: str = 'pyplot'):
+        """! Update eLog summaries by moving files to the stats folder.
+
+        @param plot_type (str) Choose to move `pyplot` or `holoviews` plots.
+        """
         os.makedirs(self.target_dir(subdir=f"runs/{run}"), exist_ok=True)
-        self.update_png(run, 'geom', 'geom')
-        self.update_png(run, 'powder', 'powder')
-        self.update_png(run, 'powder', 'stats')
-        self.update_html(['geom', 'powder', 'stats'], f"runs/{run}/")
+        if plot_type == 'pyplot':
+            self.update_png(run, 'geom', 'geom')
+            self.update_png(run, 'powder', 'powder')
+            self.update_png(run, 'powder', 'stats')
+            self.update_html(['geom', 'powder', 'stats'], f"runs/{run}/")
+        elif plot_type == 'holoviews':
+            self.update_png(run, 'geom', 'geom')
+            self.update_png(run, 'powder', 'powder')
+            self.update_hv(run, 'powder', 'stats')
+            self.update_html(['geom', 'powder', 'stats'],
+                             f"runs/{run}/",
+                             merge_html=True)
 
     def update_sample(self, sample):
         os.makedirs(self.target_dir(subdir=f"samples/stats_{sample}"), exist_ok=True)
@@ -43,13 +55,16 @@ class eLogInterface:
                 os.makedirs(target_dir, exist_ok=True)
                 shutil.copyfile(f'{source_dir}final.{filetype}', f'{target_dir}final.{filetype}')
 
-    def update_html(self, png_list, subdir):
-        with open(f'{self.target_dir(subdir=f"{subdir}")}report.html', 'w') as hfile:
-            hfile.write('<!doctype html><html><head></head><body>')
-            for png in png_list:
-                if os.path.isfile(f'{self.target_dir(subdir=f"{subdir}")}{png}.png'):
-                    hfile.write(f"<img src='{png}.png' width=1000><br>")
-            hfile.write('</body></html>')
+    def update_html(self, png_list, subdir, *, merge_html=False):
+        if not merge_html:
+            with open(f'{self.target_dir(subdir=f"{subdir}")}report.html', 'w') as hfile:
+                hfile.write('<!doctype html><html><head></head><body>')
+                for png in png_list:
+                    if os.path.isfile(f'{self.target_dir(subdir=f"{subdir}")}{png}.png'):
+                        hfile.write(f"<img src='{png}.png' width=1000><br>")
+                hfile.write('</body></html>')
+        else:
+            pass
 
     def update_png(self, item, task, image):
         if task == 'powder':
