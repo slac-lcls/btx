@@ -1,8 +1,11 @@
 import numpy as np
+import logging
 import psana
 from psana import setOption
 from psana import EventId
 from PSCalib.GeometryAccess import GeometryAccess
+
+logger = logging.getLogger(__name__)
 
 class PsanaInterface:
 
@@ -57,7 +60,7 @@ class PsanaInterface:
         self.calibrate = True
         evt = self.runner.event(self.times[0])
         if (self.det.pedestals(evt) is None) or (self.det.gain(evt) is None):
-            print("Warning: calibration data unavailable, returning uncalibrated data")
+            logger.warning("Warning: calibration data unavailable, returning uncalibrated data")
             self.calibrate = False
 
     def turn_calibration_off(self):
@@ -109,12 +112,11 @@ class PsanaInterface:
         wavelength : float
             wavelength in Angstrom
         """
-        photon_energy = self.get_photon_energy_eV_evt(evt)
-        if np.isinf(photon_energy) or photon_energy is None:
-            return self.get_wavelength()
-        else:
-            lambda_m =  1.23984197386209e-06 / photon_energy # convert to meters using e=hc/lambda
+        try:
+            lambda_m = 1.23984197386209e-06 / self.get_photon_energy_eV_evt(evt) # convert to meters using e=hc/lambda
             return lambda_m * 1e10
+        except:
+            return self.get_wavelength()
 
     def get_photon_energy_eV_evt(self, evt):
         """
@@ -132,7 +134,7 @@ class PsanaInterface:
         try:
             return psana.Detector('EBeam').get(evt).ebeamPhotonEnergy()
         except AttributeError as e:
-            print("Warning: event does not have an ebeamPhotonEnergy value.")
+            logger.warning("Event lacking an ebeamPhotonEnergy value.")
 
     def get_fee_gas_detector_energy_mJ_evt(self, evt, mode=None):
         """
@@ -202,7 +204,7 @@ class PsanaInterface:
                 pv_camera_length = 'MFX:DET:MMS:04.RBV'
             if self.det_type == 'epix10k2M':
                 pv_camera_length = 'MFX:ROB:CONT:POS:Z'
-            print(f"PV used to retrieve clen parameter: {pv_camera_length}")
+            logger.debug(f"PV used to retrieve clen parameter: {pv_camera_length}")
 
         try:
             return self.ds.env().epicsStore().value(pv_camera_length)
