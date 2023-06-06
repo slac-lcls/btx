@@ -159,6 +159,7 @@ def opt_geom(config):
 def find_peaks(config):
     from btx.processing.peak_finder import PeakFinder
     from btx.misc.shortcuts import fetch_latest
+    from btx.interfaces.ielog import update_summary
     setup = config.setup
     task = config.find_peaks
     """ Perform adaptive peak finding on run. """
@@ -181,6 +182,9 @@ def find_peaks(config):
         logger.debug("Could not communicate with the elog update url")
     logger.info(f'Saving CXI files and summary to {taskdir}/r{setup.run:04}')
     logger.debug('Done!')
+
+    summary_file = f'{setup.root_dir}/summary_r{setup.run:04}.json'
+    update_summary(summary_file, pf.pf_summary)
 
 def index(config):
     from btx.processing.indexer import Indexer
@@ -347,6 +351,17 @@ def elog_display(config):
     eli = eLogInterface(setup)
     eli.update_summary()
     logger.debug('Done!')
+
+def post_to_elog(config):
+    from btx.interfaces.ielog import elog_report_post
+    setup = config.setup
+    root_dir = setup.root_dir
+    run = setup.run
+
+    summary_file = f'{root_dir}/summary_r{run:04}.json'
+    url = os.environ.get('JID_UPDATE_COUNTERS')
+    if url:
+        elog_report_post(summary_file, url)
 
 def visualize_sample(config):
     from btx.misc.visuals import VisualizeSample

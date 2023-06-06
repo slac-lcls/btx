@@ -4,18 +4,25 @@ import shutil
 from glob import glob
 import json
 import requests
+from typing import Optional
 
-def elog_report_post(summary_file: str, update_url: str = None):
+def elog_report_post(summary_file: str, update_url: Optional[str] = None):
     """! Post a summary file to the eLog's run report section.
 
     @param summary_file (str) Path to the summary file to post.
-    @param update_url (str) URL to post to.
+    @param update_url (str | None) URL to post to. Attempts to retrieve if None.
     """
     with open(summary_file, 'r') as f:
         data: dict = json.load(f) # load for files instead of loads
         post_list: list = [ { 'key': f'{key}', 'value': f'{data[key]}' }
                             for key in data ]
-        requests.post(update_url, json = post_list)
+        if not update_url:
+            url = os.environ.get('JID_UPDATE_COUNTERS')
+            if url:
+                requests.post(url, json = post_list)
+        else:
+            requests.post(update_url, json = post_list)
+
 
 def update_summary(summary_file: str, data: dict):
     """! Append summary data to a JSON file.
