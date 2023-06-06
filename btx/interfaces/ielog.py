@@ -2,6 +2,31 @@ import os
 import numpy as np
 import shutil
 from glob import glob
+import json
+import requests
+
+def elog_report_post(summary_file: str, update_url: str = None):
+    """! Post a summary file to the eLog's run report section.
+
+    @param summary_file (str) Path to the summary file to post.
+    @param update_url (str) URL to post to.
+    """
+    with open(summary_file, 'r') as f:
+        data: dict = json.load(f) # load for files instead of loads
+        post_list: list = [ { 'key': f'{key}', 'value': f'{data[key]}' }
+                            for key in data ]
+        requests.post(update_url, json = post_list)
+
+def update_summary(summary_file: str, data: dict):
+    """! Append summary data to a JSON file.
+
+    @param summary_file (str) Path to the summary file to update.
+    @param data (dict) Key/value pairs to be stored in the JSON summary.
+    """
+    with open(summary_file, 'r+') as f:
+        summary_data: dict = json.load(f)
+        summary_data.update(data)
+        json.dump(summary_data, f) # dump for files instead of dumps
 
 class eLogInterface:
 
