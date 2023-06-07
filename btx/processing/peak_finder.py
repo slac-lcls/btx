@@ -1,6 +1,7 @@
 import numpy as np
 import argparse
 import h5py
+import logging
 import os
 import requests
 from mpi4py import MPI
@@ -8,6 +9,8 @@ from btx.interfaces.ipsana import *
 from psalgos.pypsalgos import PyAlgos
 import matplotlib.pyplot as plt
 import sys
+
+logger = logging.getLogger(__name__)
 
 class PeakFinder:
     
@@ -77,14 +80,14 @@ class PeakFinder:
         if det_type.lower() == 'rayonix':
             self.iX = np.expand_dims(self.iX, axis=0)
             self.iY = np.expand_dims(self.iY, axis=0)
-        print(f"self.iX.shape = {self.iX.shape}")
+        logger.debug(f"self.iX.shape = {self.iX.shape}")
             
         self.ipx, self.ipy = self.psi.det.point_indexes(self.psi.run, pxy_um=(0, 0))
 
         # retrieve clen from psana if None or a PV code is supplied
         if type(self.clen) != float:
             self.clen = self.psi.get_camera_length(pv_camera_length=self.clen)
-            print(f"Value of clen parameter is: {self.clen} mm")
+            logger.debug(f"Value of clen parameter is: {self.clen} mm")
 
     def _generate_mask(self, mask_file=None, psana_mask=True):
         """
@@ -203,7 +206,7 @@ class PeakFinder:
             photon energy in eV
         """
         if self.psi.det_type not in ['jungfrau4M', 'epix10k2M']:
-            print("Warning! Reformatting to Cheetah may not be correct")
+            logger.warning("Warning! Reformatting to Cheetah may not be correct")
         
         ch_rows = peaks[:,0] * img.shape[1] + peaks[:,1]
         ch_cols = peaks[:,2]
@@ -353,7 +356,7 @@ class PeakFinder:
         self.comm.Barrier()
 
         if empty_images != 0:
-            print(f"Rank {self.rank} encountered {empty_images} empty images.")
+            logger.debug(f"Rank {self.rank} encountered {empty_images} empty images.")
 
     def summarize(self):
         """
@@ -491,7 +494,7 @@ class PeakFinder:
                 fnames.append(os.path.join(self.outdir, f'{self.psi.exp}_r{self.psi.run:04}_{fi}{self.tag}.cxi'))
         if len(fnames) == 0:
             sys.exit("No hits found")
-        print(f"Files with peaks: {fnames}")
+        logger.debug(f"Files with peaks: {fnames}")
 
         # retrieve datasets to populate in virtual hdf5
         dname_list, key_list, shape_list, dtype_list = [], [], [], []
