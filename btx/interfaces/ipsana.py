@@ -112,11 +112,12 @@ class PsanaInterface:
         wavelength : float
             wavelength in Angstrom
         """
-        try:
-            lambda_m = 1.23984197386209e-06 / self.get_photon_energy_eV_evt(evt) # convert to meters using e=hc/lambda
-            return lambda_m * 1e10
-        except:
+        photon_energy = self.get_photon_energy_eV_evt(evt)
+        if photon_energy is None or np.isinf(photon_energy):
             return self.get_wavelength()
+        else:
+            lambda_m =  1.23984197386209e-06 / photon_energy # convert to meters using e=hc/lambda
+            return lambda_m * 1e10
 
     def get_photon_energy_eV_evt(self, evt):
         """
