@@ -94,7 +94,7 @@ class Indexer:
         print(f"Indexing executable written to {self.tmp_exe}")
 
     @property
-    def indexing_summary(self) -> dict:
+    def idx_summary(self) -> dict:
         """! Return a dictionary of key/values to post to the eLog.
 
         @return (dict) summary_dict Key/values parsed by eLog posting function.
@@ -206,4 +206,4 @@ if __name__ == '__main__':
         indexer_obj.report(params.update_url)
 
     summary_file = f'{params.taskdir[:-6]}/summary_r{params.run:04}.json'
-    update_summary(summary_file, indexer_obj.indexing_summary)
+    update_summary(summary_file, indexer_obj.idx_summary)
