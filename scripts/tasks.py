@@ -183,8 +183,9 @@ def find_peaks(config):
     logger.info(f'Saving CXI files and summary to {taskdir}/r{setup.run:04}')
     logger.debug('Done!')
 
-    summary_file = f'{setup.root_dir}/summary_r{setup.run:04}.json'
-    update_summary(summary_file, pf.pf_summary)
+    if pf.rank == 0:
+        summary_file = f'{setup.root_dir}/summary_r{setup.run:04}.json'
+        update_summary(summary_file, pf.pf_summary)
 
 def index(config):
     from btx.processing.indexer import Indexer

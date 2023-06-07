@@ -7,6 +7,7 @@ from mpi4py import MPI
 from btx.interfaces.ipsana import *
 from psalgos.pypsalgos import PyAlgos
 import matplotlib.pyplot as plt
+import sys
 
 class PeakFinder:
     
