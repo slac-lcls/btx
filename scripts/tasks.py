@@ -6,7 +6,7 @@ import shutil
 import numpy as np
 import itertools
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Fetch the URL to post progress update
@@ -171,7 +171,7 @@ def find_peaks(config):
                     npix_min=task.npix_min, npix_max=task.npix_max, amax_thr=task.amax_thr, atot_thr=task.atot_thr,
                     son_min=task.son_min, peak_rank=task.peak_rank, r0=task.r0, dr=task.dr, nsigm=task.nsigm,
                     calibdir=task.get('calibdir'), pv_camera_length=setup.get('pv_camera_length'))
-    logger.debug(f'Performing peak finding for run {setup.run} of {setup.exp}...')
+    logger.info(f'Performing peak finding for run {setup.run} of {setup.exp}...')
     pf.find_peaks()
     pf.curate_cxi()
     pf.summarize()
