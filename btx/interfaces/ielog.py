@@ -35,12 +35,13 @@ def update_summary(summary_file: str, data: dict):
     @param summary_file (str) Path to the summary file to update.
     @param data (dict) Key/value pairs to be stored in the JSON summary.
     """
-    with open(summary_file, 'a+') as f:
+    with open(summary_file, 'r+') as f:
         try:
             summary_data: dict = json.load(f)
         except json.decoder.JSONDecodeError:
             summary_data: dict = {}
         summary_data.update(data)
+        f.seek(0)
         json.dump(summary_data, f) # dump for files instead of dumps
 
 class eLogInterface:
