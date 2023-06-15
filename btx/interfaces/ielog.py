@@ -5,6 +5,9 @@ from glob import glob
 import json
 import requests
 from typing import Optional
+import logging
+
+logger = logging.getLogger(__name__)
 
 def elog_report_post(summary_file: str, update_url: Optional[str] = None):
     """! Post a summary file to the eLog's run report section.
@@ -20,6 +23,8 @@ def elog_report_post(summary_file: str, update_url: Optional[str] = None):
             url = os.environ.get('JID_UPDATE_COUNTERS')
             if url:
                 requests.post(url, json = post_list)
+            else:
+                logger.warning('WARNING: JID_UPDATE_COUNTERS url not found.')
         else:
             requests.post(update_url, json = post_list)
 
