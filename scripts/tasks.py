@@ -203,6 +203,58 @@ def index(config):
     indexer_obj.launch()
     logger.info(f'Indexing launched!')
 
+def summarize_idx(config):
+    import subprocess
+    from mpi4py import MPI
+    from btx.interfaces.ielog import update_summary
+
+    # Only run on rank 0
+    comm = MPI.COMM_WORLD
+    rank = comm.Get_rank()
+
+    if rank == 0:
+        # Pull from config yaml
+        setup = config.setup
+        task = config.index
+        tag = task.tag
+        tag_cxi = ''
+        cxi = task.get('tag_cxi')
+        if cxi:
+            tag_cxi = cxi
+        run = setup.run
+
+        # Define paths
+        taskdir = os.path.join(setup.root_dir, 'index')
+        summary_file = f'{setup.root_dir}/summary_r{setup.run:04}.json'
+        stream_file = os.path.join(taskdir, f'r{run:04}_{tag}.stream')
+        pf_summary = os.path.join(taskdir, f'r{run:04}/peakfinding{tag_cxi}.summary')
+
+        command1: list = ["grep", "Cell parameters", f"{stream_file}"]
+        command2: list = ["grep",
+                          "Number of hits found",
+                          f"{pf_summary}"]
+
+        summary_dict: dict = {}
+        try:
+            output: str = subprocess.check_output(command1,
+                                                  universal_newlines=True)
+            n_indexed: int = len(output.split('\n')[:-1])
+
+            output: str = subprocess.check_output(command2,
+                                                  universal_newlines=True)
+            n_total: int = int(output.split(':')[1].split('\n')[0])
+
+            key_strings: list = ['Number of lattices found',
+                                 ('Fractional indexing rate'
+                                  ' (including multiple lattices)')]
+            summary_dict: dict = { key_strings[0] : f'{n_indexed}',
+                                   key_strings[1] : f'{(n_indexed/n_total):.2f}' }
+        except subprocess.CalledProcessError as err:
+            print(err)
+
+        update_summary(summary_file, summary_dict)
+        post_to_elog(config)
+
 def stream_analysis(config):
     from btx.interfaces.istream import launch_stream_analysis
     setup = config.setup

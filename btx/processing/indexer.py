@@ -3,7 +3,6 @@ import os
 import requests
 import subprocess
 from btx.interfaces.ischeduler import *
-from btx.interfaces.ielog import update_summary
 
 class Indexer:
     
@@ -15,7 +14,7 @@ class Indexer:
     def __init__(self, exp, run, det_type, tag, taskdir, geom, cell=None, int_rad='4,5,6', methods='mosflm',
                  tolerance='5,5,5,1.5', tag_cxi=None, no_revalidate=True, multi=True, profile=True,
                  ncores=64, queue='milano', time='1:00:00'):
-        
+
         # experiment parameters
         self.exp = exp
         self.run = run
@@ -24,7 +23,7 @@ class Indexer:
         self.taskdir = taskdir
         self.tag = tag
         self.tag_cxi = tag_cxi
-        
+
         # indexing parameters
         self.geom = geom # geometry file in CrystFEL format
         self.cell = cell # file containing unit cell information
@@ -92,32 +91,6 @@ class Indexer:
         js.clean_up()
         js.submit()
         print(f"Indexing executable written to {self.tmp_exe}")
-
-    @property
-    def idx_summary(self) -> dict:
-        """! Return a dictionary of key/values to post to the eLog.
-
-        @return (dict) summary_dict Key/values parsed by eLog posting function.
-        """
-        # retrieve number of indexed patterns
-        command = ["grep", "Cell parameters", f"{self.stream}"]
-        output,error  = subprocess.Popen(
-            command, universal_newlines=True,
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
-        n_indexed = len(output.split('\n')[:-1])
-            
-        # retrieve number of total patterns
-        command = ["grep", "Number of hits found", f"{self.peakfinding_summary}"]
-        output,error  = subprocess.Popen(
-            command, universal_newlines=True,
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
-        n_total = int(output.split(":")[1].split("\n")[0])
-
-        key_strings: list = ['Number of lattices found',
-                             'Fractional indexing rate (including multiple lattices)']
-        summary_dict:dict = { key_strings[0] : f'{n_indexed}',
-                              key_strings[1] : f'{(n_indexed/n_total):.2f}' }
-        return summary_dict
 
     def report(self, update_url=None):
         """
@@ -203,7 +176,5 @@ if __name__ == '__main__':
     if not params.report:
         indexer_obj.launch()
     else:
-        indexer_obj.report(params.update_url)
-
-    summary_file = f'{params.taskdir[:-6]}/summary_r{params.run:04}.json'
-    update_summary(summary_file, indexer_obj.idx_summary)
+        pass
+        #indexer_obj.report(params.update_url)
