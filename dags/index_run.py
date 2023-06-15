@@ -17,10 +17,17 @@ dag = DAG(
 
 # Tasks SETUP
 task_id='find_peaks'
-find_peaks = JIDSlurmOperator( task_id=task_id, dag=dag)
+find_peaks = JIDSlurmOperator(task_id=task_id, dag=dag)
+
+task_id='post_to_elog'
+elog1 = JIDSlurmOperator(task_id = task_id, dag=dag)
 
 task_id='index'
-index = JIDSlurmOperator( task_id=task_id, dag=dag)
+index = JIDSlurmOperator(task_id=task_id, dag=dag)
+
+task_id='summarize_idx'
+elog2 = JIDSlurmOperator(task_id=task_id, dag=dag)
+
 
 # Draw the DAG
-find_peaks >> index
+find_peaks >> elog1 >> index >> elog2

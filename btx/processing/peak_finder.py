@@ -395,6 +395,25 @@ class PeakFinder:
                                             { "key": "Number of hits found", "value": f"{self.n_hits_total}"},
                                             { "key": "Fractional hit rate", "value": f"{(self.n_hits_total/self.n_events_per_rank[-1]):.2f}"}, ])
 
+    @property
+    def pf_summary(self) -> dict:
+        """! Return a dictionary of key/values to post to the eLog.
+
+        @return (dict) summary_dict Key/values parsed by eLog posting function.
+        """
+        summary_dict = {}
+        if self.rank == 0:
+            key_strings: list = ['Number of events processed',
+                                 'Number of hits found',
+                                 'Fractional hit rate']
+            n_events_per_rank = self.n_events_per_rank[-1]
+            n_hits = self.n_hits_total
+            fractional = n_hits/n_events_per_rank
+            summary_dict.update({ key_strings[0] : f'{n_events_per_rank}',
+                                  key_strings[1] : f'{n_hits}',
+                                  key_strings[2] : f'{fractional:.2f}'})
+        return summary_dict
+
     def compute_powders(self, fnames):
         """
         Compute the powder hits and misses by iterating through valid files.

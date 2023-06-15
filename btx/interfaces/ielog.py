@@ -2,6 +2,46 @@ import os
 import numpy as np
 import shutil
 from glob import glob
+import json
+import requests
+from typing import Optional
+import logging
+
+logger = logging.getLogger(__name__)
+
+def elog_report_post(summary_file: str, update_url: Optional[str] = None):
+    """! Post a summary file to the eLog's run report section.
+
+    @param summary_file (str) Path to the summary file to post.
+    @param update_url (str | None) URL to post to. Attempts to retrieve if None.
+    """
+    with open(summary_file, 'r') as f:
+        data: dict = json.load(f) # load for files instead of loads
+        post_list: list = [ { 'key': f'{key}', 'value': f'{data[key]}' }
+                            for key in data ]
+        if not update_url:
+            url = os.environ.get('JID_UPDATE_COUNTERS')
+            if url:
+                requests.post(url, json = post_list)
+            else:
+                logger.warning('WARNING: JID_UPDATE_COUNTERS url not found.')
+        else:
+            requests.post(update_url, json = post_list)
+
+
+def update_summary(summary_file: str, data: dict):
+    """! Append summary data to a JSON file.
+
+    @param summary_file (str) Path to the summary file to update.
+    @param data (dict) Key/value pairs to be stored in the JSON summary.
+    """
+    with open(summary_file, 'a+') as f:
+        try:
+            summary_data: dict = json.load(f)
+        except json.decoder.JSONDecodeError:
+            summary_data: dict = {}
+        summary_data.update(data)
+        json.dump(summary_data, f) # dump for files instead of dumps
 
 class eLogInterface:
 
