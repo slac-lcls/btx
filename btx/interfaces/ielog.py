@@ -35,7 +35,8 @@ def update_summary(summary_file: str, data: dict):
     @param summary_file (str) Path to the summary file to update.
     @param data (dict) Key/value pairs to be stored in the JSON summary.
     """
-    with open(summary_file, 'r+') as f:
+    with open(summary_file, 'a+') as f:
+        f.seek(0)
         try:
             summary_data: dict = json.load(f)
         except json.decoder.JSONDecodeError:
