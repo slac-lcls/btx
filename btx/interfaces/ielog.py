@@ -4,7 +4,7 @@ import shutil
 from glob import glob
 import json
 import requests
-from typing import Optional
+from typing import Optional, TextIO
 import logging
 
 logger = logging.getLogger(__name__)
@@ -64,25 +64,24 @@ class eLogInterface:
         @param plot_type (str) Choose to move `pyplot` or `holoviews` plots.
         """
         os.makedirs(self.target_dir(subdir=f"runs/{run}"), exist_ok=True)
+        self.update_img(run, 'geom', 'geom')
+        self.update_img(run, 'powder', 'powder')
+
         if plot_type == 'pyplot':
-            self.update_png(run, 'geom', 'geom')
-            self.update_png(run, 'powder', 'powder')
-            self.update_png(run, 'powder', 'stats')
+            self.update_img(run, 'powder', 'stats')
             self.update_html(['geom', 'powder', 'stats'], f"runs/{run}/")
         elif plot_type == 'holoviews':
-            self.update_png(run, 'geom', 'geom')
-            self.update_png(run, 'powder', 'powder')
-            self.update_hv(run, 'powder', 'stats')
+            self.update_img(run, 'powder', 'stats', ext='html')
             self.update_html(['geom', 'powder', 'stats'],
                              f"runs/{run}/",
                              merge_html=True)
 
     def update_sample(self, sample):
         os.makedirs(self.target_dir(subdir=f"samples/stats_{sample}"), exist_ok=True)
-        self.update_png(sample, 'index', 'peakogram')
-        self.update_png(sample, 'index', 'cell')
-        self.update_png(sample, 'merge', 'Rsplit')
-        self.update_png(sample, 'merge', 'CCstar')
+        self.update_img(sample, 'index', 'peakogram')
+        self.update_img(sample, 'index', 'cell')
+        self.update_img(sample, 'merge', 'Rsplit')
+        self.update_img(sample, 'merge', 'CCstar')
         self.update_html(['peakogram', 'cell', 'Rsplit', 'CCstar'], f"samples/stats_{sample}/")
         self.update_uglymol(sample)
 
@@ -99,35 +98,57 @@ class eLogInterface:
                 shutil.copyfile(f'{source_dir}final.{filetype}', f'{target_dir}final.{filetype}')
 
     def update_html(self, png_list, subdir, *, merge_html=False):
-        if not merge_html:
+        if merge_html:
+            hv_head: str = ''
+            hv_body: str = ''
+            png_body: str = ''
+            for img in png_list:
+                path = f'{self.target_dir(subdir=f"{subdir}")}{img}'
+                if os.path.isfile(f'{path}.html'):
+                    hvparser = Parser(path=f'{path}.html')
+                    head, body = hvparser.extract_holoviews_img()
+                    hv_head += f'{head}\n'
+                    hv_body += f'{body}\n'
+                elif os.path.isfile(f'{path}.png'):
+                    png_body += f"<img src='{img}.png' width=1000>\n<br>\n"
+
+            report_path: str = f'{self.target_dir(subdir=f"{subdir}")}report.html'
+            with open(report_path, 'w') as hfile:
+                hfile.write(('<!doctype html>\n'
+                             '<html>\n'
+                             '<head>\n'))
+                hfile.write(hv_head)
+                hfile.write('</head>')
+                hfile.write(hv_body)
+                hfile.write(png_body)
+                hfile.write('</body></html>')
+        else:
             with open(f'{self.target_dir(subdir=f"{subdir}")}report.html', 'w') as hfile:
                 hfile.write('<!doctype html><html><head></head><body>')
                 for png in png_list:
                     if os.path.isfile(f'{self.target_dir(subdir=f"{subdir}")}{png}.png'):
                         hfile.write(f"<img src='{png}.png' width=1000><br>")
                 hfile.write('</body></html>')
-        else:
-            pass
 
-    def update_png(self, item, task, image):
+    def update_img(self, item, task, image, ext: str = 'png'):
         if task == 'powder':
             source_subdir = 'powder/figs/'
             target_subdir = f'runs/{item}/'
-            source_filename = f'{image}_{item}.png'
+            source_filename = f'{image}_{item}.{ext}'
         elif task == 'geom':
             source_subdir = 'geom/figs/'
             target_subdir = f'runs/{item}/'
-            source_filename = f'{item}.png'
+            source_filename = f'{item}.{ext}'
         elif task == 'index':
             source_subdir = 'index/figs/'
             target_subdir = f'samples/stats_{item}/'
-            source_filename = f'{image}_{item}.png'
+            source_filename = f'{image}_{item}.{ext}'
         elif task == 'merge':
             source_subdir = f'merge/{item}/figs/'
             target_subdir = f'samples/stats_{item}/'
-            source_filename = f'{item}_{image}.png'
+            source_filename = f'{item}_{image}.{ext}'
         source_path = f'{self.source_dir(subdir=f"{source_subdir}")}{source_filename}'
-        target_path = f'{self.target_dir(subdir=f"{target_subdir}")}{image}.png'
+        target_path = f'{self.target_dir(subdir=f"{target_subdir}")}{image}.{ext}'
         if os.path.isfile(source_path):
             shutil.copyfile(source_path, target_path)
 
@@ -158,3 +179,59 @@ class eLogInterface:
                 if os.path.isdir(sample):
                     sample_list.append(sample.split('/')[-1])
         return np.unique(sample_list)
+
+class Parser:
+    """! Parse HTML files produced by various tasks."""
+
+    def __init__(self, path: str):
+        """! Initialize a parser.
+
+        @param path (str) Path to the HTML file to parse.
+        """
+        self._path = path
+
+    def extract_between(self, *, fptr: TextIO, START_FLAG: str, END_FLAG: str):
+        """! Extract the HTML between two flags.
+
+        @param fptr (TextIO) File TextIO wrapper.
+        @param START_FLAG (str) Begin extraction at the line with this word.
+        @param END_FLAG (str) The line with this word is the final extracted.
+        @return html_out (str) The extracted HTML.
+        """
+        append_data: bool = False
+        html_out: str = ''
+
+        for line in fptr:
+            if START_FLAG in line:
+                append_data = True
+            if append_data:
+                html_out += line
+            if END_FLAG in line:
+                # Simply break the loop so extract_between can be called again
+                # with different flags
+                break
+        return html_out
+
+    def extract_holoviews_img(self):
+        """! Extract the <head> from the HTML file produced by HoloViews.
+
+        @return (head, body) (Tuple[str..]) HoloViews <head> and <body> content.
+        """
+        head: str = ''
+        body: str = ''
+
+        with open(self._path, 'r') as f:
+            head += self.extract_between(fptr=f,
+                                         START_FLAG='<link rel=',
+                                         END_FLAG='</script>')
+
+            # Perform extraction twice for the <body> tags since there are two
+            # sets of <script> tags
+            body += self.extract_between(fptr=f,
+                                         START_FLAG='<div class="bk-root"',
+                                         END_FLAG='</script>')
+            body += self.extract_between(fptr=f,
+                                         START_FLAG='<script type=',
+                                         END_FLAG='</script>')
+
+        return head, body
