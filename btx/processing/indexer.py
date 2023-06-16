@@ -14,7 +14,7 @@ class Indexer:
     def __init__(self, exp, run, det_type, tag, taskdir, geom, cell=None, int_rad='4,5,6', methods='mosflm',
                  tolerance='5,5,5,1.5', tag_cxi=None, no_revalidate=True, multi=True, profile=True,
                  ncores=64, queue='milano', time='1:00:00'):
-        
+
         # experiment parameters
         self.exp = exp
         self.run = run
@@ -23,7 +23,7 @@ class Indexer:
         self.taskdir = taskdir
         self.tag = tag
         self.tag_cxi = tag_cxi
-        
+
         # indexing parameters
         self.geom = geom # geometry file in CrystFEL format
         self.cell = cell # file containing unit cell information
@@ -91,7 +91,7 @@ class Indexer:
         js.clean_up()
         js.submit()
         print(f"Indexing executable written to {self.tmp_exe}")
-            
+
     def report(self, update_url=None):
         """
         Write results to a .summary file and optionally post to the elog.
@@ -176,4 +176,5 @@ if __name__ == '__main__':
     if not params.report:
         indexer_obj.launch()
     else:
-        indexer_obj.report(params.update_url)
+        pass
+        #indexer_obj.report(params.update_url)

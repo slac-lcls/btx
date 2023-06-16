@@ -6,7 +6,7 @@ import shutil
 import numpy as np
 import itertools
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Fetch the URL to post progress update
@@ -159,6 +159,7 @@ def opt_geom(config):
 def find_peaks(config):
     from btx.processing.peak_finder import PeakFinder
     from btx.misc.shortcuts import fetch_latest
+    from btx.interfaces.ielog import update_summary
     setup = config.setup
     task = config.find_peaks
     """ Perform adaptive peak finding on run. """
@@ -171,7 +172,7 @@ def find_peaks(config):
                     npix_min=task.npix_min, npix_max=task.npix_max, amax_thr=task.amax_thr, atot_thr=task.atot_thr,
                     son_min=task.son_min, peak_rank=task.peak_rank, r0=task.r0, dr=task.dr, nsigm=task.nsigm,
                     calibdir=task.get('calibdir'), pv_camera_length=setup.get('pv_camera_length'))
-    logger.debug(f'Performing peak finding for run {setup.run} of {setup.exp}...')
+    logger.info(f'Performing peak finding for run {setup.run} of {setup.exp}...')
     pf.find_peaks()
     pf.curate_cxi()
     pf.summarize()
@@ -181,6 +182,10 @@ def find_peaks(config):
         logger.debug("Could not communicate with the elog update url")
     logger.info(f'Saving CXI files and summary to {taskdir}/r{setup.run:04}')
     logger.debug('Done!')
+
+    if pf.rank == 0:
+        summary_file = f'{setup.root_dir}/summary_r{setup.run:04}.json'
+        update_summary(summary_file, pf.pf_summary)
 
 def index(config):
     from btx.processing.indexer import Indexer
@@ -197,6 +202,58 @@ def index(config):
     logger.debug(f'Generating indexing executable for run {setup.run} of {setup.exp}...')
     indexer_obj.launch()
     logger.info(f'Indexing launched!')
+
+def summarize_idx(config):
+    import subprocess
+    from mpi4py import MPI
+    from btx.interfaces.ielog import update_summary
+
+    # Only run on rank 0
+    comm = MPI.COMM_WORLD
+    rank = comm.Get_rank()
+
+    if rank == 0:
+        # Pull from config yaml
+        setup = config.setup
+        task = config.index
+        tag = task.tag
+        tag_cxi = ''
+        cxi = task.get('tag_cxi')
+        if cxi:
+            tag_cxi = cxi
+        run = setup.run
+
+        # Define paths
+        taskdir = os.path.join(setup.root_dir, 'index')
+        summary_file = f'{setup.root_dir}/summary_r{setup.run:04}.json'
+        stream_file = os.path.join(taskdir, f'r{run:04}_{tag}.stream')
+        pf_summary = os.path.join(taskdir, f'r{run:04}/peakfinding{tag_cxi}.summary')
+
+        command1: list = ["grep", "Cell parameters", f"{stream_file}"]
+        command2: list = ["grep",
+                          "Number of hits found",
+                          f"{pf_summary}"]
+
+        summary_dict: dict = {}
+        try:
+            output: str = subprocess.check_output(command1,
+                                                  universal_newlines=True)
+            n_indexed: int = len(output.split('\n')[:-1])
+
+            output: str = subprocess.check_output(command2,
+                                                  universal_newlines=True)
+            n_total: int = int(output.split(':')[1].split('\n')[0])
+
+            key_strings: list = ['Number of lattices found',
+                                 ('Fractional indexing rate'
+                                  ' (including multiple lattices)')]
+            summary_dict: dict = { key_strings[0] : f'{n_indexed}',
+                                   key_strings[1] : f'{(n_indexed/n_total):.2f}' }
+        except subprocess.CalledProcessError as err:
+            print(err)
+
+        update_summary(summary_file, summary_dict)
+        post_to_elog(config)
 
 def stream_analysis(config):
     from btx.interfaces.istream import launch_stream_analysis
@@ -347,6 +404,17 @@ def elog_display(config):
     eli = eLogInterface(setup)
     eli.update_summary()
     logger.debug('Done!')
+
+def post_to_elog(config):
+    from btx.interfaces.ielog import elog_report_post
+    setup = config.setup
+    root_dir = setup.root_dir
+    run = setup.run
+
+    summary_file = f'{root_dir}/summary_r{run:04}.json'
+    url = os.environ.get('JID_UPDATE_COUNTERS')
+    if url:
+        elog_report_post(summary_file, url)
 
 def visualize_sample(config):
     from btx.misc.visuals import VisualizeSample
