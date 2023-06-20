@@ -3,7 +3,8 @@ import os
 import requests
 import subprocess
 from btx.interfaces.ischeduler import *
-from btx.interfaces.ielog import update_summary
+from btx.interfaces.ielog import update_summary, elog_report_post
+from mpi4py import MPI
 
 class Indexer:
     
@@ -15,6 +16,9 @@ class Indexer:
     def __init__(self, exp, run, det_type, tag, taskdir, geom, cell=None, int_rad='4,5,6', methods='mosflm',
                  tolerance='5,5,5,1.5', tag_cxi=None, no_revalidate=True, multi=True, profile=True,
                  ncores=64, queue='milano', time='1:00:00'):
+
+        self.comm = MPI.COMM_WORLD
+        self.rank = self.comm.Get_rank()
 
         # experiment parameters
         self.exp = exp
@@ -202,7 +206,9 @@ if __name__ == '__main__':
     if not params.report:
         indexer_obj.launch()
     else:
-        summary_file = f'{params.taskdir[:-6]}/summary_r{params.run:04}.json'
-        update_summary(summary_file, indexer_obj.idx_summary)
+        if indexer_obj.rank == 0:
+            summary_file = f'{params.taskdir[:-6]}/summary_r{params.run:04}.json'
+            update_summary(summary_file, indexer_obj.idx_summary)
+            elog_report_post(summary_file)
         #pass
         #indexer_obj.report(params.update_url)
