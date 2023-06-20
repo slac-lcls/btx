@@ -87,7 +87,9 @@ class Indexer:
         if self.profile: command += ' --profile'
 
         if not dont_report:
-            command +=f"\npython {self.script_path} -e {self.exp} -r {self.run} -d {self.det_type} --taskdir {self.taskdir} --report --tag {self.tag} "
+            #command +=f"\npython {self.script_path} -e {self.exp} -r {self.run} -d {self.det_type} --taskdir {self.taskdir} --report --tag {self.tag} "
+            # debugging
+            command =f"\npython {self.script_path} -e {self.exp} -r {self.run} -d {self.det_type} --taskdir {self.taskdir} --report --tag {self.tag} "
             if ( self.tag_cxi != '' ): command += f' --tag_cxi {self.tag_cxi}'
             command += "\n"
         if addl_command is not None:
