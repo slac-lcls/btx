@@ -396,7 +396,7 @@ class RunDiagnostics:
             @return scatter (hv.Scatter) Scatter plot.
             """
             scatter = hv.Scatter(df, kdims=['Event Id'], vdims=[y, c])
-            return scatter.opts(tools=['hover'], width=800, color=c)
+            return scatter.opts(tools=['hover'], width=800, color=c, framewise=True)
 
         def rebuild_dataframe(y: str, c: str):
             """! Create a new DataFrame from a new set of stats keys.
