@@ -385,6 +385,7 @@ class RunDiagnostics:
         import holoviews as hv
         import pandas as pd
 
+        hv.extension('bokeh')
         plot_data = dict(self.stats_final)
 
         def plot_selector(df: pd.DataFrame, y: str, c: str) -> hv.Scatter:
@@ -406,7 +407,8 @@ class RunDiagnostics:
             @param c (str) Stats key for the color-by values in the DataFrame.
             @return df (pd.DataFrame) New pandas DataFrame.
             """
-            df = pd.DataFrame({'Event Id' : pass,
+            num_evts: int = len(plot_data[y])
+            df = pd.DataFrame({'Event Id' : np.arange(num_evts),
                                f'{y}' : plot_data[y],
                                f'{c}' : plot_data[c]})
             return df

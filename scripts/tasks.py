@@ -402,7 +402,7 @@ def elog_display(config):
     """ Updates the summary page in the eLog with most recent results. """
     logger.info(f'Updating the reports in the eLog summary tab.')
     eli = eLogInterface(setup)
-    eli.update_summary()
+    eli.update_summary(plot_type='holoviews')
     logger.debug('Done!')
 
 def post_to_elog(config):

@@ -52,9 +52,13 @@ class eLogInterface:
         self.exp = setup.exp
         self.root_dir = setup.root_dir
 
-    def update_summary(self):
+    def update_summary(self, plot_type: str = 'pyplot'):
+        """! Update the eLog summaries for runs and samples.
+
+        @param plot_type (str) Choose to move `pyplot` or `holoviews` plots.
+        """
         for run in self.list_processed_runs():
-            self.update_run(run)
+            self.update_run(run, plot_type=plot_type)
         for sample in self.list_processed_samples():
             self.update_sample(sample)
 
@@ -194,8 +198,8 @@ class Parser:
         """! Extract the HTML between two flags.
 
         @param fptr (TextIO) File TextIO wrapper.
-        @param START_FLAG (str) Begin extraction at the line with this word.
-        @param END_FLAG (str) The line with this word is the final extracted.
+        @param START_FLAG (str) Begin extraction at the line after this word.
+        @param END_FLAG (str) The line before this word is the final extracted.
         @return html_out (str) The extracted HTML.
         """
         append_data: bool = False
@@ -204,12 +208,13 @@ class Parser:
         for line in fptr:
             if START_FLAG in line:
                 append_data = True
-            if append_data:
-                html_out += line
+                continue
             if END_FLAG in line:
                 # Simply break the loop so extract_between can be called again
                 # with different flags
                 break
+            if append_data:
+                html_out += line
         return html_out
 
     def extract_holoviews_img(self):
@@ -222,16 +227,10 @@ class Parser:
 
         with open(self._path, 'r') as f:
             head += self.extract_between(fptr=f,
-                                         START_FLAG='<link rel=',
-                                         END_FLAG='</script>')
+                                         START_FLAG='<head>',
+                                         END_FLAG='</head>')
 
-            # Perform extraction twice for the <body> tags since there are two
-            # sets of <script> tags
             body += self.extract_between(fptr=f,
-                                         START_FLAG='<div class="bk-root"',
-                                         END_FLAG='</script>')
-            body += self.extract_between(fptr=f,
-                                         START_FLAG='<script type=',
-                                         END_FLAG='</script>')
-
+                                         START_FLAG='<body>',
+                                         END_FLAG='</body>')
         return head, body
