@@ -1,10 +1,13 @@
 import argparse
+import logging
 import os
 import requests
 import subprocess
 from btx.interfaces.ischeduler import *
 from btx.interfaces.ielog import update_summary, elog_report_post
 from mpi4py import MPI
+
+logger = logging.getLogger(__name__)
 
 class Indexer:
     
@@ -95,7 +98,7 @@ class Indexer:
         js.write_main(command, dependencies=['crystfel'] + self.methods.split(','))
         js.clean_up()
         js.submit()
-        print(f"Indexing executable written to {self.tmp_exe}")
+        logger.info(f"Indexing executable written to {self.tmp_exe}")
 
     @property
     def idx_summary(self) -> dict:
