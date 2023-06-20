@@ -85,11 +85,13 @@ class Indexer:
         if self.no_revalidate: command += ' --no-revalidate'
         if self.multi: command += ' --multi'
         if self.profile: command += ' --profile'
+        # debugging
+        command="module load mpi/mpich"
 
         if not dont_report:
             #command +=f"\npython {self.script_path} -e {self.exp} -r {self.run} -d {self.det_type} --taskdir {self.taskdir} --report --tag {self.tag} "
             # debugging
-            command =f"\npython {self.script_path} -e {self.exp} -r {self.run} -d {self.det_type} --taskdir {self.taskdir} --report --tag {self.tag} "
+            command +=f"\npython {self.script_path} -e {self.exp} -r {self.run} -d {self.det_type} --taskdir {self.taskdir} --report --tag {self.tag} "
             if ( self.tag_cxi != '' ): command += f' --tag_cxi {self.tag_cxi}'
             command += "\n"
         if addl_command is not None:
