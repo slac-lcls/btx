@@ -98,7 +98,7 @@ class Indexer:
         js.write_main(command, dependencies=['crystfel'] + self.methods.split(','))
         js.clean_up()
         js.submit()
-        logger.info(f"Indexing executable written to {self.tmp_exe}")
+        logger.info(f"Indexing executable submitted: {self.tmp_exe}")
 
     @property
     def idx_summary(self) -> dict:
@@ -207,8 +207,10 @@ if __name__ == '__main__':
                           no_revalidate=params.no_revalidate, multi=params.multi, profile=params.profile, ncores=params.ncores, queue=params.queue,
                           time=params.time)
     if not params.report:
+        logger.info("Launching indexing...")
         indexer_obj.launch()
     else:
+        logger.info("Indexing report on the way...")
         if indexer_obj.rank == 0:
             summary_file = f'{params.taskdir[:-6]}/summary_r{params.run:04}.json'
             update_summary(summary_file, indexer_obj.idx_summary)
