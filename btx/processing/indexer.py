@@ -99,7 +99,9 @@ class Indexer:
 
         js = JobScheduler(self.tmp_exe, ncores=self.ncores, jobname=f'idx_r{self.run:04}', queue=self.queue, time=self.time)
         js.write_header()
-        js.write_main(command, dependencies=['crystfel'] + self.methods.split(','))
+        # debugging
+        js.write_main(command, dependencies=['psana'] + self.methods.split(','))
+        #js.write_main(command, dependencies=['crystfel'] + self.methods.split(','))
         # debugging
         #js.clean_up()
         js.submit()

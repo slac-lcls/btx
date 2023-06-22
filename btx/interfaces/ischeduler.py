@@ -55,8 +55,8 @@ class JobScheduler:
         for ppath in possible_paths:
             if os.path.exists(ppath):
                 pythonpath = ppath
-                #if self.ncores > 1:
-                #    pythonpath = f"{os.path.split(ppath)[0]}/mpirun -n {self.ncores} {ppath}"
+                if self.ncores > 1:
+                    pythonpath = f"{os.path.split(ppath)[0]}/mpirun -n {self.ncores} {ppath}"
 
         return pythonpath            
 
