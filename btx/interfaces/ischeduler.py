@@ -91,9 +91,6 @@ class JobScheduler:
             with open(self.jobfile, 'a') as jfile:
                 jfile.write(f"#SBATCH -A {self.account}\n\n")
 
-        with open(self.jobfile, 'a') as jfile:
-            jfile.write("module load mpi/mpich\n")
-
     def _write_dependencies(self, dependencies):
         """ Source dependencies."""
         dep_paths = ""
@@ -127,6 +124,10 @@ class JobScheduler:
             jfile.write(dep_paths)
             if 'SIT_PSDM_DATA' in os.environ:
                 jfile.write(f"export SIT_PSDM_DATA={os.environ['SIT_PSDM_DATA']}\n")
+
+        # debugging
+        with open(self.jobfile, 'a') as jfile:
+            jfile.write('export PYTHONPATH="${PYTHONPATH}:/sdf/home/f/fpoitevi/sw/btx/scripts/"')
 
     def write_main(self, application, dependencies=[]):
         """ Write application and source requested dependencies. """
