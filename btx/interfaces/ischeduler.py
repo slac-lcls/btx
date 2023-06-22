@@ -91,6 +91,9 @@ class JobScheduler:
             with open(self.jobfile, 'a') as jfile:
                 jfile.write(f"#SBATCH -A {self.account}\n\n")
 
+        with open(self.jobfile, 'w') as jfile:
+            jfile.write("module load mpi/mpich\n")
+
     def _write_dependencies(self, dependencies):
         """ Source dependencies."""
         dep_paths = ""
