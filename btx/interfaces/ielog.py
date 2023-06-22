@@ -101,15 +101,15 @@ class eLogInterface:
                 os.makedirs(target_dir, exist_ok=True)
                 shutil.copyfile(f'{source_dir}final.{filetype}', f'{target_dir}final.{filetype}')
 
-    def update_html(self, png_list, subdir, *, merge_html=False):
+    def update_html(self, img_list, subdir, *, merge_html=False):
         if merge_html:
             hv_head: str = ''
             hv_body: str = ''
             png_body: str = ''
-            for img in png_list:
+            for img in img_list:
                 path = f'{self.target_dir(subdir=f"{subdir}")}{img}'
                 if os.path.isfile(f'{path}.html'):
-                    hvparser = Parser(path=f'{path}.html')
+                    hvparser = HTMLParser(path=f'{path}.html')
                     head, body = hvparser.extract_holoviews_img()
                     hv_head += f'{head}\n'
                     hv_body += f'{body}\n'
@@ -129,7 +129,7 @@ class eLogInterface:
         else:
             with open(f'{self.target_dir(subdir=f"{subdir}")}report.html', 'w') as hfile:
                 hfile.write('<!doctype html><html><head></head><body>')
-                for png in png_list:
+                for png in img_list:
                     if os.path.isfile(f'{self.target_dir(subdir=f"{subdir}")}{png}.png'):
                         hfile.write(f"<img src='{png}.png' width=1000><br>")
                 hfile.write('</body></html>')
@@ -184,7 +184,7 @@ class eLogInterface:
                     sample_list.append(sample.split('/')[-1])
         return np.unique(sample_list)
 
-class Parser:
+class HTMLParser:
     """! Parse HTML files produced by various tasks."""
 
     def __init__(self, path: str):
