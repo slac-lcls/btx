@@ -92,6 +92,8 @@ class Indexer:
             command =f"\npython {self.script_path} -e {self.exp} -r {self.run} -d {self.det_type} --taskdir {self.taskdir} --report --tag {self.tag} "
             if ( self.tag_cxi != '' ): command += f' --tag_cxi {self.tag_cxi}'
             command += "\n"
+            # debugging
+            command =f"\npython /sdf/data/lcls/ds/mfx/mfxp23120/scratch/fpoitevi/launchpad/test2.py"
         if addl_command is not None:
             command += f"\n{addl_command}"
 
