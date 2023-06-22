@@ -204,7 +204,8 @@ def parse_input():
 if __name__ == '__main__':
     
     params = parse_input()
-    
+
+    logger.info("Instantiating indexer object.")
     indexer_obj = Indexer(exp=params.exp, run=params.run, det_type=params.det_type, tag=params.tag, taskdir=params.taskdir, geom=params.geom, 
                           cell=params.cell, int_rad=params.int_rad, methods=params.methods, tolerance=params.tolerance, tag_cxi=params.tag_cxi,
                           no_revalidate=params.no_revalidate, multi=params.multi, profile=params.profile, ncores=params.ncores, queue=params.queue,
