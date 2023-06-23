@@ -369,7 +369,58 @@ class RunDiagnostics:
             
             if output is not None:
                 f.savefig(output, dpi=300)
-                
+                self.visualize_stats_hv_html(output,
+                                             keys,
+                                             color_by='beam_energy_eV')
+
+    def visualize_stats_hv_html(self, output: str, keys: list, color_by: str):
+        """! Create an \"interactive\" Holoviews plot embedded in HTML.
+
+        Allows for selection of which statistics to display.
+
+        @param output (str) Path to save the output HTML.
+        @param keys (list) List of keys in `stats_final` to plot.
+        @param color_by (str) Key to data to color the scatter plot points by.
+        """
+        import holoviews as hv
+        import pandas as pd
+
+        hv.extension('bokeh')
+        plot_data = dict(self.stats_final)
+
+        def plot_selector(df: pd.DataFrame, y: str, c: str) -> hv.Scatter:
+            """! Create a scatter plot from a DataFrame.
+
+            @param y (str) DataFrame key for y values.
+            @param c (str) DataFrame key for coloring the scatter plot.
+            @return scatter (hv.Scatter) Scatter plot.
+            """
+            scatter = hv.Scatter(df, kdims=['Event Id'], vdims=[y, c])
+            return scatter.opts(tools=['hover'], width=800, color=c, framewise=True)
+
+        def rebuild_dataframe(y: str, c: str):
+            """! Create a new DataFrame from a new set of stats keys.
+
+            Always creates a Series corresponding to the event axis.
+
+            @param y (str) Stats key for the y-axis values in the DataFrame.
+            @param c (str) Stats key for the color-by values in the DataFrame.
+            @return df (pd.DataFrame) New pandas DataFrame.
+            """
+            num_evts: int = len(plot_data[y])
+            df = pd.DataFrame({'Event Id' : np.arange(num_evts),
+                               f'{y}' : plot_data[y],
+                               f'{c}' : plot_data[c]})
+            return df
+
+        c = color_by
+        plots_dict = { y:plot_selector(rebuild_dataframe(y, c), y, c) for y in keys }
+
+        hmap = hv.HoloMap(plots_dict, kdims=['Y Value'])
+        outfile = output[:-3] + 'html'
+        hv.save(hmap, outfile)
+
+    
     def visualize_gain_frequency(self, output=None):
         """
         Plot the distribution of the frequency with which each pixel
