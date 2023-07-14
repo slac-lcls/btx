@@ -5,7 +5,6 @@ import requests
 import subprocess
 from btx.interfaces.ischeduler import *
 from btx.interfaces.ielog import update_summary, elog_report_post
-from mpi4py import MPI
 
 logger = logging.getLogger(__name__)
 
@@ -18,11 +17,16 @@ class Indexer:
 
     def __init__(self, exp, run, det_type, tag, taskdir, geom, cell=None, int_rad='4,5,6', methods='mosflm',
                  tolerance='5,5,5,1.5', tag_cxi=None, no_revalidate=True, multi=True, profile=True,
-                 ncores=64, queue='milano', time='1:00:00'):
+                 ncores=64, queue='milano', time='1:00:00', *, mpi_init = False):
 
-        self.comm = MPI.COMM_WORLD
-        self.rank = self.comm.Get_rank()
-
+        if mpi_init:
+            from mpi4py import MPI
+            self.comm = MPI.COMM_WORLD
+            self.rank = self.comm.Get_rank()
+        else:
+            self.comm = None
+            self.rank = 0
+        
         # experiment parameters
         self.exp = exp
         self.run = run
@@ -195,6 +199,7 @@ def parse_input():
     parser.add_argument('--ncores', help='Number of cores for parallelizing indexing', required=False, type=int, default=64)
     parser.add_argument('--queue', help='Submission queue', required=False, type=str, default='ffbh3q')
     parser.add_argument('--time', help='Time limit', required=False, type=str, default='1:00:00')
+    parser.add_argument('--mpi_init', help='Run with MPI', action='store_true')
 
     return parser.parse_args()
 
@@ -205,7 +210,7 @@ if __name__ == '__main__':
     indexer_obj = Indexer(exp=params.exp, run=params.run, det_type=params.det_type, tag=params.tag, taskdir=params.taskdir, geom=params.geom, 
                           cell=params.cell, int_rad=params.int_rad, methods=params.methods, tolerance=params.tolerance, tag_cxi=params.tag_cxi,
                           no_revalidate=params.no_revalidate, multi=params.multi, profile=params.profile, ncores=params.ncores, queue=params.queue,
-                          time=params.time)
+                          time=params.time, mpi_init=True)
     if not params.report:
         logger.info("Launching indexing...")
         indexer_obj.launch()
