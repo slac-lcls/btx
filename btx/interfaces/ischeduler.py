@@ -125,7 +125,6 @@ class JobScheduler:
             if 'SIT_PSDM_DATA' in os.environ:
                 jfile.write(f"export SIT_PSDM_DATA={os.environ['SIT_PSDM_DATA']}\n")
 
-
     def write_main(self, application, dependencies=[]):
         """ Write application and source requested dependencies. """
         if dependencies:

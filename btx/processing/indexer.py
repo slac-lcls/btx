@@ -87,21 +87,16 @@ class Indexer:
         if self.profile: command += ' --profile'
 
         if not dont_report:
-            #command +=f"\npython {self.script_path} -e {self.exp} -r {self.run} -d {self.det_type} --taskdir {self.taskdir} --report --tag {self.tag} "
-            # debugging
-            command =f"\npython {self.script_path} -e {self.exp} -r {self.run} -d {self.det_type} --taskdir {self.taskdir} --report --tag {self.tag} "
+            command +=f"\npython {self.script_path} -e {self.exp} -r {self.run} -d {self.det_type} --taskdir {self.taskdir} --report --tag {self.tag} "
             if ( self.tag_cxi != '' ): command += f' --tag_cxi {self.tag_cxi}'
             command += "\n"
-            # debugging
-            command =f"\npython /sdf/data/lcls/ds/mfx/mfxp23120/scratch/fpoitevi/launchpad/test2.py"
         if addl_command is not None:
             command += f"\n{addl_command}"
 
         js = JobScheduler(self.tmp_exe, ncores=self.ncores, jobname=f'idx_r{self.run:04}', queue=self.queue, time=self.time)
         js.write_header()
         js.write_main(command, dependencies=['crystfel'] + self.methods.split(','))
-        # debugging
-        #js.clean_up()
+        js.clean_up()
         js.submit()
         logger.info(f"Indexing executable submitted: {self.tmp_exe}")
 
@@ -206,8 +201,7 @@ def parse_input():
 if __name__ == '__main__':
     
     params = parse_input()
-
-    logger.info("Instantiating indexer object.")
+    
     indexer_obj = Indexer(exp=params.exp, run=params.run, det_type=params.det_type, tag=params.tag, taskdir=params.taskdir, geom=params.geom, 
                           cell=params.cell, int_rad=params.int_rad, methods=params.methods, tolerance=params.tolerance, tag_cxi=params.tag_cxi,
                           no_revalidate=params.no_revalidate, multi=params.multi, profile=params.profile, ncores=params.ncores, queue=params.queue,
