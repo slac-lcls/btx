@@ -220,5 +220,3 @@ if __name__ == '__main__':
             summary_file = f'{params.taskdir[:-6]}/summary_r{params.run:04}.json'
             update_summary(summary_file, indexer_obj.idx_summary)
             elog_report_post(summary_file)
-        #pass
-        #indexer_obj.report(params.update_url)
