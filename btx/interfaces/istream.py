@@ -8,6 +8,7 @@ import argparse
 import os
 import requests
 from btx.interfaces.ischeduler import JobScheduler
+from btx.interfaces.ielog import update_summary, elog_report_post
 
 class StreamInterface:
     
@@ -372,7 +373,30 @@ class StreamInterface:
             elog_json.append({'key': 'Fractional indexing rate', 'value': f'{self.n_indexed/(self.n_indexed+self.n_unindexed):.2f}'})
             elog_json.append({'key': 'Fraction of indexed with multiple lattices', 'value': f'{self.n_multiple/self.n_indexed:.2f}'})
             requests.post(update_url, json=elog_json)
-            
+
+    @property
+    def stream_summary(self) -> dict:
+        """! Return a dictionary of key/values to post to the eLog.
+
+        @return (dict) summary_dit Key/values parsed by eLog posting function.
+        """
+        summary_dict: dict = {}
+        key_strings: list = ['Cell mean:',
+                             'Cell std:',
+                             'Number of indexed events:',
+                             'Fractional indexing rate:',
+                             'Fraction of indexed with multiple lattices:']
+        summary_dict.update({
+            key_strings[0] : ' '.join(f'{self.cell_params[i]:.3f}'
+                                      for i in range(self.cell_params.shape[0])),
+            key_strings[1] : ' '.join(f'{self.cell_params_std[i]:.3f}'
+                                      for i in range(self.cell_params.shape[0])),
+            key_strings[2] : f'{self.n_indexed}',
+            key_strings[3] : f'{self.n_indexed/(self.n_indexed+self.n_unindexed):.2f}',
+            key_strings[4] : f'{self.n_multiple/self.n_indexed:.2f}'
+        })
+        return summary_dict
+
     def copy_from_stream(self, stream_file, chunk_indices, crystal_indices, output):
         """
         Add the indicated crystals from the input to the output stream.
@@ -636,6 +660,14 @@ if __name__ == '__main__':
         st.plot_cell_parameters(output=os.path.join(params.outdir, f"{params.tag}_cell.png"))
         if not params.cell_only:
             st.plot_peakogram(output=os.path.join(params.outdir, f"{params.tag}_peakogram.png"))
-        st.report(tag=params.tag)
+
+        stream_path: str = params.inputs
+        indexdir: str = stream_path[:-len(stream_path.split('/')[-1])]
+        rootdir: str = indexdir[:-6]
+        summary_file: str = f'{rootdir}/summary_r{params.run:04}.json'
+        update_summary(summary_file, st.stream_summary)
+        elog_report_post(summary_file)
+
+        #st.report(tag=params.tag)
         if params.cell_out is not None:
             write_cell_file(st.cell_params, params.cell_out, input_file=params.cell_ref)
