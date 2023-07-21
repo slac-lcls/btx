@@ -681,12 +681,11 @@ if __name__ == '__main__':
         if not params.cell_only:
             st.plot_peakogram(output=os.path.join(params.outdir, f"{params.tag}_peakogram.png"))
 
-        run = get_most_recent_run(streams)
+        run: int = get_most_recent_run(streams)
         indexdir: str = stream_path[:-len(stream_path.split('/')[-1])]
         rootdir: str = indexdir[:-7]
         summary_file: str = f'{rootdir}/summary_r{run:04}.json'
         update_summary(summary_file, st.stream_summary)
         elog_report_post(summary_file)
-        #st.report(tag=params.tag)
         if params.cell_out is not None:
             write_cell_file(st.cell_params, params.cell_out, input_file=params.cell_ref)

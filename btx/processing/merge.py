@@ -4,9 +4,11 @@ import argparse
 import os
 import sys
 import requests
+import glob
 from btx.interfaces.ischeduler import *
 from btx.interfaces.istream import read_cell_file
 from btx.interfaces.imtz import *
+from btx.interfaces.ielog import update_summary, elog_report_post
 
 class StreamtoMtz:
     
@@ -167,7 +169,28 @@ class StreamtoMtz:
         """   
         self.js.clean_up()
         self.js.submit()
-        
+
+    def merge_summary(self,
+                      foms: list = ['CCstar', 'Rsplit'],
+                      nshells: int = 10) -> dict:
+        """! Return a dictionary of key/values to post to the eLog.
+
+        @param (list[str]) foms Figures of merit.
+        @param (int) Number of shells used for figures of merit.
+        @return (dict) summary_dict Key/values parsed by eLog posting function.
+        """
+        summary_dict: dict = {};
+        for fom in foms:
+            for ns in [1, nshells]:
+                shell_file = os.path.join(self.hkl_dir, f"{self.prefix}_{fom}_n{int(ns)}.dat")
+                if ns != 1:
+                    plot_file = os.path.join(self.fig_dir, f"{self.prefix}_{fom}.png")
+                    wrangle_shells_dat(shell_file, plot_file)
+                else:
+                    key, val = wrangle_shells_dat(shell_file)
+                    summary_dict[key] = val
+        return summary_dict
+
     def report(self, foms=['CCstar','Rsplit'], nshells=10, update_url=None):
         """
         Summarize results: plot figures of merit and optionally report to elog.
@@ -256,6 +279,23 @@ def wrangle_shells_dat(shells_file, outfile=None):
         if outfile is not None:
             f.savefig(outfile, dpi=300, bbox_inches='tight')
 
+def get_most_recent_summary(path: str) -> str:
+    """Given a root directory return the path of most recent summary.
+
+    @param path (str) Root BTX operating directory.
+    @return summary (str) Path to most recent summary
+    """
+    summaries = glob.glob(f'{path}/summary_*.json')
+    run: int = 0
+    most_recent = ''
+    for summary in summaries:
+        filename: str = summary.split('/')[-1]
+        current_run = int(filename[-9:-5])
+        if current_run > run:
+            run = current_run
+            most_recent = summary
+    return most_recent
+
 def parse_input():
     """
     Parse command line input.
@@ -291,8 +331,9 @@ def parse_input():
 if __name__ == '__main__':
     
     params = parse_input()
+    stream_path = params.input_stream
     
-    stream_to_mtz = StreamtoMtz(params.input_stream, 
+    stream_to_mtz = StreamtoMtz(stream_path, 
                                 params.symmetry, 
                                 params.taskdir, 
                                 params.cell, 
@@ -316,4 +357,12 @@ if __name__ == '__main__':
                                      space_group=params.space_group)
         stream_to_mtz.launch()
     else:
-        stream_to_mtz.report(foms=params.foms, nshells=params.nshells, update_url=params.update_url)
+        indexdir: str = stream_path[:-len(stream_path.split('/')[-1])]
+        rootdir: str = indexdir[:-7]
+        summary_file = get_most_recent_summary(rootdir)
+        summary_dict: dict = stream_to_mtz.merge_summary(
+            foms=params.foms,
+            nshells=params.nshells
+        )
+        update_summary(summary_file, summary_dict)
+        elog_report_post(summary_file)
