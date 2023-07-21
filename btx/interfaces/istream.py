@@ -385,11 +385,11 @@ class StreamInterface:
         @return (dict) summary_dit Key/values parsed by eLog posting function.
         """
         summary_dict: dict = {}
-        key_strings: list = ['Cell mean:',
-                             'Cell std:',
-                             'Number of indexed events:',
-                             'Fractional indexing rate:',
-                             'Fraction of indexed with multiple lattices:']
+        key_strings: list = ['(SA) Cell mean:',
+                             '(SA) Cell std:',
+                             '(SA) Number of indexed events:',
+                             '(SA) Fractional indexing rate:',
+                             '(SA) Fraction of indexed with multiple lattices:']
         summary_dict.update({
             key_strings[0] : ' '.join(f'{self.cell_params[i]:.3f}'
                                       for i in range(self.cell_params.shape[0])),
@@ -640,6 +640,20 @@ def launch_stream_analysis(in_stream, out_stream, fig_dir, tmp_exe, queue, ncore
     js.clean_up()
     js.submit()
 
+def get_most_recent_run(streams: list) -> int:
+    """ From a list of stream files, get the most recent run.
+
+    @param streams (list[str]) List of full paths to stream files.
+    @return run (int) Most recent run in the list of streams.
+    """
+    run: int = 0
+    for streampath in streams:
+        filename: str = streampath.split('/')[-1]
+        current_run = int(filename[1:5])
+        if current_run > run:
+            run = current_run
+    return run
+
 #### For command line use ####
             
 def parse_input():
@@ -659,19 +673,20 @@ def parse_input():
 if __name__ == '__main__':
 
     params = parse_input()
-    st = StreamInterface(input_files=glob.glob(params.inputs), cell_only=params.cell_only)
+    stream_path: str = params.inputs
+    streams: list = glob.glob(stream_path)
+    st = StreamInterface(input_files=streams, cell_only=params.cell_only)
     if st.rank == 0:
         st.plot_cell_parameters(output=os.path.join(params.outdir, f"{params.tag}_cell.png"))
         if not params.cell_only:
             st.plot_peakogram(output=os.path.join(params.outdir, f"{params.tag}_peakogram.png"))
 
-        stream_path: str = params.inputs
+        run = get_most_recent_run(streams)
         indexdir: str = stream_path[:-len(stream_path.split('/')[-1])]
-        rootdir: str = indexdir[:-6]
-        summary_file: str = f'{rootdir}/summary_r{params.run:04}.json'
+        rootdir: str = indexdir[:-7]
+        summary_file: str = f'{rootdir}/summary_r{run:04}.json'
         update_summary(summary_file, st.stream_summary)
         elog_report_post(summary_file)
-
         #st.report(tag=params.tag)
         if params.cell_out is not None:
             write_cell_file(st.cell_params, params.cell_out, input_file=params.cell_ref)
