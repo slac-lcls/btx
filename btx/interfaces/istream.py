@@ -2,7 +2,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 from btx.misc.xtal import compute_resolution
-from mpi4py import MPI
 import glob
 import argparse
 import os
@@ -12,7 +11,16 @@ from btx.interfaces.ielog import update_summary, elog_report_post
 
 class StreamInterface:
     
-    def __init__(self, input_files, cell_only=False):
+    def __init__(self, input_files, cell_only=False, mpi_init=True):
+        if mpi_init:
+            from mpi4py import MPI
+            self.comm = MPI.COMM_WORLD
+            self.rank = self.comm.Get_rank()
+            self.size = self.comm.Get_size()
+        else:
+            self.rank = 0
+            self.size = 1
+
         self.cell_only = cell_only # bool, if True only extract unit cell params
         self.input_files = input_files # list of stream file(s)
         self.stream_data, self.file_limits_cell, self.file_limits_refn = self.read_all_streams(self.input_files)
@@ -94,10 +102,6 @@ class StreamInterface:
         input_sel : list of str
             select list of input stream files for this rank
         """
-        # set up MPI object
-        self.comm = MPI.COMM_WORLD
-        self.rank = self.comm.Get_rank()
-        self.size = self.comm.Get_size() 
         self.n_crystal = -1
         
         # divvy up files
