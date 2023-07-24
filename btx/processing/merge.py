@@ -19,7 +19,8 @@ class StreamtoMtz:
     input stream file.
     """
     
-    def __init__(self, input_stream, symmetry, taskdir, cell, ncores=16, queue='ffbh3q', tmp_exe=None, mtz_dir=None, anomalous=False):
+    def __init__(self, input_stream, symmetry, taskdir, cell, ncores=16, queue='ffbh3q', tmp_exe=None, mtz_dir=None, anomalous=False,
+                 mpi_init=False):
         self.stream = input_stream # file of unmerged reflections, str
         self.symmetry = symmetry # point group symmetry, str
         self.taskdir = taskdir # path for storing output, str
@@ -29,6 +30,14 @@ class StreamtoMtz:
         self.mtz_dir = mtz_dir # directory to which to transfer mtz
         self.anomalous = anomalous # whether to separate Bijovet pairs
         self._set_up(tmp_exe)
+
+        if mpi_init:
+            from mpi4py import MPI
+            self.comm = MPI.COMM_WORLD
+            self.rank = self.comm.Get_rank()
+        else:
+            self.comm = None
+            self.rank = 0
         
     def _set_up(self, tmp_exe):
         """
@@ -271,6 +280,7 @@ def wrangle_shells_dat(shells_file, outfile=None):
         ax1.scatter(shells[:,0], shells[:,1], c='black')
 
         ticks = ax1.get_xticks()
+        ax1.set_xticks(ticks) # Only needed to suppress warning
         ax1.set_xticklabels(["{0:0.2f}".format(i) for i in 10/ticks])
         ax1.tick_params(axis='both', which='major', labelsize=12)
         ax1.set_xlabel("Resolution ($\mathrm{\AA}$)", fontsize=14)
@@ -340,7 +350,8 @@ if __name__ == '__main__':
                                 ncores=params.ncores, 
                                 queue=params.queue, 
                                 mtz_dir=params.mtz_dir, 
-                                anomalous=params.anomalous)
+                                anomalous=params.anomalous,
+                                mpi_init=True)
     if not params.report:
         stream_to_mtz.cmd_partialator(iterations=params.iterations, 
                                       model=params.model, 
@@ -357,12 +368,13 @@ if __name__ == '__main__':
                                      space_group=params.space_group)
         stream_to_mtz.launch()
     else:
-        indexdir: str = stream_path[:-len(stream_path.split('/')[-1])]
-        rootdir: str = indexdir[:-7]
-        summary_file = get_most_recent_summary(rootdir)
-        summary_dict: dict = stream_to_mtz.merge_summary(
-            foms=params.foms,
-            nshells=params.nshells
-        )
-        update_summary(summary_file, summary_dict)
-        elog_report_post(summary_file)
+        if stream_to_mtz.rank == 0:
+            indexdir: str = stream_path[:-len(stream_path.split('/')[-1])]
+            rootdir: str = indexdir[:-7]
+            summary_file = get_most_recent_summary(rootdir)
+            summary_dict: dict = stream_to_mtz.merge_summary(
+                foms=params.foms,
+                nshells=params.nshells
+            )
+            update_summary(summary_file, summary_dict)
+            elog_report_post(summary_file)
