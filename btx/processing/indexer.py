@@ -107,6 +107,7 @@ class Indexer:
     @property
     def idx_summary(self) -> dict:
         """! Return a dictionary of key/values to post to the eLog.
+
         @return (dict) summary_dict Key/values parsed by eLog posting function.
         """
         # retrieve number of indexed patterns

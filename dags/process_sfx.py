@@ -19,6 +19,9 @@ dag = DAG(
 task_id='find_peaks'
 find_peaks = JIDSlurmOperator( task_id=task_id, dag=dag)
 
+task_id='post_to_elog'
+elog1 = JIDSlurmOperator(task_id=task_id, dag=dag)
+
 task_id='index'
 index = JIDSlurmOperator( task_id=task_id, dag=dag)
 
@@ -35,4 +38,4 @@ task_id='elog_display'
 elog_display = JIDSlurmOperator(task_id=task_id, dag=dag)
 
 # Draw the DAG
-find_peaks >> index >> stream_analysis >> merge >> solve >> elog_display
+find_peaks >> elog1 >> index >> stream_analysis >> merge >> solve >> elog_display

@@ -2,16 +2,25 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 from btx.misc.xtal import compute_resolution
-from mpi4py import MPI
 import glob
 import argparse
 import os
 import requests
 from btx.interfaces.ischeduler import JobScheduler
+from btx.interfaces.ielog import update_summary, elog_report_post
 
 class StreamInterface:
     
-    def __init__(self, input_files, cell_only=False):
+    def __init__(self, input_files, cell_only=False, mpi_init=True):
+        if mpi_init:
+            from mpi4py import MPI
+            self.comm = MPI.COMM_WORLD
+            self.rank = self.comm.Get_rank()
+            self.size = self.comm.Get_size()
+        else:
+            self.rank = 0
+            self.size = 1
+
         self.cell_only = cell_only # bool, if True only extract unit cell params
         self.input_files = input_files # list of stream file(s)
         self.stream_data, self.file_limits_cell, self.file_limits_refn = self.read_all_streams(self.input_files)
@@ -93,10 +102,6 @@ class StreamInterface:
         input_sel : list of str
             select list of input stream files for this rank
         """
-        # set up MPI object
-        self.comm = MPI.COMM_WORLD
-        self.rank = self.comm.Get_rank()
-        self.size = self.comm.Get_size() 
         self.n_crystal = -1
         
         # divvy up files
@@ -372,7 +377,30 @@ class StreamInterface:
             elog_json.append({'key': 'Fractional indexing rate', 'value': f'{self.n_indexed/(self.n_indexed+self.n_unindexed):.2f}'})
             elog_json.append({'key': 'Fraction of indexed with multiple lattices', 'value': f'{self.n_multiple/self.n_indexed:.2f}'})
             requests.post(update_url, json=elog_json)
-            
+
+    @property
+    def stream_summary(self) -> dict:
+        """! Return a dictionary of key/values to post to the eLog.
+
+        @return (dict) summary_dit Key/values parsed by eLog posting function.
+        """
+        summary_dict: dict = {}
+        key_strings: list = ['(SA) Cell mean:',
+                             '(SA) Cell std:',
+                             '(SA) Number of indexed events:',
+                             '(SA) Fractional indexing rate:',
+                             '(SA) Fraction of indexed with multiple lattices:']
+        summary_dict.update({
+            key_strings[0] : ' '.join(f'{self.cell_params[i]:.3f}'
+                                      for i in range(self.cell_params.shape[0])),
+            key_strings[1] : ' '.join(f'{self.cell_params_std[i]:.3f}'
+                                      for i in range(self.cell_params.shape[0])),
+            key_strings[2] : f'{self.n_indexed}',
+            key_strings[3] : f'{self.n_indexed/(self.n_indexed+self.n_unindexed):.2f}',
+            key_strings[4] : f'{self.n_multiple/self.n_indexed:.2f}'
+        })
+        return summary_dict
+
     def copy_from_stream(self, stream_file, chunk_indices, crystal_indices, output):
         """
         Add the indicated crystals from the input to the output stream.
@@ -612,6 +640,20 @@ def launch_stream_analysis(in_stream, out_stream, fig_dir, tmp_exe, queue, ncore
     js.clean_up()
     js.submit()
 
+def get_most_recent_run(streams: list) -> int:
+    """ From a list of stream files, get the most recent run.
+
+    @param streams (list[str]) List of full paths to stream files.
+    @return run (int) Most recent run in the list of streams.
+    """
+    run: int = 0
+    for streampath in streams:
+        filename: str = streampath.split('/')[-1]
+        current_run = int(filename[1:5])
+        if current_run > run:
+            run = current_run
+    return run
+
 #### For command line use ####
             
 def parse_input():
@@ -631,11 +673,19 @@ def parse_input():
 if __name__ == '__main__':
 
     params = parse_input()
-    st = StreamInterface(input_files=glob.glob(params.inputs), cell_only=params.cell_only)
+    stream_path: str = params.inputs
+    streams: list = glob.glob(stream_path)
+    st = StreamInterface(input_files=streams, cell_only=params.cell_only)
     if st.rank == 0:
         st.plot_cell_parameters(output=os.path.join(params.outdir, f"{params.tag}_cell.png"))
         if not params.cell_only:
             st.plot_peakogram(output=os.path.join(params.outdir, f"{params.tag}_peakogram.png"))
-        st.report(tag=params.tag)
+
+        run: int = get_most_recent_run(streams)
+        indexdir: str = stream_path[:-len(stream_path.split('/')[-1])]
+        rootdir: str = indexdir[:-7]
+        summary_file: str = f'{rootdir}/summary_r{run:04}.json'
+        update_summary(summary_file, st.stream_summary)
+        elog_report_post(summary_file)
         if params.cell_out is not None:
             write_cell_file(st.cell_params, params.cell_out, input_file=params.cell_ref)

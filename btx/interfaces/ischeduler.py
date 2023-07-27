@@ -136,8 +136,8 @@ class JobScheduler:
 
     def submit(self):
         """ Submit to queue. """
-        os.system(f"sbatch {self.jobfile}")
-        logger.info(f"sbatch {self.jobfile}")
+        os.system(f"sbatch -W {self.jobfile}")
+        logger.info(f"sbatch -W {self.jobfile}")
 
     def clean_up(self):
         """ Add a line to delete submission file."""
