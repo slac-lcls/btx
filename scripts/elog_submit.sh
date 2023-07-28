@@ -129,7 +129,6 @@ QUEUE=${QUEUE:='milano'}
 CORES=${CORES:=1}
 # TODO: find_peaks needs to be handled from ischeduler. For now we do this...
 if [ ${TASK} != 'find_peaks' ] &&\
-   [ ${TASK} != 'stream_analysis' ] &&\
    [ ${TASK} != 'determine_cell' ] &&\
    [ ${TASK} != 'opt_geom' ]; then
   CORES=1
@@ -193,7 +192,7 @@ if [ ${RUN_NUM} != 'None' ]; then
 fi
 
 echo "$MAIN_PY -c ${THIS_CONFIGFILE} -t $TASK"
-$MAIN_PY -c ${THIS_CONFIGFILE} -t $TASK
+$MAIN_PY -c ${THIS_CONFIGFILE} -t $TASK -n $CORES
 if [ ${RUN_NUM} != 'None' ]; then
   rm -f ${THIS_CONFIGFILE}
 fi

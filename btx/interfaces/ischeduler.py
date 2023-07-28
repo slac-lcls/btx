@@ -1,7 +1,10 @@
 import shutil
+import logging
 import os
 
 """ Helper methods for job scheduling. """
+
+logger = logging.getLogger(__name__)
 
 class JobScheduler:
 
@@ -133,8 +136,8 @@ class JobScheduler:
 
     def submit(self):
         """ Submit to queue. """
-        os.system(f"sbatch {self.jobfile}")
-        print(f"sbatch {self.jobfile}")
+        os.system(f"sbatch -W {self.jobfile}")
+        logger.info(f"sbatch -W {self.jobfile}")
 
     def clean_up(self):
         """ Add a line to delete submission file."""

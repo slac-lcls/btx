@@ -25,9 +25,5 @@ elog1 = JIDSlurmOperator(task_id = task_id, dag=dag)
 task_id='index'
 index = JIDSlurmOperator(task_id=task_id, dag=dag)
 
-task_id='summarize_idx'
-elog2 = JIDSlurmOperator(task_id=task_id, dag=dag)
-
-
 # Draw the DAG
-find_peaks >> elog1 >> index >> elog2
+find_peaks >> elog1 >> index
