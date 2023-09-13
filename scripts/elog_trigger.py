@@ -22,6 +22,12 @@ if __name__ == '__main__':
     parser.add_argument("-c", "--config", help="Absolute path to the config file ( .yaml)")
     parser.add_argument("-q", "--queue", help="The SLURM queue to be used")
     parser.add_argument("-n", "--ncores", help="Number of cores", default=2)
+    parser.add_argument(
+        "-a",
+        "--account",
+        help="S3DF account to use, including repo and/or reservation.",
+        default=""
+    )
     args = parser.parse_args()
     logging.basicConfig(level=logging.DEBUG if args.verbose else logging.INFO)
 
@@ -35,6 +41,8 @@ if __name__ == '__main__':
     experiment_name = os.environ["EXPERIMENT"]
     run_num = os.environ["RUN_NUM"]
     auth_header = os.environ["Authorization"]
+
+    account = args.account if args.account else f"lcls:{experiment_name}"
 
     dag_run_data = {
         "dag_run_id": str(uuid.uuid4()),
@@ -52,8 +60,8 @@ if __name__ == '__main__':
                 "queue": args.queue,
                 "ncores": args.ncores,
                 "experiment_name": experiment_name,
-                "run_number": run_num
-            }
+                "run_number": run_num,
+                "account": account
         }
     }
 
