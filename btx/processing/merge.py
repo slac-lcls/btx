@@ -378,3 +378,15 @@ if __name__ == '__main__':
             )
             update_summary(summary_file, summary_dict)
             elog_report_post(summary_file)
+
+            if stream_to_mtz.mtz_dir:
+                shutil.copyfile(
+                    os.path.join(
+                        stream_to_mtz.taskdir,
+                        f'{stream_to_mtz.prefix}.mtz'
+                    ),
+                    os.path.join(
+                        stream_to_mtz.mtz_dir,
+                        f'{stream_to_mtz.prefix}.mtz'
+                    )
+                )
