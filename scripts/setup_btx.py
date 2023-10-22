@@ -51,8 +51,8 @@ def determine_configuration(
     exp_dir: str = f"/sdf/data/lcls/ds/{exp[:3]}/{exp}"
     config_file: str = f"{exp_dir}/scratch/btx/yamls/config.yaml"
     param_string: str = (
-        f"-a {args.account} -c {config_file} -d {dag} -n {args.ncores} "
-        f"-q {args.queue}"
+        f"-a {args.account} -c {config_file} -d {dag} -n {args.ncores}"
+        f" -q {args.queue}"
     )
 
     reservation: str = args.reservation
@@ -60,7 +60,7 @@ def determine_configuration(
         param_string += f" -r {reservation}"
 
     if args.verbose:
-        param_string += f"--verbose"
+        param_string += f" --verbose"
     return exp, executable, param_string
 
 if __name__ == "__main__":
