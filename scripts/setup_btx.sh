@@ -95,7 +95,7 @@ if [[ -z ${WORKFLOW} ]]; then
     echo "No workflow provided. Defaulting to SFX experiment."
 fi
 
-ACCOUNT=${ACCOUNT:="lcls"}
+ACCOUNT=${ACCOUNT:="lcls:${EXP}"}
 CORES=${CORES:=64}
 QUEUE=${QUEUE:="milano"}
 WORKFLOW=${WORKFLOW:="sfx"}
