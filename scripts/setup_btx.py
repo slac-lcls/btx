@@ -102,7 +102,6 @@ if __name__ == "__main__":
     parser.add_argument(
         "-v",
         "--verbose",
-        type=str,
         action="store_true",
         help="Turn on verbose logging."
     )

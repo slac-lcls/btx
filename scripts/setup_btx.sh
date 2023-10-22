@@ -104,7 +104,7 @@ BTX_DIR="/sdf/group/lcls/ds/tools/btx"
 EXP_DIR="/sdf/data/lcls/ds/${EXP:0:3}/${EXP}"
 
 if [ ! -d "${EXP_DIR}" ]; then
-    echo "Experiment foldr does not exist yet."
+    echo "Experiment folder does not exist yet."
     exit 1
 fi
 
