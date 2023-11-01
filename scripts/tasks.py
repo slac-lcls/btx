@@ -366,7 +366,9 @@ def refine_geometry(config, task=None):
                         geom_file,
                         task.dx,
                         task.dy,
-                        task.dz)
+                        task.dz,
+                        slurm_account=setup.account
+    )
     geopt.launch_indexing(setup.exp, setup.det_type, config.index, cell_file)
     geopt.launch_stream_wrangling(config.stream_analysis)
     geopt.launch_merging(config.merge)
