@@ -99,7 +99,8 @@ def run_analysis(config):
     js = JobScheduler(os.path.join(".", f'ra_{setup.run:04}.sh'), 
                       queue=setup.queue,
                       ncores=task.ncores,
-                      jobname=f'ra_{setup.run:04}')
+                      jobname=f'ra_{setup.run:04}',
+                      account=setup.account)
     js.write_header()
     js.write_main(f"{command}\n", dependencies=['psana'])
     js.clean_up()
