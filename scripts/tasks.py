@@ -195,7 +195,7 @@ def index(config):
     indexer_obj = Indexer(exp=config.setup.exp, run=config.setup.run, det_type=config.setup.det_type, tag=task.tag, tag_cxi=task.get('tag_cxi'), taskdir=taskdir,
                           geom=geom_file, cell=task.get('cell'), int_rad=task.int_radius, methods=task.methods, tolerance=task.tolerance, no_revalidate=task.no_revalidate,
                           multi=task.multi, profile=task.profile, queue=setup.get('queue'), ncores=task.get('ncores') if task.get('ncores') is not None else 64,
-                          time=task.get('time') if task.get('time') is not None else '1:00:00', mpi_init = False)
+                          time=task.get('time') if task.get('time') is not None else '1:00:00', mpi_init = False, slurm_account=setup.account)
     logger.debug(f'Generating indexing executable for run {setup.run} of {setup.exp}...')
     indexer_obj.launch()
     logger.info(f'Indexing launched!')
@@ -268,7 +268,8 @@ def stream_analysis(config):
                            ncores=task.get('ncores') if task.get('ncores') is not None else 6,
                            cell_only=task.get('cell_only') if task.get('cell_only') is not None else False,
                            cell_out=os.path.join(setup.root_dir, 'cell', f'{task.tag}.cell'),
-                           cell_ref=task.get('ref_cell'))
+                           cell_ref=task.get('ref_cell'),
+                           slurm_account=setup.account)
     logger.info(f'Stream analysis launched')
 
 def determine_cell(config):
