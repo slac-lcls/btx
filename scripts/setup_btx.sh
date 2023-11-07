@@ -116,6 +116,8 @@ mkdir -p ${EXP_DIR}/scratch/btx/launchpad
 cp ${BTX_DIR}/config/config.yaml ${EXP_DIR}/scratch/btx/yamls
 sed -i "s|root_dir: ''|root_dir: \'${EXP_DIR}/scratch/btx/\'|g" ${EXP_DIR}/scratch/btx/yamls/config.yaml
 sed -i "s|exp: ''|exp: \'${EXP}\'|g" ${EXP_DIR}/scratch/btx/yamls/config.yaml
+sed -i "s|queue: ''|queue: \'${QUEUE}\'|g" ${EXP_DIR}/scratch/btx/yamls/config.yaml
+sed -i "s|account: ''|account: \'${ACCOUNT}\'|g" ${EXP_DIR}/scratch/btx/yamls/config.yaml
 
 chmod -R o+r ${EXP_DIR}/scratch/btx
 chmod -R o+w ${EXP_DIR}/scratch/btx

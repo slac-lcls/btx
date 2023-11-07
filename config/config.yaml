@@ -1,5 +1,6 @@
 setup:
   queue: 'milano'
+  account: ''
   root_dir: ''
   exp: ''
   run: 5
