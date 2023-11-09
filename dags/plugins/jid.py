@@ -29,7 +29,7 @@ class JIDSlurmOperator( BaseOperator ):
     'SLAC': "/cds/sw/package/autosfx/btx/",
     'SRCF_FFB': "/cds/sw/package/autosfx/btx/",
     'NERSC': "/global/cfs/cdirs/lcls/btx/",
-    'S3DF' : "/sdf/group/lcls/ds/tools/btx/"
+    'S3DF' : "/sdf/group/lcls/ds/tools/btx/stable/"
   }
   # "/sdf/group/lcls/ds/sw/autosfx/btx/",
 
