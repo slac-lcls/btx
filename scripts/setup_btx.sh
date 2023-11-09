@@ -100,7 +100,7 @@ CORES=${CORES:=64}
 QUEUE=${QUEUE:="milano"}
 WORKFLOW=${WORKFLOW:="sfx"}
 
-BTX_DIR="/sdf/group/lcls/ds/tools/btx"
+BTX_DIR="/sdf/group/lcls/ds/tools/btx/stable"
 EXP_DIR="/sdf/data/lcls/ds/${EXP:0:3}/${EXP}"
 
 if [ ! -d "${EXP_DIR}" ]; then
