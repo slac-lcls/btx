@@ -5,6 +5,7 @@ from btx.plugins.jid import JIDSlurmOperator
 
 description='BTX process SAXS DAG'
 dag_name = os.path.splitext(os.path.basename(__file__))[0]
+dag_name = f"slac_lcls_{dag_name}"
 
 dag = DAG(
     dag_name,
