@@ -56,7 +56,7 @@ if __name__ == '__main__':
             "user": getpass.getuser(),
             "parameters": {
                 "config_file": args.config,
-                "dag": args.dag,
+                "dag": f"slac_lcls_{args.dag}",
                 "queue": args.queue,
                 "ncores": args.ncores,
                 "experiment_name": experiment_name,
