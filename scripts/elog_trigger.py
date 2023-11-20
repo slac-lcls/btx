@@ -25,7 +25,14 @@ if __name__ == '__main__':
     parser.add_argument(
         "-a",
         "--account",
-        help="S3DF account to use, including repo and/or reservation.",
+        help="S3DF account to use, including repo.",
+        default=""
+    )
+    parser.add_argument(
+        "-r",
+        "--reservation",
+        type=str,
+        help="SLURM reservation to use (optional).",
         default=""
     )
     args = parser.parse_args()
@@ -62,7 +69,7 @@ if __name__ == '__main__':
                 "experiment_name": experiment_name,
                 "run_number": run_num,
                 "account": account
-            }
+            } | ({"reservation": args.reservation} if args.reservation else {})
         }
     }
     
