@@ -51,6 +51,18 @@ if __name__ == '__main__':
 
     account = args.account if args.account else f"lcls:{experiment_name}"
 
+    params = {
+        "config_file": args.config,
+        "dag": f"slac_lcls_{args.dag}",
+        "queue": args.queue,
+        "ncores": args.ncores,
+        "experiment_name": experiment_name,
+        "run_number": run_num,
+        "account": account
+    }
+    if args.reservation:
+        params.update({"reservation": args.reservation})
+
     dag_run_data = {
         "dag_run_id": str(uuid.uuid4()),
         "conf": {
@@ -61,18 +73,10 @@ if __name__ == '__main__':
             "ARP_LOCATION": 'S3DF', #os.environ["ARP_LOCATION"],
             "Authorization": auth_header,
             "user": getpass.getuser(),
-            "parameters": {
-                "config_file": args.config,
-                "dag": f"slac_lcls_{args.dag}",
-                "queue": args.queue,
-                "ncores": args.ncores,
-                "experiment_name": experiment_name,
-                "run_number": run_num,
-                "account": account
-            } | ({"reservation": args.reservation} if args.reservation else {})
+            "parameters": params
         }
     }
-    
+
     resp = requests.post(airflow_s3df + f"api/v1/dags/slac_lcls_{args.dag}/dagRuns", json=dag_run_data, auth=HTTPBasicAuth('btx', 'btx'))
     resp.raise_for_status()
     print(resp.text)
