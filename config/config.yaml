@@ -4,7 +4,7 @@ setup:
   root_dir: ''
   exp: ''
   run: 5
-  det_type: 'epix10k2M'
+  det_type: 'Rayonix'
   cell: ''
 
 elog_display:
