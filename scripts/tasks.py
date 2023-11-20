@@ -311,7 +311,7 @@ def merge(config):
                                 ncores=task.get('ncores') if task.get('ncores') is not None else 16,
                                 mtz_dir=os.path.join(setup.root_dir, "solve", f"{task.tag}"),
                                 anomalous=task.get('anomalous') if task.get('anomalous') is not None else False,
-                                slurm_account=setup.account)
+                                slurm_account=setup.account, slurm_reservation=setup.reservation)
     stream_to_mtz.cmd_partialator(iterations=task.iterations, model=task.model,
                                   min_res=task.get('min_res'), push_res=task.get('push_res'), max_adu=task.get('max_adu'))
     for ns in [1, task.nshells]:
