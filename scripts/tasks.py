@@ -334,7 +334,8 @@ def solve(config):
                queue=setup.get('queue'),
                ncores=task.get('ncores') if task.get('ncores') is not None else 16,
                anomalous=task.get('anomalous') if task.get('anomalous') is not None else False,
-               slurm_account=setup.account)
+               slurm_account=setup.account,
+               slurm_reservation=setup.reservation)
     logger.info(f'Dimple launched!')
 
 def refine_geometry(config, task=None):
