@@ -17,7 +17,8 @@ class Indexer:
 
     def __init__(self, exp, run, det_type, tag, taskdir, geom, cell=None, int_rad='4,5,6', methods='mosflm',
                  tolerance='5,5,5,1.5', tag_cxi=None, no_revalidate=True, multi=True, profile=True,
-                 ncores=64, queue='milano', time='1:00:00', *, mpi_init = False, slurm_account="lcls"):
+                 ncores=64, queue='milano', time='1:00:00', *, mpi_init = False, slurm_account="lcls",
+                 slurm_reservation=""):
 
         if mpi_init:
             from mpi4py import MPI
@@ -51,6 +52,7 @@ class Indexer:
         self.queue = queue # str, submission queue
         self.time = time # str, time limit
         self.slurm_account = slurm_account
+        self.slurm_reservation = slurm_reservation
         self._retrieve_paths()
 
     def _retrieve_paths(self):
@@ -100,7 +102,8 @@ class Indexer:
 
         js = JobScheduler(self.tmp_exe, ncores=self.ncores,
                           jobname=f'idx_r{self.run:04}', queue=self.queue,
-                          time=self.time, account=self.slurm_account)
+                          time=self.time, account=self.slurm_account,
+                          reservation=self.slurm_reservation)
         js.write_header()
         js.write_main(command, dependencies=['crystfel'] + self.methods.split(','))
         js.clean_up()
