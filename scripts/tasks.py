@@ -270,7 +270,8 @@ def stream_analysis(config):
                            cell_only=task.get('cell_only') if task.get('cell_only') is not None else False,
                            cell_out=os.path.join(setup.root_dir, 'cell', f'{task.tag}.cell'),
                            cell_ref=task.get('ref_cell'),
-                           slurm_account=setup.account)
+                           slurm_account=setup.account,
+                           slurm_reservation=setup.reservation)
     logger.info(f'Stream analysis launched')
 
 def determine_cell(config):
