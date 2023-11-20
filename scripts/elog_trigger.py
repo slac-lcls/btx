@@ -66,7 +66,7 @@ if __name__ == '__main__':
         }
     }
     
-    resp = requests.post(airflow_s3df + f"api/v1/dags/{args.dag}/dagRuns", json=dag_run_data, auth=HTTPBasicAuth('btx', 'btx'))
+    resp = requests.post(airflow_s3df + f"api/v1/dags/slac_lcls_{args.dag}/dagRuns", json=dag_run_data, auth=HTTPBasicAuth('btx', 'btx'))
     resp.raise_for_status()
     print(resp.text)
 
