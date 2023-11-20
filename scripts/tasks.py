@@ -100,7 +100,8 @@ def run_analysis(config):
                       queue=setup.queue,
                       ncores=task.ncores,
                       jobname=f'ra_{setup.run:04}',
-                      account=setup.account)
+                      account=setup.account,
+                      reservation=setup.reservation)
     js.write_header()
     js.write_main(f"{command}\n", dependencies=['psana'])
     js.clean_up()
@@ -370,7 +371,8 @@ def refine_geometry(config, task=None):
                         task.dx,
                         task.dy,
                         task.dz,
-                        slurm_account=setup.account
+                        slurm_account=setup.account,
+                        slurm_reservation=setup.reservation
     )
     geopt.launch_indexing(setup.exp, setup.det_type, config.index, cell_file)
     geopt.launch_stream_wrangling(config.stream_analysis)
