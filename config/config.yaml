@@ -51,7 +51,7 @@ index:
   time: '1:30:00'
   ncores: 64
   tag: 'S1'
-  tag_cxi: ''
+  tag_cxi: 'S1'
   int_radius: '3,4,5'
   methods: 'mosflm'
   tolerance: '5,5,5,1.5'
