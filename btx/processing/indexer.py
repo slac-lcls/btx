@@ -88,7 +88,7 @@ class Indexer:
             if False, do not create summary files / report to elog
         """     
         command=f"indexamajig -i {self.lst} -o {self.stream} -j {self.ncores} -g {self.geom} --peaks=cxi --int-rad={self.rad} --indexing={self.methods} --tolerance={self.tolerance}"
-        if self.cell is not None: command += f' --pdb={self.cell}'
+        if self.cell: command += f' --pdb={self.cell}'
         if self.no_revalidate: command += ' --no-revalidate'
         if self.multi: command += ' --multi'
         if self.profile: command += ' --profile'
