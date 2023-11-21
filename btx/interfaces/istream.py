@@ -75,7 +75,10 @@ class StreamInterface:
                 if key == 'n_crystal':
                     stream_data[key] = [np.array(arr) for arr in stream_data[key]]
                     for narr in range(1, len(stream_data[key])):
-                        stream_data[key][narr] += stream_data[key][narr-1][-1]+1
+                        if stream_data[key][narr-1].any():
+                            stream_data[key][narr] += stream_data[key][narr-1][-1]+1
+                        else:
+                            stream_data[key][narr] += 0
                 stream_data[key] = np.concatenate(np.array(stream_data[key], dtype=object))
                 if key in ['n_crystal','n_chunk', 'n_crystal_cell', 'n_lattice', 'image_num', 'h', 'k', 'l']:
                     stream_data[key] = stream_data[key].astype(int)
