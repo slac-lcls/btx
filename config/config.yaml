@@ -11,7 +11,7 @@ setup:
 elog_display:
 
 fetch_mask:
-  dataset: '/data/data'
+  dataset: '/entry_1/data_1/mask' # Rayonix - switch to /data/data for other det
 
 fetch_geom:
 
