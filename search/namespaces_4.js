@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['peak_5ffinder_763',['peak_finder',['../namespacepeak__finder.html',1,'']]],
-  ['pipca_764',['pipca',['../namespacepipca.html',1,'']]]
+  ['peak_5ffinder_765',['peak_finder',['../namespacepeak__finder.html',1,'']]],
+  ['pipca_766',['pipca',['../namespacepipca.html',1,'']]]
 ];
