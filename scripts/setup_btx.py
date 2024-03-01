@@ -39,7 +39,9 @@ def determine_configuration(
     if workflow:
         dag = workflow
     else:
-        if args.workflow == "sfx":
+        if args.workflow == "setup":
+            dag = "setup_metrology"
+        elif args.workflow == "sfx":
             dag = "process_sfx"
         elif args.workflow == "geometry" or args.workflow == "behenate":
             dag = "optimize_geometry"
