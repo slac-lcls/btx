@@ -43,6 +43,8 @@ def determine_configuration(
             dag = "process_sfx"
         elif args.workflow == "geometry" or args.workflow == "behenate":
             dag = "optimize_geometry"
+        elif args.workflow == "metrology" or args.workflow == "setup_metrology":
+            dag = "setup_metrology"
 
     btx_base_dir: str = "/sdf/group/lcls/ds/tools/btx/stable/scripts"
     btx_executable: str = "elog_trigger.py"
@@ -111,7 +113,7 @@ if __name__ == "__main__":
         type=str,
         help=(
             "Which analysis workflow to run. Defaults to sfx. Options: sfx, "
-            "geometry"
+            "geometry, metrology"
         ),
         default="sfx"
     )
@@ -142,6 +144,20 @@ if __name__ == "__main__":
                 "parameters": geom_params
             }
             workflows.append(geometry_workflow)
+        if "setup_metrology" not in main_workflow["parameters"]:
+            metrology_params: str = re.sub(
+                "-d.*-n",
+                "-d setup_metrology -n",
+                params
+            )
+            metrology_workflow: Dict[str, str] = {
+                "name": "setup_metrology",
+                "executable": executable,
+                "trigger": "MANUAL",
+                "trigger": "S3DF",
+                "parameters": metrology_params,
+            }
+            workflows.append(metrology_workflow)
 
         for workflow in workflows:
             krbticket: Any = KerberosTicket("HTTP@pswww.slac.stanford.edu")
