@@ -154,7 +154,7 @@ if __name__ == "__main__":
                 "name": "setup_metrology",
                 "executable": executable,
                 "trigger": "MANUAL",
-                "trigger": "S3DF",
+                "location": "S3DF",
                 "parameters": metrology_params,
             }
             workflows.append(metrology_workflow)
