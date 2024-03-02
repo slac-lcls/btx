@@ -119,7 +119,7 @@ class Geoptimizer:
                                geom=gfile, cell=cell_file, int_rad=params.int_radius, methods=params.methods, tolerance=params.tolerance, no_revalidate=params.no_revalidate, 
                                multi=params.multi, profile=params.profile, queue=self.queue, ncores=params.get('ncores') if params.get('ncores') is not None else 64,
                                time=params.get('time') if params.get('time') is not None else '1:00:00',
-                               slurm_account=self.slurm_account, slurm_reservation=self.slurm_reservation)
+                               slurm_account=self.slurm_account, slurm_reservation=self.slurm_reservation, wait=False)
                 idxr.tmp_exe = jobfile
                 idxr.stream = stream
                 idxr.launch(addl_command=f"echo {jobname} | tee -a {statusfile}\n",
@@ -159,7 +159,8 @@ class Geoptimizer:
                                    cell_ref=params.get('ref_cell'),
                                    addl_command=f"echo {jobname} | tee -a {statusfile}\n",
                                    slurm_account=self.slurm_account,
-                                   slurm_reservation=self.slurm_reservation
+                                   slurm_reservation=self.slurm_reservation,
+                                   wait=False
             )
             jobnames.append(jobname)
             time.sleep(self.frequency)
@@ -207,7 +208,7 @@ class Geoptimizer:
                                          highres=params.get('highres'), 
                                          xds_style=False)
             stream_to_mtz.js.write_main(f"echo {jobname} | tee -a {statusfile}\n")
-            stream_to_mtz.launch()
+            stream_to_mtz.launch(wait=False)
 
             jobnames.append(jobname)
             time.sleep(self.frequency)
